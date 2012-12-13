@@ -1,3 +1,3 @@
-pg-cli.js
-pg-test.js
-*.sock
+.git*
+test/
+node_modules/
