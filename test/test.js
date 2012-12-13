@@ -1,15 +1,12 @@
-/*
-var config = require('./lib/config');
-
-for (config in config.db) {
-	console.log(config);
-}
-*/
 
 var postgrator = require('../postgrator.js');
 
 postgrator.setMigrationDirectory(__dirname + '/migrations');
-postgrator.setConnectionString("tcp://rickber2_test:TestUser@just63.justhost.com/rickber2_test"); // tcp://user:password@address/database
+
+// This connection string used here is a postgres database on a cheapy host I'm using
+// If you try testing using this database it'll fail, as the database uses an IP whitelist
+// tcp://user:password@address/database
+postgrator.setConnectionString("tcp://rickber2_test:TestUser@just63.justhost.com/rickber2_test"); 
 
 postgrator.migrate('003', function(err, migrations) {
 	if (err) console.log(err);
@@ -19,6 +16,8 @@ postgrator.migrate('003', function(err, migrations) {
 
 
 /*
+
+// other random test stuff
 
 postgrator.getMigrations();
 
@@ -37,7 +36,6 @@ postgrator.getCurrentVersion(function(err, currentVersion) {
 	if (err) console.log(err);
 	console.log('current version ' + currentVersion);
 });
-
 
 */
 
