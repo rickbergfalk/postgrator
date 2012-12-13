@@ -3,12 +3,6 @@
 A PostgreSQL migration tool using plain sql scripts. 
 
 
-## DISCLAIMER
-Posgrator is a work in progress and will likely change. 
-
-If that doesn't scare you, feel free to use it for whatever. I'm still figuring a lot of this stuff out, so any assistance is welcome :)
-
-
 ## Overview
 
 Postgrator is a migration tool for PostgreSQL, using SQL instead of a DSL/library in some other language. 
