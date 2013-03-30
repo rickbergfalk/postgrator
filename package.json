@@ -1,17 +1,22 @@
 {
     "name": "postgrator",
-	"version": "0.0.12",
+	"version": "0.1.0",
 	"author": "Rick Bergfalk <rick.bergfalk@gmail.com> (http://rickbergfalk.com/)",
-	"description": "Postgrator is a PostgreSQL migration tool for SQL people",
+	"description": "Postgrator is a SQL migration tool for SQL people",
 	"keywords": [
 		"migrator", 
 		"migration", 
 		"postgres", 
 		"postgresql", 
+		"mysql",
+		"sql server",
 		"sql"
 	],
 	"dependencies": {
-		"pg" 		: ">= 0.8.3"
+		"mysql"		: "2.0.0-alpha7",
+		"pg" 		: "0.15.x",
+		"tedious" 	: "0.1.x",
+		"async" 	: "0.2.x"
 	},
 	"repository" : {
 		"type": "git", 
