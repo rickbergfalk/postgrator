@@ -38,9 +38,9 @@ var postgrator = require('postgrator');
 
 postgrator.config.set({
     migrationDirectory: __dirname + '/migrations',  // path to the migrations
-    dbdriver: 'pg',                                 // or 'mysql' or 'tedious' (a non-native TDS SQL Server driver)
+    driver: 'pg',                                   // or 'mysql' or 'tedious' (a non-native TDS SQL Server driver)
     host: '127.0.0.1',
-    dbname: 'databasename',
+    database: 'databasename',
     username: 'username',
     password: 'password'
 }); 

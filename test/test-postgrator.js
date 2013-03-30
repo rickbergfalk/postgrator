@@ -43,11 +43,11 @@ tests.push(function (callback) {
 	var pg = require('../postgrator.js');
 	var cs = "tcp://rickber2_test:TestUser@just63.justhost.com/rickber2_test";
 	pg.config.setFromPostgresConnectionString(cs);
-	assert.equal(pg.config.dbdriver, 'pg', 'dbdriver should be pg');
+	assert.equal(pg.config.driver, 'pg', 'dbdriver should be pg');
 	assert.equal(pg.config.username, 'rickber2_test', 'username should be rickber2_test');
 	assert.equal(pg.config.password, 'TestUser', 'password should be TestUser');
 	assert.equal(pg.config.host, 'just63.justhost.com', 'host should be just63.justhost.com');
-	assert.equal(pg.config.dbname, 'rickber2_test', 'dbname should be rickber2_test');
+	assert.equal(pg.config.database, 'rickber2_test', 'dbname should be rickber2_test');
 	assert.equal(pg.config.getPostgresConnectionString(), cs, 'config.setFromPostgresConnectionString (or the string passed to it) has a problem');
 	callback();
 });
@@ -61,19 +61,19 @@ tests.push(function (callback) {
 	var directory = __dirname + '/migrations';
 	var config = {
 			migrationDirectory: directory,
-			dbdriver: 'mysql',
+			driver: 'mysql',
 			host: 'just63.justhost.com',
-			dbname: 'rickber2_test',
+			database: 'rickber2_test',
 			username: 'rickber2_test',
 			password: 'TestUser'
 		}
 	pg.config.set(config);
 	assert.equal(pg.config.migrationDirectory, directory, 'the directory should be ' + directory);
-	assert.equal(pg.config.dbdriver, 'mysql', 'dbdriver should be mysql');
+	assert.equal(pg.config.driver, 'mysql', 'dbdriver should be mysql');
 	assert.equal(pg.config.username, 'rickber2_test', 'username should be rickber2_test');
 	assert.equal(pg.config.password, 'TestUser', 'password should be TestUser');
 	assert.equal(pg.config.host, 'just63.justhost.com', 'host should be just63.justhost.com');
-	assert.equal(pg.config.dbname, 'rickber2_test', 'dbname should be rickber2_test');
+	assert.equal(pg.config.database, 'rickber2_test', 'dbname should be rickber2_test');
 	callback();
 });
 
@@ -134,32 +134,30 @@ var buildTestsForConfig = function (config) {
 
 buildTestsForConfig({
 	migrationDirectory: __dirname + '/migrations',
-	dbdriver: 'pg',
+	driver: 'pg',
 	host: 'just63.justhost.com',
-	dbname: 'rickber2_test',
+	database: 'rickber2_test',
 	username: 'rickber2_test',
 	password: 'TestUser'
 });
 
 buildTestsForConfig({
 	migrationDirectory: __dirname + '/migrations',
-	dbdriver: 'mysql',
+	driver: 'mysql',
 	host: 'just63.justhost.com',
-	dbname: 'rickber2_test',
+	database: 'rickber2_test',
 	username: 'rickber2_test',
 	password: 'TestUser'
 });
 
 buildTestsForConfig({
 	migrationDirectory: __dirname + '/migrations',
-	dbdriver: 'tedious',
+	driver: 'tedious',
 	host: '127.0.0.1',
-	dbname: 'myUtility',
+	database: 'myUtility',
 	username: 'rickber2_test',
 	password: 'TestUser1!'
 });
-
-
 
 	
 

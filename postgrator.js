@@ -10,7 +10,7 @@
 	API:
 	
 	var postgrator = require('postgrator');
-	postgrator.config.set(configuration); // dbdriver, host, dbname,  username, password, migrationDirectory
+	postgrator.config.set(configuration); // driver, host, database,  username, password, migrationDirectory
 	postgrator.migrate(version, function (err, migrations) {});
 	
 	DEPRECATED API:
@@ -47,14 +47,14 @@ var migrations = []; // array of objects like: {version: n, action: 'do', direct
 
 var config = {
 	migrationDirectory: null,
-	dbdriver: 'pg',
+	driver: 'pg',
 	host: null,
-	dbname: null,
+	database: null,
 	username: null,
 	password: null,
 	getPostgresConnectionString: function () {
 		// "tcp://username:password@hosturl/databasename"
-		return "tcp://" + this.username + ":" + this.password + "@" + this.host + "/" + this.dbname;
+		return "tcp://" + this.username + ":" + this.password + "@" + this.host + "/" + this.database;
 	},
 	setFromPostgresConnectionString: function (connectionString) {
 		var cs = connectionString.replace(/tcp:\/\//gi, '');
@@ -62,19 +62,19 @@ var config = {
 		var credentials = credentialsDatabase[0];
 		var database = credentialsDatabase[1];
 		var usernamePassword = credentials.split(':');
-		var hostDbname = database.split('/');
+		var hostDatabase = database.split('/');
 		
-		this.host = hostDbname[0];
-		this.dbname = hostDbname[1];
+		this.host = hostDatabase[0];
+		this.database = hostDatabase[1];
 		this.username = usernamePassword[0];
 		this.password = usernamePassword[1];
 	},
 	set: function (configuration) {
 		if (configuration.host) 				this.host = configuration.host;
-		if (configuration.dbname) 				this.dbname = configuration.dbname;
+		if (configuration.database) 			this.database = configuration.database;
 		if (configuration.username) 			this.username = configuration.username;
 		if (configuration.password) 			this.password = configuration.password;
-		if (configuration.dbdriver) 			this.dbdriver = configuration.dbdriver;
+		if (configuration.driver) 				this.driver = configuration.driver;
 		if (configuration.migrationDirectory) 	this.migrationDirectory = configuration.migrationDirectory;
 	}
 }
@@ -149,14 +149,14 @@ var getMigrations = function () {
 ================================================================= */
 var runQuery = function (query, callback) {
 	
-	if (config.dbdriver == 'mysql') {
+	if (config.driver == 'mysql') {
 		
 		var connection = mysql.createConnection({
 			multipleStatements: true,
 			host: config.host,
 			user: config.username,
 			password: config.password,
-			database: config.dbname
+			database: config.database
 		});
 		connection.connect(function (err) {
 			if (err) {
@@ -178,7 +178,7 @@ var runQuery = function (query, callback) {
 		});
 			
 		
-	} else if (config.dbdriver == 'pg') {
+	} else if (config.driver == 'pg') {
 		
 		pg.connect(config.getPostgresConnectionString(), function (err, client, done) {
 			currentConnection = client;
@@ -193,14 +193,14 @@ var runQuery = function (query, callback) {
 			}
 		});
 	
-	} else if (config.dbdriver == 'tedious') {
+	} else if (config.driver == 'tedious') {
 		
 		var connection = new tedious.Connection({
 			userName: 	config.username,
 			password: 	config.password,
 			server: 	config.host, 
 			options: {
-				database: 	config.dbname
+				database: 	config.database
 			}
 		});
 		connection.on('connect', function (err) {
@@ -264,9 +264,9 @@ exports.runQuery = runQuery;
 ================================================================= */
 var getCurrentVersion = function (callback) {
 	var query;
-	if (config.dbdriver == 'pg' || config.dbdriver == 'mysql') {
+	if (config.driver == 'pg' || config.driver == 'mysql') {
 		query = 'SELECT version FROM schemaversion ORDER BY version DESC LIMIT 1';
-	} else if (config.dbdriver == 'tedious') {
+	} else if (config.driver == 'tedious') {
 		query = 'SELECT TOP 1 version FROM schemaversion ORDER BY version DESC';
 	}
 	runQuery(query, function(err, result) {
@@ -448,13 +448,13 @@ var prep = function (callback) {
 	var checkQuery;
 	var makeTableQuery;
 	
-	if (config.dbdriver == 'pg') {
+	if (config.driver == 'pg') {
 		checkQuery = "SELECT * FROM pg_catalog.pg_tables WHERE schemaname = CURRENT_SCHEMA AND tablename = 'schemaversion'";
 		makeTableQuery = "CREATE TABLE schemaversion (version INT); INSERT INTO schemaversion (version) VALUES (0);"
-	} else if (config.dbdriver == 'mysql') {
-		checkQuery = "SELECT * FROM information_schema.tables WHERE table_schema = '" + config.dbname + "' AND table_name = 'schemaversion'";
+	} else if (config.driver == 'mysql') {
+		checkQuery = "SELECT * FROM information_schema.tables WHERE table_schema = '" + config.database + "' AND table_name = 'schemaversion'";
 		makeTableQuery = "CREATE TABLE schemaversion (version INT); INSERT INTO schemaversion (version) VALUES (0);"
-	} else if (config.dbdriver == 'tedious') {
+	} else if (config.driver == 'tedious') {
 		checkQuery = "SELECT * FROM information_schema.tables WHERE table_schema = 'dbo' AND table_name = 'schemaversion'";
 		makeTableQuery = "CREATE TABLE schemaversion (version INT); INSERT INTO schemaversion (version) VALUES (0);"
 	}
@@ -497,6 +497,6 @@ exports.setMigrationDirectory = function(dir) {
 
 exports.setConnectionString = function (cs) {
 	console.warn('.setConnectionString() is deprecated. use .config.set({options}) instead');
-	config.dbdriver = 'pg';
+	config.driver = 'pg';
 	config.setFromPostgresConnectionString(cs);
 };
