@@ -1,1 +1,2 @@
-DROP TABLE migration_002_t1;
+-- remove the record
+DELETE FROM person WHERE name = 'fred' AND age = 30;

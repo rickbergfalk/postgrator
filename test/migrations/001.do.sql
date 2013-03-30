@@ -1,8 +1,11 @@
 
-CREATE TABLE migration_001_t1 (
-	somecolumn VARCHAR(10)
+-- create a person table
+CREATE TABLE person (
+	name 	VARCHAR(50),
+	age 	INT
 );
--- this is a comment
-CREATE TABLE migration_001_t2 (
-	somecolumn VARCHAR(10)
+
+-- to test multiple statements, create another table
+CREATE TABLE animal (
+	kind 	VARCHAR(50)
 );
