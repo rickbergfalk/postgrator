@@ -43,11 +43,11 @@ tests.push(function (callback) {
 	var pg = require('../postgrator.js');
 	var cs = "tcp://rickber2_test:TestUser@just63.justhost.com/rickber2_test";
 	pg.config.setFromPostgresConnectionString(cs);
-	assert.equal(pg.config.driver, 'pg', 'dbdriver should be pg');
+	assert.equal(pg.config.driver, 'pg', 'driver should be pg');
 	assert.equal(pg.config.username, 'rickber2_test', 'username should be rickber2_test');
 	assert.equal(pg.config.password, 'TestUser', 'password should be TestUser');
 	assert.equal(pg.config.host, 'just63.justhost.com', 'host should be just63.justhost.com');
-	assert.equal(pg.config.database, 'rickber2_test', 'dbname should be rickber2_test');
+	assert.equal(pg.config.database, 'rickber2_test', 'database should be rickber2_test');
 	assert.equal(pg.config.getPostgresConnectionString(), cs, 'config.setFromPostgresConnectionString (or the string passed to it) has a problem');
 	callback();
 });
@@ -69,11 +69,11 @@ tests.push(function (callback) {
 		}
 	pg.config.set(config);
 	assert.equal(pg.config.migrationDirectory, directory, 'the directory should be ' + directory);
-	assert.equal(pg.config.driver, 'mysql', 'dbdriver should be mysql');
+	assert.equal(pg.config.driver, 'mysql', 'driver should be mysql');
 	assert.equal(pg.config.username, 'rickber2_test', 'username should be rickber2_test');
 	assert.equal(pg.config.password, 'TestUser', 'password should be TestUser');
 	assert.equal(pg.config.host, 'just63.justhost.com', 'host should be just63.justhost.com');
-	assert.equal(pg.config.database, 'rickber2_test', 'dbname should be rickber2_test');
+	assert.equal(pg.config.database, 'rickber2_test', 'database should be rickber2_test');
 	callback();
 });
 
@@ -87,7 +87,7 @@ var buildTestsForConfig = function (config) {
 	/* Go 2 migrations up.
 	------------------------------------------------------------------------- */
 	tests.push(function (callback) {
-		console.log('\n----- ' + config.dbdriver + ' up to 002 -----');
+		console.log('\n----- ' + config.driver + ' up to 002 -----');
 		var pg = require('../postgrator.js');
 		pg.config.set(config);
 		pg.migrate('002', function(err, migrations) {
@@ -103,7 +103,7 @@ var buildTestsForConfig = function (config) {
 	/* Go 1 migration up.
 	------------------------------------------------------------------------- */
 	tests.push(function (callback) {
-		console.log('\n----- ' + config.dbdriver + ' up to 003 -----');
+		console.log('\n----- ' + config.driver + ' up to 003 -----');
 		var pg = require('../postgrator.js');
 		pg.config.set(config);
 		pg.migrate('003', function(err, migrations) {
@@ -120,7 +120,7 @@ var buildTestsForConfig = function (config) {
 	/* Go down to 0
 	------------------------------------------------------------------------- */
 	tests.push(function (callback) {
-		console.log('\n----- ' + config.dbdriver + ' down to 000 -----');
+		console.log('\n----- ' + config.driver + ' down to 000 -----');
 		var pg = require('../postgrator.js');
 		pg.config.set(config);
 		pg.migrate('00', function(err, migrations) {
