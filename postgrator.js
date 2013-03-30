@@ -1,26 +1,39 @@
 /*
 
 	Postgrator
-	a PostgreSQL migration tool for SQL people
 	
-	NEW IMPORTANT CHANGES!
-	postgrator.migrate() now checks for the schemaversion table each time its called.
-	If it does not exist, it creates it.
-	This should maybe be toggleable in the future.
+	DESCRIPTION
 	
-	postgrator.setMigrationDirectory(dir)								// sets the directory the migrations are found in
-	postgrator.setConnectionString(conn)								// connectionstring
-	postgrator.migrate() 												// does nothing
-	postgrator.migrate(n, function(err, migrations){}) 					// migrates to a given version (determines up or down by itself)
+	Postgrator is a sql migration tool that uses plain SQL files. 
+	The SQL migration scripts follow a convention to help maintain their order in which they are run.
 	
-	-- will not be officially documented (internal use only?)
-	postgrator.getCurrentVersion(function(err, currentVersion) {})		// gets current version
-
+	API:
+	
+	var postgrator = require('postgrator');
+	postgrator.config.set(configuration); // dbdriver, host, dbname,  username, password, migrationDirectory
+	postgrator.migrate(version, function (err, migrations) {});
+	
+	DEPRECATED API:
+	
+	postgrator.setMigrationDirectory(dir);
+	postgrator.setConnectionString(conn);
+	
+	NOTES:
+	
+	If schemaversion table is not present, it will be created automatically!
+	If no migration version is supplied, no migration is performed
+	
+	THINGS TO IMPLEMENT SOMEDAY (MAYBE)
+	
+	postgrator.migrate('max', callback); 	// migrate to the latest migration available
+	postgrator.config.tableVersionName  	// not everyone will want a table called "schemaversion"
+	
 ================================================================= */
 
 var fs = require('fs');
 var pg = require('pg'); 
-
+var mysql = require('mysql');
+var tedious = require('tedious');
 
 
 /* 
@@ -31,10 +44,42 @@ var pg = require('pg');
 var currentVersion;
 var targetVersion;
 var migrations = []; // array of objects like: {version: n, action: 'do', direction: 'up', filename: '0001.up.sql'}
-var migrationDirectory; 
-var connectionString;
 
+var config = {
+	migrationDirectory: null,
+	dbdriver: 'pg',
+	host: null,
+	dbname: null,
+	username: null,
+	password: null,
+	getPostgresConnectionString: function () {
+		// "tcp://username:password@hosturl/databasename"
+		return "tcp://" + this.username + ":" + this.password + "@" + this.host + "/" + this.dbname;
+	},
+	setFromPostgresConnectionString: function (connectionString) {
+		var cs = connectionString.replace(/tcp:\/\//gi, '');
+		var credentialsDatabase = cs.split('@');
+		var credentials = credentialsDatabase[0];
+		var database = credentialsDatabase[1];
+		var usernamePassword = credentials.split(':');
+		var hostDbname = database.split('/');
+		
+		this.host = hostDbname[0];
+		this.dbname = hostDbname[1];
+		this.username = usernamePassword[0];
+		this.password = usernamePassword[1];
+	},
+	set: function (configuration) {
+		if (configuration.host) 				this.host = configuration.host;
+		if (configuration.dbname) 				this.dbname = configuration.dbname;
+		if (configuration.username) 			this.username = configuration.username;
+		if (configuration.password) 			this.password = configuration.password;
+		if (configuration.dbdriver) 			this.dbdriver = configuration.dbdriver;
+		if (configuration.migrationDirectory) 	this.migrationDirectory = configuration.migrationDirectory;
+	}
+}
 
+exports.config = config;
 
 /* 
 	Sorting Functions
@@ -71,7 +116,7 @@ var sortMigrationsDesc = function (a, b) {
 ================================================================= */	
 var getMigrations = function () {
 	migrations = [];
-	var migrationFiles = fs.readdirSync(migrationDirectory);
+	var migrationFiles = fs.readdirSync(config.migrationDirectory);
 	migrationFiles.forEach(function(file) {
 		var m = file.split('.');
 		if (m[2] === 'sql') {
@@ -83,7 +128,6 @@ var getMigrations = function () {
 			})
 		}
 	});
-	//console.log(migrations);
 };
 
 
@@ -92,21 +136,123 @@ var getMigrations = function () {
 	runQuery(query, callback)
 	
 	Internal function
-	Simple wrapper around pg module to execute some SQL.
+	Simple wrapper around the driver modules to execute some SQL.
+	The results passed on to the callback will at least contain a rows array of row objects
+	results = {
+		rows: [
+			{
+				colname: value
+			}
+		]
+	}
 	
 ================================================================= */
 var runQuery = function (query, callback) {
-	pg.connect(connectionString, function (err, client) {
-		if (err) {
-			if (callback) callback(err);
-		} else {
-			client.query(query, function(err, result) {
-				if (callback) callback(err, result);
-			});
-		}
-	});
+	
+	if (config.dbdriver == 'mysql') {
+		
+		var connection = mysql.createConnection({
+			multipleStatements: true,
+			host: config.host,
+			user: config.username,
+			password: config.password,
+			database: config.dbname
+		});
+		connection.connect(function (err) {
+			if (err) {
+				if (callback) callback(err);
+			} else {
+				connection.query(query, function (err, rows, fields) {
+					if (err) {
+						if (callback) callback(err);
+					} else {
+						var results = {};
+						if (rows) results.rows = rows;
+						if (fields) results.fields = fields;
+						connection.end(function (err) {
+							callback(err, results);
+						})
+					}
+				});
+			}
+		});
+			
+		
+	} else if (config.dbdriver == 'pg') {
+		
+		pg.connect(config.getPostgresConnectionString(), function (err, client, done) {
+			currentConnection = client;
+			if (err) {
+				if (callback) callback(err);
+				done();
+			} else {
+				client.query(query, function(err, result) {
+					done();
+					if (callback) callback(err, result);
+				});
+			}
+		});
+	
+	} else if (config.dbdriver == 'tedious') {
+		
+		var connection = new tedious.Connection({
+			userName: 	config.username,
+			password: 	config.password,
+			server: 	config.host, 
+			options: {
+				database: 	config.dbname
+			}
+		});
+		connection.on('connect', function (err) {
+			if (err) {
+				console.log(err);
+				callback(err);
+				connection.close();
+			} else {
+				var finalData = {
+					rowCount: null,
+					columns: null,
+					rows: []
+				};
+				request = new tedious.Request(query, function(err, rowCount) {
+					if (err) {
+						console.log(err);
+						callback(err);
+						connection.close();
+					} else {
+						// This is where we end up if the query completes successfully
+						// (mix of callback and event style stuff is sometimes hard to follow)
+						finalData.rowCount = rowCount;
+						connection.close();
+						callback(err, finalData);
+					}
+				});
+				request.on('columnMetadata', function (columns) {
+					finalData.columns = columns;
+				});
+				request.on('row', function(row) {
+					// Capture the row data and format it to the same style object that the other drivers are using
+					// it should be like:
+					// row = {colname: value, anotherColName: anothervalue}
+					var cleanRow = {};
+					for (var i = 0; i < row.length; i++) {
+						var columnName = row[i].metadata.colName;
+						var value = row[i].value;
+						cleanRow[columnName] = value;
+					}
+					finalData.rows.push(cleanRow);
+				});
+				connection.execSql(request);
+			}
+		});
+	
+	} else {
+		var err = new Error("db driver is not supported. Must either be 'mysql' or 'pg' or 'tedious'");
+		callback(err);
+	}
+		
 };
-
+exports.runQuery = runQuery;
 
 
 /* 
@@ -117,12 +263,18 @@ var runQuery = function (query, callback) {
 	
 ================================================================= */
 var getCurrentVersion = function (callback) {
-	runQuery('SELECT version FROM schemaversion ORDER BY version DESC LIMIT 1', function(err, result) {
+	var query;
+	if (config.dbdriver == 'pg' || config.dbdriver == 'mysql') {
+		query = 'SELECT version FROM schemaversion ORDER BY version DESC LIMIT 1';
+	} else if (config.dbdriver == 'tedious') {
+		query = 'SELECT TOP 1 version FROM schemaversion ORDER BY version DESC';
+	}
+	runQuery(query, function(err, result) {
 		if (err) { // means the table probably doesn't exist yet. To lazy to check.
-			var error = new Error('Table schemaversion does not exist, or you are pointed at the wrong database. Schemaversion may be created using .prep() if desired.');
-			error.dbErr = err;
+			console.error('something went wrong getting the Current Version from the schemaversion table');
 		} else {
-			currentVersion = result.rows[0].version;
+			if (result.rows.length > 0) currentVersion = result.rows[0].version;
+			else currentVersion = 0;
 		}
 		if (callback) callback(err, currentVersion);
 	});
@@ -146,11 +298,11 @@ exports.getCurrentVersion = getCurrentVersion;
 		
 ================================================================= */
 var runMigrations = function (migrations, finishedCallback) {
-	//console.log(migrations);
+	
 	var runNext = function (i) {
 		console.log('running ' + migrations[i].filename);
 		
-		var sql = fs.readFileSync((migrationDirectory + '/' + migrations[i].filename), 'utf8');
+		var sql = fs.readFileSync((config.migrationDirectory + '/' + migrations[i].filename), 'utf8');
 		
 		runQuery(sql, function(err, result) {
 			if (err) {
@@ -164,14 +316,12 @@ var runMigrations = function (migrations, finishedCallback) {
 				runQuery(migrations[i].schemaVersionSQL, function(err, result) {
 					if (err) {
 						// SQL to update schemaversion failed.
-						console.log('error updating the schemaversion table. (well, not *update* exactly...)');
+						console.log('error updating the schemaversion table');
 						console.log(err);
 					} else {
 						// schemaversion successfully recorded. 
 						// move on to next migration
 						i = i + 1;
-						//console.log('i is ' + i);
-						//console.log('migrations length is ' + migrations.length);
 						if (i < migrations.length) {
 							runNext(i);
 						} else {
@@ -249,7 +399,7 @@ var getRelevantMigrations = function (currentVersion, targetVersion) {
 ================================================================= */
 exports.migrate = function (target, finishedCallback) {
 	
-	exports.prep(function(err) {
+	prep(function(err) {
 		
 		if (err) {
 			if (finishedCallback) finishedCallback(err);
@@ -259,8 +409,6 @@ exports.migrate = function (target, finishedCallback) {
 		
 		if (target) {
 			targetVersion = Number(target);
-		} else {
-			// TODO targetVersion = MAX(target)?
 		}
 		
 		getCurrentVersion(function(err, currentVersion) {
@@ -275,6 +423,8 @@ exports.migrate = function (target, finishedCallback) {
 					var relevantMigrations = getRelevantMigrations(currentVersion, targetVersion);
 					if (relevantMigrations.length > 0) {
 						runMigrations(relevantMigrations, finishedCallback);
+					} else {
+						if (finishedCallback) finishedCallback(err);
 					}
 				}	
 			}
@@ -293,23 +443,21 @@ exports.migrate = function (target, finishedCallback) {
 	
 	callback - function called after schema version table is built. function (err, results) {}
 	
-	Possible TODO: Allow customization of what the table is called or prefixed with.
-	
-IF NOT EXISTS (
-    SELECT *
-    FROM   pg_catalog.pg_tables 
-    WHERE  schemaname = current_schema()
-    AND    tablename  = 'schemaversion'
-    ) THEN
-		CREATE TABLE schemaversion (version INT); 
-		INSERT INTO schemaversion (version) VALUES (0);
-END IF;
-	
 ================================================================= */
-exports.prep = function (callback) {
-	var checkQuery = "SELECT * FROM pg_catalog.pg_tables WHERE schemaname = CURRENT_SCHEMA AND tablename = 'schemaversion'";
-	var makeTableQuery =  " CREATE TABLE schemaversion (version INT); "
-						+ " INSERT INTO schemaversion (version) VALUES (0); "
+var prep = function (callback) {
+	var checkQuery;
+	var makeTableQuery;
+	
+	if (config.dbdriver == 'pg') {
+		checkQuery = "SELECT * FROM pg_catalog.pg_tables WHERE schemaname = CURRENT_SCHEMA AND tablename = 'schemaversion'";
+		makeTableQuery = "CREATE TABLE schemaversion (version INT); INSERT INTO schemaversion (version) VALUES (0);"
+	} else if (config.dbdriver == 'mysql') {
+		checkQuery = "SELECT * FROM information_schema.tables WHERE table_schema = '" + config.dbname + "' AND table_name = 'schemaversion'";
+		makeTableQuery = "CREATE TABLE schemaversion (version INT); INSERT INTO schemaversion (version) VALUES (0);"
+	} else if (config.dbdriver == 'tedious') {
+		checkQuery = "SELECT * FROM information_schema.tables WHERE table_schema = 'dbo' AND table_name = 'schemaversion'";
+		makeTableQuery = "CREATE TABLE schemaversion (version INT); INSERT INTO schemaversion (version) VALUES (0);"
+	}
 	
 	runQuery(checkQuery, function(err, result) {
 		if (err) {
@@ -332,29 +480,23 @@ exports.prep = function (callback) {
 		}
 	});
 };
-
+exports.prep = prep;
 
 
 /* 
-	.setMigrationDirectory(directory)
+	DEPRECATED API
 	
-	Sets the directory where the migration scripts can be found. 
+	.setMigrationDirectory(directory)
+	.setConnectionString(connectionString)
 	
 ================================================================= */
 exports.setMigrationDirectory = function(dir) {
-	migrationDirectory = dir;
+	console.warn('.setMigrationDirectory() is deprecated. use .config.set({options}) instead');
+	config.migrationDirectory = dir;
 };
 
-
-
-/* 
-	.setConnectionString(connectionString)
-	
-	Sets the connection string to be used. tcp://user:password@address/database
-	
-================================================================= */
 exports.setConnectionString = function (cs) {
-	connectionString = cs;
+	console.warn('.setConnectionString() is deprecated. use .config.set({options}) instead');
+	config.dbdriver = 'pg';
+	config.setFromPostgresConnectionString(cs);
 };
-
-
