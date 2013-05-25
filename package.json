@@ -1,6 +1,6 @@
 {
     "name": "postgrator",
-	"version": "0.1.0",
+	"version": "0.1.2",
 	"author": "Rick Bergfalk <rick.bergfalk@gmail.com> (http://rickbergfalk.com/)",
 	"description": "Postgrator is a SQL migration tool for SQL people",
 	"keywords": [
@@ -20,7 +20,7 @@
 	},
 	"repository" : {
 		"type": "git", 
-		"url": "git://github.com/redidas/postgrator.git"
+		"url": "git://github.com/rickbergfalk/postgrator.git"
 	},
 	"main": "postgrator"
 }
