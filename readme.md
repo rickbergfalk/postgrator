@@ -3,14 +3,13 @@
 A Node.js SQL migration tool using plain SQL scripts.
 
 
-
 ## Overview
 
 Postgrator is a migration tool using SQL instead of a DSL/library in some other language. 
 It currently supports PostgreSQL, MySQL, and SQL Server.
 
 
-## usage
+## Usage
 
 Create a folder and stick some SQL scripts in there that change your database in some way. It might look like:
 
@@ -52,7 +51,6 @@ postgrator.migrate('002', function (err, migrations) {
 ```
 
 
-
 ## Helpful Info
 
 When first run against your database, *Postgrator will create a table called schemaversion.*
@@ -66,12 +64,17 @@ It is up to you to migrate back down to the version you started at if you are ru
 Because of this, keep in mind how you write your SQL - You may (or may not) want to write your SQL defensively 
 (ie, check for pre-existing objects before you create new ones).
 
-When running migrations against PostgreSQL, the non-native pg driver is utilized. 
-This could eventually be a config setting if requested.
 
 I'm not really sure what happens if a migration takes a really long time to run. 
 Let me know if you run into any weird behavior.
 
+
+## Version 0.2.x Notes
+
+- Updated database drivers to latest versions
+- pg module swapped out for javascript only pg.js version (cli tool now possible)
+- mssql now used instead of tedious
+- All migrations are run under a single connection (vs creating a new connection for each query)
 
 
 ## Installation
@@ -81,28 +84,6 @@ npm install postgrator
 ```
 
 
-
 ## License 
 
-(The MIT License)
-
-Copyright (c) 2012 Rick Bergfalk
-
-Permission is hereby granted, free of charge, to any person obtaining
-a copy of this software and associated documentation files (the
-'Software'), to deal in the Software without restriction, including
-without limitation the rights to use, copy, modify, merge, publish,
-distribute, sublicense, and/or sell copies of the Software, and to
-permit persons to whom the Software is furnished to do so, subject to
-the following conditions:
-
-The above copyright notice and this permission notice shall be
-included in all copies or substantial portions of the Software.
-
-THE SOFTWARE IS PROVIDED 'AS IS', WITHOUT WARRANTY OF ANY KIND,
-EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
-MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.
-IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY
-CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,
-TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
-SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+MIT
