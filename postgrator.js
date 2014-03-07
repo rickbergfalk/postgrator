@@ -31,9 +31,9 @@
 ================================================================= */
 
 var fs = require('fs');
-var pg = require('pg'); 
+var pg = require('pg.js'); 
 var mysql = require('mysql');
-var tedious = require('tedious');
+var mssql = require('mssql');
 
 
 /* 
@@ -63,7 +63,7 @@ var config = {
 		var database = credentialsDatabase[1];
 		var usernamePassword = credentials.split(':');
 		var hostDatabase = database.split('/');
-		
+
 		this.host = hostDatabase[0];
 		this.database = hostDatabase[1];
 		this.username = usernamePassword[0];
@@ -131,23 +131,25 @@ var getMigrations = function () {
 };
 
 
-
 /* 
-	runQuery(query, callback)
+	createUniversalClient(callback)
 	
-	Internal function
-	Simple wrapper around the driver modules to execute some SQL.
-	The results passed on to the callback will at least contain a rows array of row objects
-	results = {
-		rows: [
-			{
-				colname: value
-			}
-		]
-	}
+	Internal function that creates a universal client 
+	for running queries and ending the connection when things are done.
+	
+	It is called by runQuery if universalClient == false;
 	
 ================================================================= */
-var runQuery = function (query, callback) {
+var universalClient = {
+	connected: false,
+	runQuery: function (query, rqCallback) { },
+	endConnection: function (endCallback) {
+		universalClient.connected = false;
+		endCallback();
+	}
+};
+
+var createUniversalClient = function (callback) {
 	
 	if (config.driver == 'mysql') {
 		
@@ -162,97 +164,106 @@ var runQuery = function (query, callback) {
 			if (err) {
 				if (callback) callback(err);
 			} else {
-				connection.query(query, function (err, rows, fields) {
-					if (err) {
-						if (callback) callback(err);
-					} else {
-						var results = {};
-						if (rows) results.rows = rows;
-						if (fields) results.fields = fields;
-						connection.end(function (err) {
-							callback(err, results);
-						})
-					}
-				});
+				// Create universal client for MySQL
+				universalClient.connected = true;
+				universalClient.runQuery = function (query, rqCallback) {
+					connection.query(query, function (err, rows, fields) {
+						if (err) {
+							if (rqCallback) rqCallback(err);
+						} else {
+							var results = {};
+							if (rows) results.rows = rows;
+							if (fields) results.fields = fields;
+							rqCallback(err, results);
+						}
+					});
+				};
+				universalClient.endConnection = function (endCallback) {
+					connection.end(function (err) {
+						universalClient.connected = false;
+						endCallback(err);
+					})
+				};
+				callback(); // creation of universalClient is success.
 			}
 		});
-			
 		
 	} else if (config.driver == 'pg') {
 		
-		pg.connect(config.getPostgresConnectionString(), function (err, client, done) {
-			currentConnection = client;
+		var client = new pg.Client(config.getPostgresConnectionString());
+		client.connect(function (err) {
 			if (err) {
 				if (callback) callback(err);
-				done();
 			} else {
-				client.query(query, function(err, result) {
-					done();
-					if (callback) callback(err, result);
-				});
+				// Create Universal Client
+				universalClient.connected = true;
+				universalClient.runQuery = function (query, rqCallback) {
+					client.query(query, function(err, result) {
+						if (rqCallback) rqCallback(err, result);
+					});
+				};
+				universalClient.endConnection = function (endCallback) {
+					console.log('ending');
+					client.end();
+					console.log('client has ended');
+					universalClient.connected = false;
+					endCallback();
+				};
+				callback();
 			}
 		});
 	
-	} else if (config.driver == 'tedious') {
+	} else if (config.driver == 'tedious' || config.driver == 'mssql') {
 		
-		var connection = new tedious.Connection({
-			userName: 	config.username,
-			password: 	config.password,
-			server: 	config.host, 
-			options: {
-				database: 	config.database
-			}
-		});
-		connection.on('connect', function (err) {
+		var sqlconfig = {
+			user: config.username,
+			password: config.password,
+			server: config.host,
+			database: config.database
+		}
+		mssql.connect(sqlconfig, function (err) {
 			if (err) {
-				console.log(err);
 				callback(err);
-				connection.close();
 			} else {
-				var finalData = {
-					rowCount: null,
-					columns: null,
-					rows: []
+				// Create Universal Client
+				universalClient.connected = true;
+				universalClient.runQuery = function (query, rqCallback) {
+					var request = new mssql.Request();
+					request.query(query, function (err, result) {
+						if (rqCallback) rqCallback(err, {rows: result});
+					});	
 				};
-				request = new tedious.Request(query, function(err, rowCount) {
-					if (err) {
-						console.log(err);
-						callback(err);
-						connection.close();
-					} else {
-						// This is where we end up if the query completes successfully
-						// (mix of callback and event style stuff is sometimes hard to follow)
-						finalData.rowCount = rowCount;
-						connection.close();
-						callback(err, finalData);
-					}
-				});
-				request.on('columnMetadata', function (columns) {
-					finalData.columns = columns;
-				});
-				request.on('row', function(row) {
-					// Capture the row data and format it to the same style object that the other drivers are using
-					// it should be like:
-					// row = {colname: value, anotherColName: anothervalue}
-					var cleanRow = {};
-					for (var i = 0; i < row.length; i++) {
-						var columnName = row[i].metadata.colName;
-						var value = row[i].value;
-						cleanRow[columnName] = value;
-					}
-					finalData.rows.push(cleanRow);
-				});
-				connection.execSql(request);
+				universalClient.endConnection = function (endCallback) {
+					// mssql doesn't offer a way to kill a single connection
+					// It'll die on its own, and won't prevent us from creating additional connections.
+					// eventually this should maybe use the pooling mechanism, even though we only need one connection
+					universalClient.connected = false;
+					endCallback();
+				};
+				callback();
 			}
 		});
 	
 	} else {
-		var err = new Error("db driver is not supported. Must either be 'mysql' or 'pg' or 'tedious'");
+		var err = new Error("db driver is not supported. Must either be 'mysql' or 'pg' or 'tedious' or 'mssql'");
 		callback(err);
 	}
-		
+	
+};
+
+var runQuery = function (query, rqCallback) {
+	if (universalClient.connected) {
+		universalClient.runQuery(query, rqCallback);
+	} else {
+		// create the universal client and run query
+		createUniversalClient(function (err) {
+			if (err) rqCallback(err);
+			else universalClient.runQuery(query, rqCallback);
+		});
+	}
 };
 exports.runQuery = runQuery;
+
 
 
 /* 
@@ -298,12 +309,9 @@ exports.getCurrentVersion = getCurrentVersion;
 		
 ================================================================= */
 var runMigrations = function (migrations, finishedCallback) {
-	
 	var runNext = function (i) {
 		console.log('running ' + migrations[i].filename);
-		
 		var sql = fs.readFileSync((config.migrationDirectory + '/' + migrations[i].filename), 'utf8');
-		
 		runQuery(sql, function(err, result) {
 			if (err) {
 				console.log('Error in runMigrations()');
@@ -336,7 +344,6 @@ var runMigrations = function (migrations, finishedCallback) {
 				});	
 			}
 		});
-		
 	}
 	runNext(0);
 };
@@ -352,9 +359,7 @@ var runMigrations = function (migrations, finishedCallback) {
 ================================================================= */
 var getRelevantMigrations = function (currentVersion, targetVersion) {
 	var relevantMigrations = [];
-	
 	if (targetVersion > currentVersion) {
-	
 		// we are migrating up
 		// get all up migrations > currentVersion and <= targetVersion
 		console.log('migrating up to ' + targetVersion);
@@ -365,9 +370,7 @@ var getRelevantMigrations = function (currentVersion, targetVersion) {
 			}
 		})
 		relevantMigrations = relevantMigrations.sort(sortMigrationsAsc);
-	
 	} else if (targetVersion < currentVersion) {
-		
 		// we are going to migrate down
 		console.log('migrating down to ' + targetVersion);
 		migrations.forEach(function(migration) {
@@ -377,11 +380,9 @@ var getRelevantMigrations = function (currentVersion, targetVersion) {
 			}
 		});
 		relevantMigrations = relevantMigrations.sort(sortMigrationsDesc);
-		
 	} else if (targetVersion == currentVersion) {
 		console.log("database already at version " + targetVersion);
 	}
-	
 	return relevantMigrations;
 };
 
@@ -398,19 +399,14 @@ var getRelevantMigrations = function (currentVersion, targetVersion) {
 	
 ================================================================= */
 exports.migrate = function (target, finishedCallback) {
-	
 	prep(function(err) {
-		
 		if (err) {
 			if (finishedCallback) finishedCallback(err);
 		}
-		
 		getMigrations();
-		
 		if (target) {
 			targetVersion = Number(target);
 		}
-		
 		getCurrentVersion(function(err, currentVersion) {
 			if (err) {
 				console.log('error getting current version');
@@ -422,16 +418,22 @@ exports.migrate = function (target, finishedCallback) {
 				} else {
 					var relevantMigrations = getRelevantMigrations(currentVersion, targetVersion);
 					if (relevantMigrations.length > 0) {
-						runMigrations(relevantMigrations, finishedCallback);
+						runMigrations(relevantMigrations, function(err, migrations) {
+							if (err) finishedCallback(err, migrations);
+							else {
+								universalClient.endConnection(function (err) {
+									if (err) console.log(err);
+									finishedCallback(err, migrations);
+								});	
+							}
+						});
 					} else {
 						if (finishedCallback) finishedCallback(err);
 					}
 				}	
 			}
 		}); // get current version
-		
 	}); // prep
-	
 };
 
 
@@ -447,7 +449,6 @@ exports.migrate = function (target, finishedCallback) {
 var prep = function (callback) {
 	var checkQuery;
 	var makeTableQuery;
-	
 	if (config.driver == 'pg') {
 		checkQuery = "SELECT * FROM pg_catalog.pg_tables WHERE schemaname = CURRENT_SCHEMA AND tablename = 'schemaversion'";
 		makeTableQuery = "CREATE TABLE schemaversion (version INT); INSERT INTO schemaversion (version) VALUES (0);"
@@ -458,7 +459,6 @@ var prep = function (callback) {
 		checkQuery = "SELECT * FROM information_schema.tables WHERE table_schema = 'dbo' AND table_name = 'schemaversion'";
 		makeTableQuery = "CREATE TABLE schemaversion (version INT); INSERT INTO schemaversion (version) VALUES (0);"
 	}
-	
 	runQuery(checkQuery, function(err, result) {
 		if (err) {
 			err.helpfulDescription = 'Prep() table CHECK query Failed';
