@@ -47,6 +47,7 @@ var migrations = []; // array of objects like: {version: n, action: 'do', direct
 
 var config = {
 	migrationDirectory: null,
+    connectionString: null,
 	driver: 'pg',
 	host: null,
 	database: null,
@@ -54,20 +55,8 @@ var config = {
 	password: null,
 	getPostgresConnectionString: function () {
 		// "tcp://username:password@hosturl/databasename"
-		return "tcp://" + this.username + ":" + this.password + "@" + this.host + "/" + this.database;
-	},
-	setFromPostgresConnectionString: function (connectionString) {
-		var cs = connectionString.replace(/tcp:\/\//gi, '');
-		var credentialsDatabase = cs.split('@');
-		var credentials = credentialsDatabase[0];
-		var database = credentialsDatabase[1];
-		var usernamePassword = credentials.split(':');
-		var hostDatabase = database.split('/');
-
-		this.host = hostDatabase[0];
-		this.database = hostDatabase[1];
-		this.username = usernamePassword[0];
-		this.password = usernamePassword[1];
+		if (config.connectionString) return config.connectionString
+        else return "tcp://" + this.username + ":" + this.password + "@" + this.host + "/" + this.database;
 	},
 	set: function (configuration) {
 		if (configuration.host) 				this.host = configuration.host;
@@ -76,6 +65,7 @@ var config = {
 		if (configuration.password) 			this.password = configuration.password;
 		if (configuration.driver) 				this.driver = configuration.driver;
 		if (configuration.migrationDirectory) 	this.migrationDirectory = configuration.migrationDirectory;
+        if (configuration.connectionString)     this.connectionString = configuration.connectionString;
 	}
 }
 
@@ -481,22 +471,3 @@ var prep = function (callback) {
 	});
 };
 exports.prep = prep;
-
-
-/* 
-	DEPRECATED API
-	
-	.setMigrationDirectory(directory)
-	.setConnectionString(connectionString)
-	
-================================================================= */
-exports.setMigrationDirectory = function(dir) {
-	console.warn('.setMigrationDirectory() is deprecated. use .config.set({options}) instead');
-	config.migrationDirectory = dir;
-};
-
-exports.setConnectionString = function (cs) {
-	console.warn('.setConnectionString() is deprecated. use .config.set({options}) instead');
-	config.driver = 'pg';
-	config.setFromPostgresConnectionString(cs);
-};

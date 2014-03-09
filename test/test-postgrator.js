@@ -1,26 +1,20 @@
 var assert = require('assert');
 var async = require('async');
 
-// NOTES ABOUT TESTS BELOW
-// 
-// The connection string used here is a postgres & mysql database on a cheapy host I'm using
-// If you try testing using this database it'll fail, as the database uses an IP whitelist
-// tcp://user:password@address/database
-
 var tests = [];
-
 var pgUrl = "tcp://qblgodnjwwvqjr:auWYSDIW73KC1scgGv-VDquQGJ@ec2-54-204-24-154.compute-1.amazonaws.com/d42c6mk8cotcn2";
 
 process.env.PGSSLMODE = 'require';
 
-/* Test original API to make sure its compatible
-   We're going up and back down because we want to leave the database in a clean state for other tests
+/* Test postgres connection string API
 ============================================================================= */
 tests.push(function (callback) {
 	console.log('\n----- testing original api to 003 -----');
 	var postgrator = require('../postgrator.js');
-	postgrator.setMigrationDirectory(__dirname + '/migrations');
-	postgrator.setConnectionString(pgUrl); 
+	postgrator.config.set({
+        migrationDirectory: __dirname + '/migrations',
+        connectionString: pgUrl
+    });
 	postgrator.migrate('003', function(err, migrations) {
 		assert.ifError(err);
 		callback();
@@ -30,54 +24,14 @@ tests.push(function (callback) {
 tests.push(function (callback) {
 	console.log('\n----- testing original api to 000 -----');
 	var postgrator = require('../postgrator.js');
-	postgrator.setMigrationDirectory(__dirname + '/migrations');
-	postgrator.setConnectionString(pgUrl); 
+	postgrator.config.set({
+        migrationDirectory: __dirname + '/migrations',
+        connectionString: pgUrl
+    }); 
 	postgrator.migrate('000', function(err, migrations) {
 		assert.ifError(err);
 		callback();
 	});
-});
-
-
-/* Test Connection String parsing
-============================================================================= */
-tests.push(function (callback) {
-	console.log('\n----- testing that connection string parsing thing -----');
-	var pg = require('../postgrator.js');
-	var cs = "tcp://rickber2_test:TestUser@just63.justhost.com/rickber2_test";
-	pg.config.setFromPostgresConnectionString(cs);
-	assert.equal(pg.config.driver, 'pg', 'driver should be pg');
-	assert.equal(pg.config.username, 'rickber2_test', 'username should be rickber2_test');
-	assert.equal(pg.config.password, 'TestUser', 'password should be TestUser');
-	assert.equal(pg.config.host, 'just63.justhost.com', 'host should be just63.justhost.com');
-	assert.equal(pg.config.database, 'rickber2_test', 'database should be rickber2_test');
-	assert.equal(pg.config.getPostgresConnectionString(), cs, 'config.setFromPostgresConnectionString (or the string passed to it) has a problem');
-	callback();
-});
-
-
-/* Test config.set
-============================================================================= */
-tests.push(function (callback) {
-	console.log('\n----- testing the new config.set thing -----');
-	var pg = require('../postgrator.js');
-	var directory = __dirname + '/migrations';
-	var config = {
-			migrationDirectory: directory,
-			driver: 'mysql',
-			host: 'just63.justhost.com',
-			database: 'rickber2_test',
-			username: 'rickber2_test',
-			password: 'TestUser'
-		}
-	pg.config.set(config);
-	assert.equal(pg.config.migrationDirectory, directory, 'the directory should be ' + directory);
-	assert.equal(pg.config.driver, 'mysql', 'driver should be mysql');
-	assert.equal(pg.config.username, 'rickber2_test', 'username should be rickber2_test');
-	assert.equal(pg.config.password, 'TestUser', 'password should be TestUser');
-	assert.equal(pg.config.host, 'just63.justhost.com', 'host should be just63.justhost.com');
-	assert.equal(pg.config.database, 'rickber2_test', 'database should be rickber2_test');
-	callback();
 });
 
 
@@ -159,7 +113,6 @@ buildTestsForConfig({
 	username: 'testuser',
 	password: 'testuser'
 });
-
 	
 
 
