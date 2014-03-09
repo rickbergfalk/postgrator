@@ -37,11 +37,28 @@ var postgrator = require('postgrator');
 
 postgrator.config.set({
     migrationDirectory: __dirname + '/migrations',  // path to the migrations
-    driver: 'pg',                                   // or 'mysql' or 'tedious' (a non-native TDS SQL Server driver)
+    driver: 'pg',                                   // or 'mysql' or 'tedious' or 'mssql' (last 2 both non-native SQL Server drivers)
     host: '127.0.0.1',
     database: 'databasename',
     username: 'username',
     password: 'password'
+}); 
+
+postgrator.migrate('002', function (err, migrations) {
+	if (err) console.log(err)
+	else console.log(migrations)
+});
+```
+
+Alternatively, for Postgres you could also do:
+
+```js
+var postgrator = require('postgrator');
+
+postgrator.config.set({
+    migrationDirectory: __dirname + '/migrations',
+    driver: 'pg',
+    connectionString: 'tcp://username:password@hosturl/databasename'
 }); 
 
 postgrator.migrate('002', function (err, migrations) {
@@ -64,7 +81,6 @@ It is up to you to migrate back down to the version you started at if you are ru
 Because of this, keep in mind how you write your SQL - You may (or may not) want to write your SQL defensively 
 (ie, check for pre-existing objects before you create new ones).
 
-
 I'm not really sure what happens if a migration takes a really long time to run. 
 Let me know if you run into any weird behavior.
 
@@ -73,9 +89,9 @@ Let me know if you run into any weird behavior.
 
 - Updated database drivers to latest versions
 - pg module swapped out for javascript only pg.js version (cli tool now possible)
-- mssql now used instead of tedious
-- All migrations are run under a single connection (vs creating a new connection for each query)
-
+- mssql now used instead of tedious (mssql is just a nice wrapper around tedious)
+- All migrations are run under a single connection instead of creating a new connection for each query
+- config.set accepts a connectionString for Postgres only as an alternative to host/database/username/password
 
 ## Installation
 
