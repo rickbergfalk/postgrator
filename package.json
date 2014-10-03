@@ -16,9 +16,6 @@
 		"test": "node test/test-postgrator.js"
 	},
 	"dependencies": {
-		"mysql"		: "2.1.x",
-		"pg.js" 	: "2.11.x",
-		"mssql" 	: "0.5.x",
 		"async" 	: "0.2.x"
 	},
 	"repository" : {
