@@ -5,7 +5,7 @@
     var postgrator = require('postgrator');
     
     postgrator.setConfig({
-        driver: 'pg', // or pg.js, mssql, mysql
+        driver: 'pg', // or pg.js, mysql, mssql, tedious
         migrationDirectory: '',
         logProgress: true,
         host: '',

@@ -37,7 +37,7 @@ var postgrator = require('postgrator');
 
 postgrator.setConfig({
     migrationDirectory: __dirname + '/migrations', 
-    driver: 'pg', 
+    driver: 'pg', // or pg.js, mysql, mssql, tedious
     host: '127.0.0.1',
     database: 'databasename',
     username: 'username',
@@ -45,8 +45,14 @@ postgrator.setConfig({
 }); 
 
 postgrator.migrate('002', function (err, migrations) {
-	if (err) console.log(err)
-	else console.log(migrations)
+	if (err) {
+        console.log(err)
+    } else { 
+        console.log(migrations)
+    }
+    postgrator.endConnection(function () {
+        // connection is closed, unless you are using SQL Server
+    });
 });
 ```
 
@@ -83,7 +89,7 @@ Despite the driver specified, Postgrator will use either pg.js, mysql, or mssql 
 
 
 
-## Helpful Info
+## What Postgrator is doing
 
 When first run against your database, *Postgrator will create a table called schemaversion.* Postgrator relies on this table to track what version the database is at. 
 
