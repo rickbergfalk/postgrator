@@ -1,26 +1,29 @@
 {
-	"name": "postgrator",
-	"version": "0.2.0",
-	"author": "Rick Bergfalk <rick.bergfalk@gmail.com>",
-	"description": "Postgrator is a SQL migration tool for SQL people",
-	"keywords": [
-		"migrator", 
-		"migration", 
-		"postgres", 
-		"postgresql", 
-		"mysql",
-		"sql server",
-		"sql"
-	],
-	"scripts": {
-		"test": "node test/test-postgrator.js"
-	},
-	"dependencies": {
-		"async" 	: "0.2.x"
-	},
-	"repository" : {
-		"type": "git", 
-		"url": "git://github.com/rickbergfalk/postgrator.git"
-	},
-	"main": "postgrator"
+  "name": "postgrator",
+  "version": "0.2.0",
+  "author": "Rick Bergfalk <rick.bergfalk@gmail.com>",
+  "description": "Postgrator is a SQL migration tool for SQL people",
+  "keywords": [
+    "migrator",
+    "migration",
+    "postgres",
+    "postgresql",
+    "mysql",
+    "sql server",
+    "sql"
+  ],
+  "scripts": {
+    "test": "node test/test-postgrator.js"
+  },
+  "dependencies": {
+    "async": "0.2.x",
+    "mssql": "^1.3.0",
+    "mysql": "^2.5.2",
+    "pg.js": "^3.6.2"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git://github.com/rickbergfalk/postgrator.git"
+  },
+  "main": "postgrator"
 }

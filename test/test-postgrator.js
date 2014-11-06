@@ -82,10 +82,12 @@ var buildTestsForConfig = function (config) {
 		console.log('\n----- ' + config.driver + ' down to 000 -----');
 		var pg = require('../postgrator.js');
 		pg.setConfig(config);
-		pg.migrate('00', function(err, migrations) {
-			assert.ifError(err);
-			pg.endConnection(callback);
-		});
+		setTimeout(function () {
+		    pg.migrate('00', function(err, migrations) {
+                assert.ifError(err);
+                pg.endConnection(callback);
+            });
+		}, 10000);
 	});
 	
 };
@@ -99,15 +101,16 @@ buildTestsForConfig({
 	username: 'qblgodnjwwvqjr',
 	password: 'auWYSDIW73KC1scgGv-VDquQGJ'
 });
-/*
+
 buildTestsForConfig({
 	migrationDirectory: __dirname + '/migrations',
 	driver: 'mysql',
-	host: 'blue2.corecloud.com',
+	host: 'localhost',
 	database: 'test',
-	username: 'testuser',
-	password: 'testuser'
+	username: 'root',
+	password: ''
 });
+/*
 buildTestsForConfig({
 	migrationDirectory: __dirname + '/migrations',
 	driver: 'tedious',
@@ -117,7 +120,6 @@ buildTestsForConfig({
 	password: 'testuser'
 });
 */
-
 
 /* Run the tests in an asyncy way
 ============================================================================= */

@@ -1,23 +1,11 @@
 /*
-
-	Postgrator
-	
-	DESCRIPTION
-	
-	Postgrator is a sql migration tool that uses plain SQL files. 
-	The SQL migration scripts follow a convention to help maintain their order in which they are run.
-	
-    Starting with version 1.x.x of Postgrator, no database drivers will be installed as a dependency.
-    You'll have to do that on your own.
-    
     
 	API:
 	
     var postgrator = require('postgrator');
     
     postgrator.setConfig({
-        driver: 'pg', // or pg.js, mssql, mysql, sqlite3, oracle
-        driverVersion: 3,
+        driver: 'pg', // or pg.js, mssql, mysql
         migrationDirectory: '',
         logProgress: true,
         host: '',
