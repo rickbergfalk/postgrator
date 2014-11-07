@@ -11,26 +11,28 @@ process.env.PGSSLMODE = 'require';
 tests.push(function (callback) {
 	console.log('\n----- testing original api to 003 -----');
 	var postgrator = require('../postgrator.js');
-	postgrator.config.set({
+	postgrator.setConfig({
+        driver: 'pg.js',
         migrationDirectory: __dirname + '/migrations',
         connectionString: pgUrl
     });
 	postgrator.migrate('003', function(err, migrations) {
 		assert.ifError(err);
-		callback();
+		postgrator.endConnection(callback);
 	});
 });
 
 tests.push(function (callback) {
 	console.log('\n----- testing original api to 000 -----');
 	var postgrator = require('../postgrator.js');
-	postgrator.config.set({
+	postgrator.setConfig({
+        driver: 'pg.js',
         migrationDirectory: __dirname + '/migrations',
         connectionString: pgUrl
     }); 
 	postgrator.migrate('000', function(err, migrations) {
 		assert.ifError(err);
-		callback();
+		postgrator.endConnection(callback);
 	});
 });
 
@@ -46,13 +48,13 @@ var buildTestsForConfig = function (config) {
 	tests.push(function (callback) {
 		console.log('\n----- ' + config.driver + ' up to 002 -----');
 		var pg = require('../postgrator.js');
-		pg.config.set(config);
+		pg.setConfig(config);
 		pg.migrate('002', function(err, migrations) {
 			assert.ifError(err);
 			pg.runQuery('SELECT name, age FROM person', function (err, result) {
 				assert.ifError(err);
 				assert.equal(result.rows.length, 1, 'person table should have 1 record at this point');
-				callback();
+				pg.endConnection(callback);
 			});
 		});
 	});
@@ -62,13 +64,13 @@ var buildTestsForConfig = function (config) {
 	tests.push(function (callback) {
 		console.log('\n----- ' + config.driver + ' up to 003 -----');
 		var pg = require('../postgrator.js');
-		pg.config.set(config);
+		pg.setConfig(config);
 		pg.migrate('003', function(err, migrations) {
 			assert.ifError(err);
 			pg.runQuery('SELECT name, age FROM person', function (err, result) {
 				assert.ifError(err);
 				assert.equal(result.rows.length, 3, 'person table should have 3 records at this point');
-				callback();
+                pg.endConnection(callback);
 			});
 		});
 	});
@@ -79,11 +81,13 @@ var buildTestsForConfig = function (config) {
 	tests.push(function (callback) {
 		console.log('\n----- ' + config.driver + ' down to 000 -----');
 		var pg = require('../postgrator.js');
-		pg.config.set(config);
-		pg.migrate('00', function(err, migrations) {
-			assert.ifError(err);
-			callback();
-		});
+		pg.setConfig(config);
+		setTimeout(function () {
+		    pg.migrate('00', function(err, migrations) {
+                assert.ifError(err);
+                pg.endConnection(callback);
+            });
+		}, 10000);
 	});
 	
 };
@@ -91,20 +95,22 @@ var buildTestsForConfig = function (config) {
 
 buildTestsForConfig({
 	migrationDirectory: __dirname + '/migrations',
-	driver: 'pg',
+	driver: 'pg.js',
 	host: 'ec2-54-204-24-154.compute-1.amazonaws.com',
 	database: 'd42c6mk8cotcn2',
 	username: 'qblgodnjwwvqjr',
 	password: 'auWYSDIW73KC1scgGv-VDquQGJ'
 });
+
 buildTestsForConfig({
 	migrationDirectory: __dirname + '/migrations',
 	driver: 'mysql',
-	host: 'blue2.corecloud.com',
+	host: 'localhost',
 	database: 'test',
-	username: 'testuser',
-	password: 'testuser'
+	username: 'root',
+	password: ''
 });
+/*
 buildTestsForConfig({
 	migrationDirectory: __dirname + '/migrations',
 	driver: 'tedious',
@@ -113,8 +119,7 @@ buildTestsForConfig({
 	username: 'testuser',
 	password: 'testuser'
 });
-	
-
+*/
 
 /* Run the tests in an asyncy way
 ============================================================================= */

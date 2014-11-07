@@ -1,22 +1,24 @@
 /*
-
-	Postgrator
-	
-	DESCRIPTION
-	
-	Postgrator is a sql migration tool that uses plain SQL files. 
-	The SQL migration scripts follow a convention to help maintain their order in which they are run.
-	
+    
 	API:
 	
-	var postgrator = require('postgrator');
-	postgrator.config.set(configuration); // driver, host, database,  username, password, migrationDirectory
-	postgrator.migrate(version, function (err, migrations) {});
+    var postgrator = require('postgrator');
+    
+    postgrator.setConfig({
+        driver: 'pg', // or pg.js, mysql, mssql, tedious
+        migrationDirectory: '',
+        logProgress: true,
+        host: '',
+        database: '',
+        username: '',
+        password: ''
+    });
+    
+    postgrator.migrate(version, function (err, migrations) {
+        // handle the error, and if you want end the connection
+        postgrator.endConnection();
+    });
 	
-	DEPRECATED API:
-	
-	postgrator.setMigrationDirectory(dir);
-	postgrator.setConnectionString(conn);
 	
 	NOTES:
 	
@@ -31,52 +33,29 @@
 ================================================================= */
 
 var fs = require('fs');
-var pg = require('pg.js'); 
-var mysql = require('mysql');
-var mssql = require('mssql');
+var createCommonClient = require('./lib/create-common-client.js');
 
-
-/* 
-	Local variables and what not. 
-	These are populated and referenced throughout this module.
-	
-================================================================= */
+var commonClient;
 var currentVersion;
 var targetVersion;
 var migrations = []; // array of objects like: {version: n, action: 'do', direction: 'up', filename: '0001.up.sql'}
 
-var config = {
-	migrationDirectory: null,
-    connectionString: null,
-	driver: 'pg',
-	host: null,
-	database: null,
-	username: null,
-	password: null,
-	getPostgresConnectionString: function () {
-		// "tcp://username:password@hosturl/databasename"
-		if (config.connectionString) return config.connectionString
-        else return "tcp://" + this.username + ":" + this.password + "@" + this.host + "/" + this.database;
-	},
-	set: function (configuration) {
-		if (configuration.host) 				this.host = configuration.host;
-		if (configuration.database) 			this.database = configuration.database;
-		if (configuration.username) 			this.username = configuration.username;
-		if (configuration.password) 			this.password = configuration.password;
-		if (configuration.driver) 				this.driver = configuration.driver;
-		if (configuration.migrationDirectory) 	this.migrationDirectory = configuration.migrationDirectory;
-        if (configuration.connectionString)     this.connectionString = configuration.connectionString;
-	}
-}
+var config = {};
 
 exports.config = config;
 
-/* 
-	Sorting Functions
-	
-	Internal functions
-	Used to sort the migrations. 
-	
+
+
+/*  Set Config
+================================================================= */
+exports.setConfig = function (configuration) {
+    config = configuration;
+    commonClient = createCommonClient(configuration);
+};
+
+
+
+/*  Migration Sorting Functions
 ================================================================= */
 var sortMigrationsAsc = function (a,b) {
 	if (a.version < b.version)
@@ -109,151 +88,53 @@ var getMigrations = function () {
 	var migrationFiles = fs.readdirSync(config.migrationDirectory);
 	migrationFiles.forEach(function(file) {
 		var m = file.split('.');
-		if (m[2] === 'sql') {
+		if (m[m.length - 1] === 'sql') {
 			migrations.push({
 				version: Number(m[0]),
 				direction: m[1],
 				action: m[1],
 				filename: file
-			})
+			});
 		}
 	});
 };
 
 
-/* 
-	createUniversalClient(callback)
-	
-	Internal function that creates a universal client 
-	for running queries and ending the connection when things are done.
-	
-	It is called by runQuery if universalClient == false;
-	
+/*  runQuery
+    connects the database driver if it is not currently connected.
+    Executes an arbitrary sql query using the common client
 ================================================================= */
-var universalClient = {
-	connected: false,
-	runQuery: function (query, rqCallback) { },
-	endConnection: function (endCallback) {
-		universalClient.connected = false;
-		endCallback();
-	}
-};
-
-var createUniversalClient = function (callback) {
-	
-	if (config.driver == 'mysql') {
-		
-		var connection = mysql.createConnection({
-			multipleStatements: true,
-			host: config.host,
-			user: config.username,
-			password: config.password,
-			database: config.database
-		});
-		connection.connect(function (err) {
-			if (err) {
-				if (callback) callback(err);
-			} else {
-				// Create universal client for MySQL
-				universalClient.connected = true;
-				universalClient.runQuery = function (query, rqCallback) {
-					connection.query(query, function (err, rows, fields) {
-						if (err) {
-							if (rqCallback) rqCallback(err);
-						} else {
-							var results = {};
-							if (rows) results.rows = rows;
-							if (fields) results.fields = fields;
-							rqCallback(err, results);
-						}
-					});
-				};
-				universalClient.endConnection = function (endCallback) {
-					connection.end(function (err) {
-						universalClient.connected = false;
-						endCallback(err);
-					})
-				};
-				callback(); // creation of universalClient is success.
-			}
-		});
-		
-	} else if (config.driver == 'pg') {
-		
-		var client = new pg.Client(config.getPostgresConnectionString());
-		client.connect(function (err) {
-			if (err) {
-				if (callback) callback(err);
-			} else {
-				// Create Universal Client
-				universalClient.connected = true;
-				universalClient.runQuery = function (query, rqCallback) {
-					client.query(query, function(err, result) {
-						if (rqCallback) rqCallback(err, result);
-					});
-				};
-				universalClient.endConnection = function (endCallback) {
-					console.log('ending');
-					client.end();
-					console.log('client has ended');
-					universalClient.connected = false;
-					endCallback();
-				};
-				callback();
-			}
-		});
-	
-	} else if (config.driver == 'tedious' || config.driver == 'mssql') {
-		
-		var sqlconfig = {
-			user: config.username,
-			password: config.password,
-			server: config.host,
-			database: config.database
-		}
-		mssql.connect(sqlconfig, function (err) {
-			if (err) {
-				callback(err);
-			} else {
-				// Create Universal Client
-				universalClient.connected = true;
-				universalClient.runQuery = function (query, rqCallback) {
-					var request = new mssql.Request();
-					request.query(query, function (err, result) {
-						if (rqCallback) rqCallback(err, {rows: result});
-					});	
-				};
-				universalClient.endConnection = function (endCallback) {
-					// mssql doesn't offer a way to kill a single connection
-					// It'll die on its own, and won't prevent us from creating additional connections.
-					// eventually this should maybe use the pooling mechanism, even though we only need one connection
-					universalClient.connected = false;
-					endCallback();
-				};
-				callback();
-			}
-		});
-	
+function runQuery (query, cb) {
+	if (commonClient.connected) {
+		commonClient.runQuery(query, cb);
 	} else {
-		var err = new Error("db driver is not supported. Must either be 'mysql' or 'pg' or 'tedious' or 'mssql'");
-		callback(err);
-	}
-	
-};
-
-var runQuery = function (query, rqCallback) {
-	if (universalClient.connected) {
-		universalClient.runQuery(query, rqCallback);
-	} else {
-		// create the universal client and run query
-		createUniversalClient(function (err) {
-			if (err) rqCallback(err);
-			else universalClient.runQuery(query, rqCallback);
+		// connect common client
+		commonClient.createConnection(function (err) {
+		    if (err) cb(err);
+		    else {
+		        commonClient.connected = true;
+		        commonClient.runQuery(query, cb);
+		    }
 		});
 	}
-};
+}
 exports.runQuery = runQuery;
 
+
+/*  endConnection
+    Ends the commonClient's connection to the database
+================================================================= */
+function endConnection (cb) {
+    if (commonClient.connected) {
+        commonClient.endConnection(function () {
+            commonClient.connected = false;
+            cb();
+        });
+    } else {
+        cb();
+    }
+}
+exports.endConnection = endConnection;
 
 
 /* 
@@ -264,20 +145,14 @@ exports.runQuery = runQuery;
 	
 ================================================================= */
 var getCurrentVersion = function (callback) {
-	var query;
-	if (config.driver == 'pg' || config.driver == 'mysql') {
-		query = 'SELECT version FROM schemaversion ORDER BY version DESC LIMIT 1';
-	} else if (config.driver == 'tedious') {
-		query = 'SELECT TOP 1 version FROM schemaversion ORDER BY version DESC';
-	}
-	runQuery(query, function(err, result) {
+	runQuery(commonClient.queries.getCurrentVersion, function(err, result) {
 		if (err) { // means the table probably doesn't exist yet. To lazy to check.
 			console.error('something went wrong getting the Current Version from the schemaversion table');
 		} else {
 			if (result.rows.length > 0) currentVersion = result.rows[0].version;
 			else currentVersion = 0;
 		}
-		if (callback) callback(err, currentVersion);
+		callback(err, currentVersion);
 	});
 };
 exports.getCurrentVersion = getCurrentVersion;
@@ -334,7 +209,7 @@ var runMigrations = function (migrations, finishedCallback) {
 				});	
 			}
 		});
-	}
+	};
 	runNext(0);
 };
 	
@@ -358,7 +233,7 @@ var getRelevantMigrations = function (currentVersion, targetVersion) {
 				migration.schemaVersionSQL = 'INSERT INTO schemaversion (version) VALUES (' + migration.version + ');';
 				relevantMigrations.push(migration);
 			}
-		})
+		});
 		relevantMigrations = relevantMigrations.sort(sortMigrationsAsc);
 	} else if (targetVersion < currentVersion) {
 		// we are going to migrate down
@@ -388,7 +263,7 @@ var getRelevantMigrations = function (currentVersion, targetVersion) {
 	callback - callback to run after migrations have finished. function (err, migrations) {}
 	
 ================================================================= */
-exports.migrate = function (target, finishedCallback) {
+function migrate (target, finishedCallback) {
 	prep(function(err) {
 		if (err) {
 			if (finishedCallback) finishedCallback(err);
@@ -403,19 +278,13 @@ exports.migrate = function (target, finishedCallback) {
 				if (finishedCallback) finishedCallback(err);
 			} else {
 				console.log('version of database is: ' + currentVersion);
-				if (targetVersion == undefined) {
+				if (targetVersion === undefined) {
 					console.log('no target version supplied - no migrations performed');	
 				} else {
 					var relevantMigrations = getRelevantMigrations(currentVersion, targetVersion);
 					if (relevantMigrations.length > 0) {
 						runMigrations(relevantMigrations, function(err, migrations) {
-							if (err) finishedCallback(err, migrations);
-							else {
-								universalClient.endConnection(function (err) {
-									if (err) console.log(err);
-									finishedCallback(err, migrations);
-								});	
-							}
+							finishedCallback(err, migrations);
 						});
 					} else {
 						if (finishedCallback) finishedCallback(err);
@@ -424,8 +293,8 @@ exports.migrate = function (target, finishedCallback) {
 			}
 		}); // get current version
 	}); // prep
-};
-
+}
+exports.migrate = migrate;
 
 
 /* 
@@ -436,20 +305,8 @@ exports.migrate = function (target, finishedCallback) {
 	callback - function called after schema version table is built. function (err, results) {}
 	
 ================================================================= */
-var prep = function (callback) {
-	var checkQuery;
-	var makeTableQuery;
-	if (config.driver == 'pg') {
-		checkQuery = "SELECT * FROM pg_catalog.pg_tables WHERE schemaname = CURRENT_SCHEMA AND tablename = 'schemaversion'";
-		makeTableQuery = "CREATE TABLE schemaversion (version INT); INSERT INTO schemaversion (version) VALUES (0);"
-	} else if (config.driver == 'mysql') {
-		checkQuery = "SELECT * FROM information_schema.tables WHERE table_schema = '" + config.database + "' AND table_name = 'schemaversion'";
-		makeTableQuery = "CREATE TABLE schemaversion (version INT); INSERT INTO schemaversion (version) VALUES (0);"
-	} else if (config.driver == 'tedious') {
-		checkQuery = "SELECT * FROM information_schema.tables WHERE table_schema = 'dbo' AND table_name = 'schemaversion'";
-		makeTableQuery = "CREATE TABLE schemaversion (version INT); INSERT INTO schemaversion (version) VALUES (0);"
-	}
-	runQuery(checkQuery, function(err, result) {
+function prep (callback) {
+	runQuery(commonClient.queries.checkTable, function(err, result) {
 		if (err) {
 			err.helpfulDescription = 'Prep() table CHECK query Failed';
 			callback(err);
@@ -458,7 +315,7 @@ var prep = function (callback) {
 				callback();
 			} else {
 				console.log('table schemaversion does not exist - creating it.');
-				runQuery(makeTableQuery, function(err, result) {
+				runQuery(commonClient.queries.makeTable, function(err, result) {
 					if (err) {
 						err.helpfulDescription = 'Prep() table BUILD query Failed';
 						callback(err);
@@ -469,5 +326,4 @@ var prep = function (callback) {
 			} 
 		}
 	});
-};
-exports.prep = prep;
+}
