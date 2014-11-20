@@ -33,6 +33,7 @@
 ================================================================= */
 
 var fs = require('fs');
+var crypto = require('crypto');
 var createCommonClient = require('./lib/create-common-client.js');
 
 var commonClient;
@@ -88,12 +89,15 @@ var getMigrations = function () {
 	var migrationFiles = fs.readdirSync(config.migrationDirectory);
 	migrationFiles.forEach(function(file) {
 		var m = file.split('.');
+		var name = m.length >= 3 ? m.slice(2, m.length - 1).join('.') : file;
 		if (m[m.length - 1] === 'sql') {
 			migrations.push({
 				version: Number(m[0]),
 				direction: m[1],
 				action: m[1],
-				filename: file
+				filename: file,
+				name: name,
+				md5: fileChecksum(config.migrationDirectory + "/" + file)
 			});
 		}
 	});
@@ -173,42 +177,69 @@ exports.getCurrentVersion = getCurrentVersion;
 		- once all migrations have been run, we call the callback.
 
 ================================================================= */
-var runMigrations = function (migrations, finishedCallback) {
+var runMigrations = function (migrations, currentVersion, targetVersion, finishedCallback) {
 	var runNext = function (i) {
-		console.log('running ' + migrations[i].filename);
 		var sql = fs.readFileSync((config.migrationDirectory + '/' + migrations[i].filename), 'utf8');
-		runQuery(sql, function(err, result) {
-			if (err) {
-				console.log('Error in runMigrations()');
-				if (finishedCallback) {
-					finishedCallback(err, migrations);
-				}
-			} else {
-				// migration ran successfully
-				// add version to schemaversion table.
-				runQuery(migrations[i].schemaVersionSQL, function(err, result) {
-					if (err) {
-						// SQL to update schemaversion failed.
-						console.log('error updating the schemaversion table');
-						console.log(err);
+		if (migrations[i].md5Sql) {
+			console.log('verifying checksum of migration ' + migrations[i].filename);
+			runQuery(migrations[i].md5Sql, function (err, result) {
+				if (err) {
+					console.log('Error in runMigrations() while retrieving existing migrations');
+					if (finishedCallback) {
+						finishedCallback(err, migrations);
+					}
+				} else {
+					if (result.rows[0].md5 && result.rows[0].md5 !== migrations[i].md5) {
+						console.log('Error in runMigrations() while verifying checksums of existing migrations');
+						if (finishedCallback) {
+							finishedCallback(new Error("For migration [" + migrations[i].version + "], expected MD5 checksum [" + migrations[i].md5 + "] but got [" + result.rows[0].md5 + "]"), migrations);
+						}
 					} else {
-						// schemaversion successfully recorded.
-						// move on to next migration
 						i = i + 1;
 						if (i < migrations.length) {
 							runNext(i);
 						} else {
-							// We are done running the migrations.
-							// run the finished callback if supplied.
-							console.log('done');
 							if (finishedCallback) {
 								finishedCallback(null, migrations);
 							}
 						}
 					}
-				});
-			}
-		});
+				}
+			});
+		} else {
+			console.log('running ' + migrations[i].filename);
+			runQuery(sql, function (err, result) {
+				if (err) {
+					console.log('Error in runMigrations()');
+					if (finishedCallback) {
+						finishedCallback(err, migrations);
+					}
+				} else {
+					// migration ran successfully
+					// add version to schemaversion table.
+					runQuery(migrations[i].schemaVersionSQL, function (err, result) {
+						if (err) {
+							// SQL to update schemaversion failed.
+							console.log('error updating the schemaversion table');
+							console.log(err);
+						} else {
+							// schemaversion successfully recorded.
+							// move on to next migration
+							i = i + 1;
+							if (i < migrations.length) {
+								runNext(i);
+							} else {
+								// We are done running the migrations.
+								// run the finished callback if supplied.
+								if (finishedCallback) {
+									finishedCallback(null, migrations);
+								}
+							}
+						}
+					});
+				}
+			});
+		}
 	};
 	runNext(0);
 };
@@ -224,13 +255,17 @@ var runMigrations = function (migrations, finishedCallback) {
 ================================================================= */
 var getRelevantMigrations = function (currentVersion, targetVersion) {
 	var relevantMigrations = [];
-	if (targetVersion > currentVersion) {
+	if (targetVersion >= currentVersion) {
 		// we are migrating up
 		// get all up migrations > currentVersion and <= targetVersion
 		console.log('migrating up to ' + targetVersion);
 		migrations.forEach(function(migration) {
+			if (migration.action == 'do' && migration.version > 0 && migration.version <= currentVersion && (config.driver === 'pg' || config.driver === 'pg.js')) {
+				migration.md5Sql = 'SELECT md5 FROM schemaversion WHERE version = ' + migration.version + ';';
+				relevantMigrations.push(migration);
+			}
 			if (migration.action == 'do' && migration.version > currentVersion && migration.version <= targetVersion) {
-				migration.schemaVersionSQL = 'INSERT INTO schemaversion (version) VALUES (' + migration.version + ');';
+				migration.schemaVersionSQL = config.driver === 'pg' || config.driver === 'pg.js' ? "INSERT INTO schemaversion (version, name, md5) VALUES (" + migration.version + ", '" + migration.name + "', '" + migration.md5 + "');" : "INSERT INTO schemaversion (version) VALUES (" + migration.version + ");";
 				relevantMigrations.push(migration);
 			}
 		});
@@ -245,12 +280,9 @@ var getRelevantMigrations = function (currentVersion, targetVersion) {
 			}
 		});
 		relevantMigrations = relevantMigrations.sort(sortMigrationsDesc);
-	} else if (targetVersion == currentVersion) {
-		console.log("database already at version " + targetVersion);
 	}
 	return relevantMigrations;
 };
-
 
 
 /*
@@ -285,7 +317,7 @@ function migrate (target, finishedCallback) {
 				} else {
 					var relevantMigrations = getRelevantMigrations(currentVersion, targetVersion);
 					if (relevantMigrations.length > 0) {
-						runMigrations(relevantMigrations, function(err, migrations) {
+						runMigrations(relevantMigrations, currentVersion, targetVersion, function(err, migrations) {
 							finishedCallback(err, migrations);
 						});
 					} else {
@@ -314,7 +346,31 @@ function prep (callback) {
 			callback(err);
 		} else {
 			if (result.rows && result.rows.length > 0) {
-				callback();
+				if (config.driver === 'pg' || config.driver === 'pg.js') {
+					// table schemaversion exists, does it have the md5 column? (PostgreSQL only)
+					runQuery("SELECT column_name, data_type, character_maximum_length FROM INFORMATION_SCHEMA.COLUMNS WHERE table_name = 'schemaversion' AND column_name = 'md5';", function (err, result) {
+						if (err) {
+							err.helpfulDescription = 'Prep() table CHECK MD5 COLUMN query Failed';
+							callback(err);
+						} else {
+							if (!result.rows || result.rows.length === 0) {
+								// md5 column doesn't exist, add it
+								runQuery("ALTER TABLE schemaversion ADD COLUMN md5 text DEFAULT '';", function (err, result) {
+									if (err) {
+										err.helpfulDescription = 'Prep() table ADD MD5 COLUMN query Failed';
+										callback(err);
+									} else {
+										callback();
+									}
+								});
+							} else {
+								callback();
+							}
+						}
+					});
+				} else {
+					callback();
+				}
 			} else {
 				console.log('table schemaversion does not exist - creating it.');
 				runQuery(commonClient.queries.makeTable, function(err, result) {
@@ -328,4 +384,21 @@ function prep (callback) {
 			}
 		}
 	});
+}
+
+/*
+ .fileChecksum(filename)
+
+ Calculate checksum of file to detect changes to migrations that have already run.
+
+ filename - calculate MD5 checksum of contents of this file
+
+ ================================================================= */
+
+function fileChecksum (filename) {
+	return checksum(fs.readFileSync(filename, 'utf8'));
+}
+
+function checksum (str) {
+	return crypto.createHash('md5').update(str, 'utf8').digest('hex');
 }
