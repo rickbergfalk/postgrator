@@ -1,9 +1,9 @@
 /*
-    
+
 	API:
-	
+
     var postgrator = require('postgrator');
-    
+
     postgrator.setConfig({
         driver: 'pg', // or pg.js, mysql, mssql, tedious
         migrationDirectory: '',
@@ -13,23 +13,23 @@
         username: '',
         password: ''
     });
-    
+
     postgrator.migrate(version, function (err, migrations) {
         // handle the error, and if you want end the connection
         postgrator.endConnection();
     });
-	
-	
+
+
 	NOTES:
-	
+
 	If schemaversion table is not present, it will be created automatically!
 	If no migration version is supplied, no migration is performed
-	
+
 	THINGS TO IMPLEMENT SOMEDAY (MAYBE)
-	
+
 	postgrator.migrate('max', callback); 	// migrate to the latest migration available
 	postgrator.config.tableVersionName  	// not everyone will want a table called "schemaversion"
-	
+
 ================================================================= */
 
 var fs = require('fs');
@@ -64,7 +64,7 @@ var sortMigrationsAsc = function (a,b) {
 		return 1;
 	return 0;
 };
-	
+
 var sortMigrationsDesc = function (a, b) {
 	if (a.version < b.version)
 		return 1;
@@ -75,14 +75,14 @@ var sortMigrationsDesc = function (a, b) {
 
 
 
-/* 
+/*
 	getMigrations()
-	
+
 	Internal function
 	Reads the migration directory for all the migration files.
 	It is SYNC out of laziness and simplicity
-	
-================================================================= */	
+
+================================================================= */
 var getMigrations = function () {
 	migrations = [];
 	var migrationFiles = fs.readdirSync(config.migrationDirectory);
@@ -137,12 +137,12 @@ function endConnection (cb) {
 exports.endConnection = endConnection;
 
 
-/* 
+/*
 	getCurrentVersion(callback)
-	
+
 	Internal & External function
 	Gets the current version of the schema from the database.
-	
+
 ================================================================= */
 var getCurrentVersion = function (callback) {
 	runQuery(commonClient.queries.getCurrentVersion, function(err, result) {
@@ -157,21 +157,21 @@ var getCurrentVersion = function (callback) {
 };
 exports.getCurrentVersion = getCurrentVersion;
 
-	
 
-/* 
+
+/*
 	runMigrations(migrations, finishedCallback)
-	
+
 	Internal function
 	Runs the migrations in the order provided, using a recursive kind of approach
 	For each migration run:
 		- the contents of the script is read (sync because I'm lazy)
-		- script is run. 
+		- script is run.
 			if error, the callback is called and we don't run anything else
 			if success, we then add/remove a record from the schemaversion table to keep track of the migration we just ran
 		- if all goes as planned, we run the next migration
 		- once all migrations have been run, we call the callback.
-		
+
 ================================================================= */
 var runMigrations = function (migrations, finishedCallback) {
 	var runNext = function (i) {
@@ -185,20 +185,20 @@ var runMigrations = function (migrations, finishedCallback) {
 				}
 			} else {
 				// migration ran successfully
-				// add version to schemaversion table. 
+				// add version to schemaversion table.
 				runQuery(migrations[i].schemaVersionSQL, function(err, result) {
 					if (err) {
 						// SQL to update schemaversion failed.
 						console.log('error updating the schemaversion table');
 						console.log(err);
 					} else {
-						// schemaversion successfully recorded. 
+						// schemaversion successfully recorded.
 						// move on to next migration
 						i = i + 1;
 						if (i < migrations.length) {
 							runNext(i);
 						} else {
-							// We are done running the migrations. 
+							// We are done running the migrations.
 							// run the finished callback if supplied.
 							console.log('done');
 							if (finishedCallback) {
@@ -206,21 +206,21 @@ var runMigrations = function (migrations, finishedCallback) {
 							}
 						}
 					}
-				});	
+				});
 			}
 		});
 	};
 	runNext(0);
 };
-	
 
-	
-/* 
+
+
+/*
 	.getRelevantMigrations(currentVersion, targetVersion)
-	
+
 	returns an array of relevant migrations based on the target and current version passed.
 	returned array is sorted in the order it needs to be run
-	
+
 ================================================================= */
 var getRelevantMigrations = function (currentVersion, targetVersion) {
 	var relevantMigrations = [];
@@ -253,15 +253,15 @@ var getRelevantMigrations = function (currentVersion, targetVersion) {
 
 
 
-/* 
+/*
 	.migrate(target, callback)
-	
+
 	Main method to move a schema to a particular version.
 	A target must be specified, otherwise nothing is run.
-	
+
 	target - version to migrate to as string or number (will be handled as numbers internally)
 	callback - callback to run after migrations have finished. function (err, migrations) {}
-	
+
 ================================================================= */
 function migrate (target, finishedCallback) {
 	prep(function(err) {
@@ -269,7 +269,9 @@ function migrate (target, finishedCallback) {
 			if (finishedCallback) finishedCallback(err);
 		}
 		getMigrations();
-		if (target) {
+		if (target && target === 'max') {
+			targetVersion = Math.max.apply(null, migrations.map(function (migration) { return migration.version; }));
+		} else if (target) {
 			targetVersion = Number(target);
 		}
 		getCurrentVersion(function(err, currentVersion) {
@@ -279,7 +281,7 @@ function migrate (target, finishedCallback) {
 			} else {
 				console.log('version of database is: ' + currentVersion);
 				if (targetVersion === undefined) {
-					console.log('no target version supplied - no migrations performed');	
+					console.log('no target version supplied - no migrations performed');
 				} else {
 					var relevantMigrations = getRelevantMigrations(currentVersion, targetVersion);
 					if (relevantMigrations.length > 0) {
@@ -289,7 +291,7 @@ function migrate (target, finishedCallback) {
 					} else {
 						if (finishedCallback) finishedCallback(err);
 					}
-				}	
+				}
 			}
 		}); // get current version
 	}); // prep
@@ -297,13 +299,13 @@ function migrate (target, finishedCallback) {
 exports.migrate = migrate;
 
 
-/* 
+/*
 	.prep(callback)
-	
+
 	Creates the table required for Postgrator to keep track of which migrations have been run.
-	
+
 	callback - function called after schema version table is built. function (err, results) {}
-	
+
 ================================================================= */
 function prep (callback) {
 	runQuery(commonClient.queries.checkTable, function(err, result) {
@@ -323,7 +325,7 @@ function prep (callback) {
 						callback();
 					}
 				});
-			} 
+			}
 		}
 	});
 }
