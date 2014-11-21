@@ -89,13 +89,12 @@ Despite the driver specified, Postgrator will use either pg.js, mysql, or mssql 
 
 
 
-## What Postgrator is doing
+## Version 2.0 Notes
 
-When first run against your database, *Postgrator will create a table called schemaversion.* Postgrator relies on this table to track what version the database is at. 
+Despite the major version bump, postgrator's API has not changed. Some of its behavior has however:
 
-Postgrator automatically determines whether it needs to go "up" or "down", and will update the schemaversion table accordingly. If the database is already at the version specified to migrate to, Postgrator does nothing.
-
-If a migration fails, Postgrator will stop running any further migrations. It is up to you to migrate back down to the version you started at if you are running several migration scripts. Because of this, keep in mind how you write your SQL - You may (or may not) want to write your SQL defensively (ie, check for pre-existing objects before you create new ones).
+- Migrating against a Postgres database now logs script checksums. Future migrations will confirm the checksum to ensure any previously run scripts have not been changed. This is a Postgres-only feature for now.
+- Postgrator can always migrate to the latest version available by running ```postgrator.migrate('max', callback);```
 
 
 
@@ -105,6 +104,16 @@ If a migration fails, Postgrator will stop running any further migrations. It is
 - Postgrator connection can be closed via postgrator.endConnection
 - Updated database drivers to latest versions
 - refactored db client abstraction so that it's easier to understand
+
+
+
+## What Postgrator is doing
+
+When first run against your database, *Postgrator will create a table called schemaversion.* Postgrator relies on this table to track what version the database is at. 
+
+Postgrator automatically determines whether it needs to go "up" or "down", and will update the schemaversion table accordingly. If the database is already at the version specified to migrate to, Postgrator does nothing.
+
+If a migration fails, Postgrator will stop running any further migrations. It is up to you to migrate back down to the version you started at if you are running several migration scripts. Because of this, keep in mind how you write your SQL - You may (or may not) want to write your SQL defensively (ie, check for pre-existing objects before you create new ones).
 
 
 
