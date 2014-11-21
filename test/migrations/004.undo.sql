@@ -1,0 +1,1 @@
+DELETE FROM person WHERE name = 'holly';

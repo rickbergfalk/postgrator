@@ -29,7 +29,7 @@ tests.push(function (callback) {
         driver: 'pg.js',
         migrationDirectory: __dirname + '/migrations',
         connectionString: pgUrl
-    }); 
+    });
 	postgrator.migrate('000', function(err, migrations) {
 		assert.ifError(err);
 		postgrator.endConnection(callback);
@@ -38,7 +38,7 @@ tests.push(function (callback) {
 
 
 /* A function to build a set of tests for a given config.
-   This will be helpful when we want to run the same kinds of tests on 
+   This will be helpful when we want to run the same kinds of tests on
    postgres, mysql, sql server, etc.
 ============================================================================= */
 var buildTestsForConfig = function (config) {
@@ -58,7 +58,7 @@ var buildTestsForConfig = function (config) {
 			});
 		});
 	});
-	
+
 	/* Go 1 migration up.
 	------------------------------------------------------------------------- */
 	tests.push(function (callback) {
@@ -74,8 +74,23 @@ var buildTestsForConfig = function (config) {
 			});
 		});
 	});
-	
-	
+
+	/* Go up to 'max' (4)
+	 ------------------------------------------------------------------------- */
+	tests.push(function (callback) {
+		console.log('\n----- ' + config.driver + ' up to max (004) -----');
+		var pg = require('../postgrator.js');
+		pg.setConfig(config);
+		pg.migrate('max', function(err, migrations) {
+			assert.ifError(err);
+			pg.runQuery('SELECT name, age FROM person', function (err, result) {
+				assert.ifError(err);
+				assert.equal(result.rows.length, 4, 'person table should have 4 records at this point');
+				pg.endConnection(callback);
+			});
+		});
+	});
+
 	/* Go down to 0
 	------------------------------------------------------------------------- */
 	tests.push(function (callback) {
@@ -89,7 +104,7 @@ var buildTestsForConfig = function (config) {
             });
 		}, 10000);
 	});
-	
+
 };
 
 
