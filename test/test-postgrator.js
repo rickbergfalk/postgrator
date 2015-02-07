@@ -42,7 +42,8 @@ tests.push(function (callback) {
    postgres, mysql, sql server, etc.
 ============================================================================= */
 var buildTestsForConfig = function (config) {
-
+    
+    
 	/* Go 2 migrations up.
 	------------------------------------------------------------------------- */
 	tests.push(function (callback) {
@@ -104,6 +105,18 @@ var buildTestsForConfig = function (config) {
             });
 		}, 10000);
 	});
+	
+	/* remove version table for next run (to test table creation)
+    ------------------------------------------------------------------------- */
+    tests.push(function (callback) {
+        console.log('\n----- ' + config.driver + ' removing schemaversion table -----');
+        var pg = require('../postgrator.js');
+        pg.setConfig(config);
+        pg.runQuery('DROP TABLE schemaversion', function (err) {
+            assert.ifError(err);
+            pg.endConnection(callback);
+        });
+    });
 
 };
 
