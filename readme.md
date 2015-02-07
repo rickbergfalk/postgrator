@@ -56,29 +56,41 @@ postgrator.migrate('002', function (err, migrations) {
 });
 ```
 
-Alternatively, for Postgres you could also do:
+
+### Postgres specific notes:
+
+Alternatively, for Postgres you may provide a connection string containing the database and authentication details:
 
 ```js  
-var postgrator = require('postgrator');
-
 postgrator.config.set({
     migrationDirectory: __dirname + '/migrations',
     driver: 'pg',
     connectionString: 'tcp://username:password@hosturl/databasename'
 }); 
 
-postgrator.migrate('002', function (err, migrations) {
-	if (err) {
-	    console.log(err)
-	} else { 
-	    console.log(migrations)
-	}
-	postgrator.endConnection(function () {
-	    // connection is closed, unless you are using SQL Server
-	});
-});
 ```
 
+
+### SQL Server specific notes:
+
+For SQL Server, you may optionally provide an additional options configuration. This may be necessary if requiring a secure connection for Azure.
+
+```js  
+postgrator.setConfig({
+    migrationDirectory: __dirname + '/migrations', 
+    driver: 'pg', // or pg.js, mysql, mssql, tedious
+    host: '127.0.0.1',
+    database: 'databasename',
+    username: 'username',
+    password: 'password',
+    options: {
+        encrypt: true
+    }
+}); 
+
+```
+
+Reference options for mssql for more details: [https://www.npmjs.com/package/mssql](https://www.npmjs.com/package/mssql)
 
 
 ## Compatible Drivers
