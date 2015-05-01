@@ -59,6 +59,28 @@ var buildTestsForConfig = function (config) {
 			});
 		});
 	});
+	
+	/* try migrating to current version.
+    ------------------------------------------------------------------------- */
+    tests.push(function (callback) {
+        console.log('\n----- ' + config.driver + ' up to 002 -----');
+        var pg = require('../postgrator.js');
+        pg.setConfig(config);
+        pg.migrate('002', function(err, migrations) {
+            console.log('migrated to 002, current version');
+            //console.log(err);
+            //console.log(migrations);
+            callback();
+            /*
+            assert.ifError(err);
+            pg.runQuery('SELECT name, age FROM person', function (err, result) {
+                assert.ifError(err);
+                assert.equal(result.rows.length, 1, 'person table should have 1 record at this point');
+                pg.endConnection(callback);
+            });
+            */
+        });
+    });
 
 	/* Go 1 migration up.
 	------------------------------------------------------------------------- */
