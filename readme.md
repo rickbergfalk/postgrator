@@ -51,7 +51,7 @@ postgrator.migrate('002', function (err, migrations) {
         console.log(migrations)
     }
     postgrator.endConnection(function () {
-        // connection is closed, unless you are using SQL Server
+        // connection is closed, or will close in the case of SQL Server
     });
 });
 ```
