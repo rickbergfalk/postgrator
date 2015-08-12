@@ -97,7 +97,7 @@ var getMigrations = function () {
 				action: m[1],
 				filename: file,
 				name: name,
-				md5: fileChecksum(config.migrationDirectory + "/" + file)
+				md5: fileChecksum(config.migrationDirectory + "/" + file, config.newline)
 			});
 		}
 	});
@@ -395,10 +395,15 @@ function prep (callback) {
 
  ================================================================= */
 
-function fileChecksum (filename) {
-	return checksum(fs.readFileSync(filename, 'utf8'));
+function fileChecksum (filename, newline) {
+	return checksum(fs.readFileSync(filename, 'utf8'), newline);
 }
 
-function checksum (str) {
+function checksum (str, nl) {
+  if (nl) {
+    var newline = require('newline');
+    console.log('Converting newline from: ', newline.detect(str), 'to:', nl);
+    str = newline.set(str, nl);
+  }
 	return crypto.createHash('md5').update(str, 'utf8').digest('hex');
 }
