@@ -8,6 +8,7 @@
         driver: 'pg', // or pg.js, mysql, mssql, tedious
         migrationDirectory: '',
         logProgress: true,
+        schemaTable: '', // default is 'schemaversion'
         host: '',
         database: '',
         username: '',
@@ -22,13 +23,12 @@
 
 	NOTES:
 
-	If schemaversion table is not present, it will be created automatically!
+	If the table specified by config.schemaTable is not present, it will be created automatically!
 	If no migration version is supplied, no migration is performed
 
 	THINGS TO IMPLEMENT SOMEDAY (MAYBE)
 
 	postgrator.migrate('max', callback); 	// migrate to the latest migration available
-	postgrator.config.tableVersionName  	// not everyone will want a table called "schemaversion"
 
 ================================================================= */
 
@@ -51,7 +51,9 @@ exports.config = config;
 ================================================================= */
 exports.setConfig = function (configuration) {
     config = configuration;
-    commonClient = createCommonClient(configuration);
+    config.schemaTable = config.schemaTable || 'schemaversion';
+
+    commonClient = createCommonClient(config);
 };
 
 
@@ -151,7 +153,7 @@ exports.endConnection = endConnection;
 var getCurrentVersion = function (callback) {
 	runQuery(commonClient.queries.getCurrentVersion, function(err, result) {
 		if (err) { // means the table probably doesn't exist yet. To lazy to check.
-			console.error('something went wrong getting the Current Version from the schemaversion table');
+			console.error('something went wrong getting the Current Version from the ' + config.schemaTable + ' table');
 		} else {
 			if (result.rows.length > 0) currentVersion = result.rows[0].version;
 			else currentVersion = 0;
@@ -172,7 +174,7 @@ exports.getCurrentVersion = getCurrentVersion;
 		- the contents of the script is read (sync because I'm lazy)
 		- script is run.
 			if error, the callback is called and we don't run anything else
-			if success, we then add/remove a record from the schemaversion table to keep track of the migration we just ran
+			if success, we then add/remove a record from the config.schemaTable to keep track of the migration we just ran
 		- if all goes as planned, we run the next migration
 		- once all migrations have been run, we call the callback.
 
@@ -216,14 +218,14 @@ var runMigrations = function (migrations, currentVersion, targetVersion, finishe
 					}
 				} else {
 					// migration ran successfully
-					// add version to schemaversion table.
+					// add version to config.schemaTable table.
 					runQuery(migrations[i].schemaVersionSQL, function (err, result) {
 						if (err) {
-							// SQL to update schemaversion failed.
-							console.log('error updating the schemaversion table');
+							// SQL to update config.schemaTable failed.
+							console.log('error updating the ' + config.schemaTable + ' table');
 							console.log(err);
 						} else {
-							// schemaversion successfully recorded.
+							// config.schemaTable successfully recorded.
 							// move on to next migration
 							i = i + 1;
 							if (i < migrations.length) {
@@ -261,11 +263,11 @@ var getRelevantMigrations = function (currentVersion, targetVersion) {
 		console.log('migrating up to ' + targetVersion);
 		migrations.forEach(function(migration) {
 			if (migration.action == 'do' && migration.version > 0 && migration.version <= currentVersion && (config.driver === 'pg' || config.driver === 'pg.js')) {
-				migration.md5Sql = 'SELECT md5 FROM schemaversion WHERE version = ' + migration.version + ';';
+				migration.md5Sql = 'SELECT md5 FROM ' + config.schemaTable + ' WHERE version = ' + migration.version + ';';
 				relevantMigrations.push(migration);
 			}
 			if (migration.action == 'do' && migration.version > currentVersion && migration.version <= targetVersion) {
-				migration.schemaVersionSQL = config.driver === 'pg' || config.driver === 'pg.js' ? "INSERT INTO schemaversion (version, name, md5) VALUES (" + migration.version + ", '" + migration.name + "', '" + migration.md5 + "');" : "INSERT INTO schemaversion (version) VALUES (" + migration.version + ");";
+				migration.schemaVersionSQL = config.driver === 'pg' || config.driver === 'pg.js' ? "INSERT INTO "+config.schemaTabl+" (version, name, md5) VALUES (" + migration.version + ", '" + migration.name + "', '" + migration.md5 + "');" : "INSERT INTO " + config.schemaTable + " (version) VALUES (" + migration.version + ");";
 				relevantMigrations.push(migration);
 			}
 		});
@@ -275,7 +277,7 @@ var getRelevantMigrations = function (currentVersion, targetVersion) {
 		console.log('migrating down to ' + targetVersion);
 		migrations.forEach(function(migration) {
 			if (migration.action == 'undo' && migration.version <= currentVersion && migration.version > targetVersion) {
-				migration.schemaVersionSQL = 'DELETE FROM schemaversion WHERE version = ' + migration.version + ';';
+				migration.schemaVersionSQL = 'DELETE FROM ' + config.schemaTable + ' WHERE version = ' + migration.version + ';';
 				relevantMigrations.push(migration);
 			}
 		});
@@ -347,15 +349,15 @@ function prep (callback) {
 		} else {
 			if (result.rows && result.rows.length > 0) {
 				if (config.driver === 'pg' || config.driver === 'pg.js') {
-					// table schemaversion exists, does it have the md5 column? (PostgreSQL only)
-					runQuery("SELECT column_name, data_type, character_maximum_length FROM INFORMATION_SCHEMA.COLUMNS WHERE table_name = 'schemaversion' AND column_name = 'md5';", function (err, result) {
+					// config.schemaTable exists, does it have the md5 column? (PostgreSQL only)
+					runQuery("SELECT column_name, data_type, character_maximum_length FROM INFORMATION_SCHEMA.COLUMNS WHERE table_name = '" + config.schemaTable + "' AND column_name = 'md5';", function (err, result) {
 						if (err) {
 							err.helpfulDescription = 'Prep() table CHECK MD5 COLUMN query Failed';
 							callback(err);
 						} else {
 							if (!result.rows || result.rows.length === 0) {
 								// md5 column doesn't exist, add it
-								runQuery("ALTER TABLE schemaversion ADD COLUMN md5 text DEFAULT '';", function (err, result) {
+								runQuery("ALTER TABLE " + config.schemaTable + " ADD COLUMN md5 text DEFAULT '';", function (err, result) {
 									if (err) {
 										err.helpfulDescription = 'Prep() table ADD MD5 COLUMN query Failed';
 										callback(err);
@@ -372,7 +374,7 @@ function prep (callback) {
 					callback();
 				}
 			} else {
-				console.log('table schemaversion does not exist - creating it.');
+				console.log('table ' + config.schemaTable + ' does not exist - creating it.');
 				runQuery(commonClient.queries.makeTable, function(err, result) {
 					if (err) {
 						err.helpfulDescription = 'Prep() table BUILD query Failed';
