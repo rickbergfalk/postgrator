@@ -267,7 +267,7 @@ var getRelevantMigrations = function (currentVersion, targetVersion) {
 				relevantMigrations.push(migration);
 			}
 			if (migration.action == 'do' && migration.version > currentVersion && migration.version <= targetVersion) {
-				migration.schemaVersionSQL = config.driver === 'pg' || config.driver === 'pg.js' ? "INSERT INTO "+config.schemaTabl+" (version, name, md5) VALUES (" + migration.version + ", '" + migration.name + "', '" + migration.md5 + "');" : "INSERT INTO " + config.schemaTable + " (version) VALUES (" + migration.version + ");";
+				migration.schemaVersionSQL = config.driver === 'pg' || config.driver === 'pg.js' ? "INSERT INTO "+config.schemaTable+" (version, name, md5) VALUES (" + migration.version + ", '" + migration.name + "', '" + migration.md5 + "');" : "INSERT INTO " + config.schemaTable + " (version) VALUES (" + migration.version + ");";
 				relevantMigrations.push(migration);
 			}
 		});
