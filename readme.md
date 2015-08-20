@@ -37,6 +37,7 @@ var postgrator = require('postgrator');
 
 postgrator.setConfig({
     migrationDirectory: __dirname + '/migrations', 
+    schemaTable: 'schemaversion', // optional. default is 'schemaversion'
     driver: 'pg', // or pg.js, mysql, mssql, tedious
     host: '127.0.0.1',
     database: 'databasename',
@@ -78,6 +79,7 @@ For SQL Server, you may optionally provide an additional options configuration. 
 ```js  
 postgrator.setConfig({
     migrationDirectory: __dirname + '/migrations', 
+    schemaTable: 'schemaversion', // optional. default is 'schemaversion'
     driver: 'pg', // or pg.js, mysql, mssql, tedious
     host: '127.0.0.1',
     database: 'databasename',
@@ -121,9 +123,9 @@ Despite the major version bump, postgrator's API has not changed. Some of its be
 
 ## What Postgrator is doing
 
-When first run against your database, *Postgrator will create a table called schemaversion.* Postgrator relies on this table to track what version the database is at. 
+When first run against your database, *Postgrator will create the table specified by config.schemaTable.* Postgrator relies on this table to track what version the database is at. 
 
-Postgrator automatically determines whether it needs to go "up" or "down", and will update the schemaversion table accordingly. If the database is already at the version specified to migrate to, Postgrator does nothing.
+Postgrator automatically determines whether it needs to go "up" or "down", and will update the schemaTable accordingly. If the database is already at the version specified to migrate to, Postgrator does nothing.
 
 If a migration fails, Postgrator will stop running any further migrations. It is up to you to migrate back down to the version you started at if you are running several migration scripts. Because of this, keep in mind how you write your SQL - You may (or may not) want to write your SQL defensively (ie, check for pre-existing objects before you create new ones).
 
