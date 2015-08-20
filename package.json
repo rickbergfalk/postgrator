@@ -19,6 +19,7 @@
     "async": "0.2.x",
     "mssql": "2.x.x",
     "mysql": "2.x.x",
+    "newline": "0.0.3",
     "pg.js": "4.x.x"
   },
   "repository": {

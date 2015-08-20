@@ -127,6 +127,23 @@ Postgrator automatically determines whether it needs to go "up" or "down", and w
 
 If a migration fails, Postgrator will stop running any further migrations. It is up to you to migrate back down to the version you started at if you are running several migration scripts. Because of this, keep in mind how you write your SQL - You may (or may not) want to write your SQL defensively (ie, check for pre-existing objects before you create new ones).
 
+## Cross platform line feeds
+
+Line feeds: Unix/Mac uses LF, Windows uses 'CRLF', this causes problems for postgrator when calculating the md5 checksum of the migration files - particularly if some developers are on windows, some are on mac, etc. To negate this, you can use the `newline` config flag to tell postgrator to always use a particular line feed, e.g.
+
+```
+postgrator.setConfig({
+    migrationDirectory: __dirname + '/migrations', 
+    driver: 'pg', // or pg.js, mysql, mssql, tedious
+    host: '127.0.0.1',
+    database: 'databasename',
+    username: 'username',
+    password: 'password',
+    newline: 'CRLF'
+});
+```
+
+Under the hood this uses the [newline](www.npmjs.com/package/newline) module for detecting and setting line feeds.
 
 
 ## Installation
