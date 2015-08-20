@@ -2,9 +2,9 @@ var assert = require('assert');
 var async = require('async');
 
 var tests = [];
-var pgUrl = "tcp://qblgodnjwwvqjr:auWYSDIW73KC1scgGv-VDquQGJ@ec2-54-204-24-154.compute-1.amazonaws.com/d42c6mk8cotcn2";
+var pgUrl = "tcp://postgrator:postgrator@localhost/postgrator";
 
-process.env.PGSSLMODE = 'require';
+//process.env.PGSSLMODE = 'require';
 
 /* Test postgres connection string API
 ============================================================================= */
@@ -146,11 +146,12 @@ var buildTestsForConfig = function (config) {
 buildTestsForConfig({
 	migrationDirectory: __dirname + '/migrations',
 	driver: 'pg.js',
-	host: 'ec2-54-204-24-154.compute-1.amazonaws.com',
-	database: 'd42c6mk8cotcn2',
-	username: 'qblgodnjwwvqjr',
-	password: 'auWYSDIW73KC1scgGv-VDquQGJ'
+	host: 'localhost',
+	database: 'postgrator',
+	username: 'postgrator',
+	password: 'postgrator'
 });
+
 
 buildTestsForConfig({
 	migrationDirectory: __dirname + '/migrations',
@@ -160,6 +161,7 @@ buildTestsForConfig({
 	username: 'root',
 	password: ''
 });
+
 /*
 buildTestsForConfig({
 	migrationDirectory: __dirname + '/migrations',
