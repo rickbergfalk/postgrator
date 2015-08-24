@@ -164,6 +164,19 @@ var getCurrentVersion = function (callback) {
 exports.getCurrentVersion = getCurrentVersion;
 
 
+/*
+ isLatestVersion(callback)
+
+ Internal & External function
+ Compares the current version of the schema from the database and the max version of migration available.
+ Then throws an error if they are not the same
+
+ ================================================================= */
+var isLatestVersion = function (callback) {
+
+};
+exports.isLatestVersion = isLatestVersion;
+
 
 /*
 	runMigrations(migrations, finishedCallback)
