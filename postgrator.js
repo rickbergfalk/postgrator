@@ -168,8 +168,8 @@ exports.getCurrentVersion = getCurrentVersion;
  getVersions(callback)
 
  Internal & External function
- Returns an object with the current applied version of the schema from the database and the max version of migration
- available.
+ Returns an object with the current applied version of the schema from
+ the database and the max version of migration available.
 
 
  ================================================================= */
