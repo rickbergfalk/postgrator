@@ -165,17 +165,29 @@ exports.getCurrentVersion = getCurrentVersion;
 
 
 /*
- isLatestVersion(callback)
+ getVersions(callback)
 
  Internal & External function
- Compares the current version of the schema from the database and the max version of migration available.
- Then throws an error if they are not the same
+ Returns an object with the current applied version of the schema from the database and the max version of migration
+ available.
+
 
  ================================================================= */
-var isLatestVersion = function (callback) {
-
+var getVersions = function (callback) {
+	var versions = {};
+	getMigrations()
+	versions.max = Math.max.apply(null, migrations.map(function (migration) { return migration.version; }));
+	getCurrentVersion(function(err, version) {
+		if (err) {
+			console.log('Error in postgrator{isLatestVersion}');
+			console.log('Error:' + err)
+		} else {
+			versions.current = version;
+		}
+		callback(err, versions);
+	});
 };
-exports.isLatestVersion = isLatestVersion;
+exports.getVersions = getVersions;
 
 
 /*
