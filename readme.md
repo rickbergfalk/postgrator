@@ -1,6 +1,6 @@
 # Postgrator
 
-A Node.js SQL migration tool using a directory of plain SQL scripts. 
+A Node.js SQL migration tool using a directory of plain SQL or knex scripts. 
 Supports Postgres, MySQL, and SQL Server.
 
 
@@ -17,16 +17,17 @@ migrations/
   |- 002.undo.optional-description-of-script.sql
   |- 003.do.sql
   |- 003.undo.sql
+  |- 004.knex.optional-description-of-script.js
   |- ... and so on
 ```
 
-The files must follow the convention [version].[action].[optional-description].sql. 
+The files must follow the convention [version].[action].[optional-description].[sql|js]. 
 
 **Version** must be a number, but you may start and increment the numbers in any way you'd like. 
 If you choose to use a purely sequential numbering scheme instead of something based off a timestamp, 
 you will find it helpful to start with 000s or some large number for file organization purposes. 
 
-**Action** must be either "do" or "undo". Do implements the version, and undo undoes it. 
+**Action** must be either "do" or "undo". Do implements the version, and undo undoes it. Knex uses knex to do or undo it.
 
 **Optional-description** can be a label or tag to help keep track of what happens inside the script. Descriptions should not contain periods.
 

@@ -34,6 +34,7 @@
 
 var fs = require('fs');
 var crypto = require('crypto');
+var Promise = require('knex/lib/promise');
 var createCommonClient = require('./lib/create-common-client.js');
 
 var commonClient;
@@ -92,7 +93,8 @@ var getMigrations = function () {
 	migrationFiles.forEach(function(file) {
 		var m = file.split('.');
 		var name = m.length >= 3 ? m.slice(2, m.length - 1).join('.') : file;
-		if (m[m.length - 1] === 'sql') {
+		var ext = m[m.length - 1];
+		if (ext === 'sql' || ext === 'js') {
 			migrations.push({
 				version: Number(m[0]),
 				direction: m[1],
@@ -126,6 +128,18 @@ function runQuery (query, cb) {
 }
 exports.runQuery = runQuery;
 
+/*  runMigrationQuery
+    Execute the function to run the migration query
+================================================================= */
+function runMigrationQuery (useKnex, query, cb) {
+	if(!useKnex) {
+		runQuery(query, cb);
+	} else {
+		query(commonClient.knex, Promise).then(function(){
+			cb();
+		});
+	}
+}
 
 /*  endConnection
     Ends the commonClient's connection to the database
@@ -235,7 +249,12 @@ var runMigrations = function (migrations, currentVersion, targetVersion, finishe
 			});
 		} else {
 			console.log('running ' + migrations[i].filename);
-			runQuery(sql, function (err, result) {
+			var useKnex = (migrations[i].action == 'knex');
+			var query = useKnex
+				? migrations[i].knexjs
+				: sql
+
+			runMigrationQuery(useKnex, query, function (err, result) {
 				if (err) {
 					console.log('Error in runMigrations()');
 					if (finishedCallback) {
@@ -287,11 +306,15 @@ var getRelevantMigrations = function (currentVersion, targetVersion) {
 		// get all up migrations > currentVersion and <= targetVersion
 		console.log('migrating up to ' + targetVersion);
 		migrations.forEach(function(migration) {
-			if (migration.action == 'do' && migration.version > 0 && migration.version <= currentVersion && (config.driver === 'pg' || config.driver === 'pg.js')) {
+			if (migration.action == 'knex') {
+				migration.knexjs = require(config.migrationDirectory + '/' + migration.filename).up;
+			}
+
+			if ((migration.action == 'do' || migration.action == 'knex') && migration.version > 0 && migration.version <= currentVersion && (config.driver === 'pg' || config.driver === 'pg.js')) {
 				migration.md5Sql = 'SELECT md5 FROM ' + config.schemaTable + ' WHERE version = ' + migration.version + ';';
 				relevantMigrations.push(migration);
 			}
-			if (migration.action == 'do' && migration.version > currentVersion && migration.version <= targetVersion) {
+			if ((migration.action == 'do' || migration.action == 'knex') && migration.version > currentVersion && migration.version <= targetVersion) {
 				migration.schemaVersionSQL = config.driver === 'pg' || config.driver === 'pg.js' ? "INSERT INTO "+config.schemaTable+" (version, name, md5) VALUES (" + migration.version + ", '" + migration.name + "', '" + migration.md5 + "');" : "INSERT INTO " + config.schemaTable + " (version) VALUES (" + migration.version + ");";
 				relevantMigrations.push(migration);
 			}
@@ -301,7 +324,11 @@ var getRelevantMigrations = function (currentVersion, targetVersion) {
 		// we are going to migrate down
 		console.log('migrating down to ' + targetVersion);
 		migrations.forEach(function(migration) {
-			if (migration.action == 'undo' && migration.version <= currentVersion && migration.version > targetVersion) {
+			if (migration.action == 'knex') {
+				migration.knexjs = require(config.migrationDirectory + '/' + migration.filename).down;
+			}
+
+			if ((migration.action == 'undo' || migration.action =='knex') && migration.version <= currentVersion && migration.version > targetVersion) {
 				migration.schemaVersionSQL = 'DELETE FROM ' + config.schemaTable + ' WHERE version = ' + migration.version + ';';
 				relevantMigrations.push(migration);
 			}

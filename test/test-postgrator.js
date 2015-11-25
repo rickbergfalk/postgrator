@@ -181,4 +181,5 @@ async.eachSeries(tests, function(testFunc, callback) {
 }, function (err) {
 	assert.ifError(err); // this won't ever happen, as we don't pass errors on in our test. But just in case we do some day...
 	console.log('\nEverythings gonna be alright');
+  process.exit(0);
 });
