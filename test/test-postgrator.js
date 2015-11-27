@@ -98,17 +98,17 @@ var buildTestsForConfig = function (config) {
 		});
 	});
 
-	/* Go up to 'max' (4)
+	/* Go up to 'max' (5)
 	 ------------------------------------------------------------------------- */
 	tests.push(function (callback) {
-		console.log('\n----- ' + config.driver + ' up to max (004) -----');
+		console.log('\n----- ' + config.driver + ' up to max (005) -----');
 		var pg = require('../postgrator.js');
 		pg.setConfig(config);
 		pg.migrate('max', function(err, migrations) {
 			assert.ifError(err);
 			pg.runQuery('SELECT name, age FROM person', function (err, result) {
 				assert.ifError(err);
-				assert.equal(result.rows.length, 4, 'person table should have 4 records at this point');
+				assert.equal(result.rows.length, 5, 'person table should have 5 records at this point');
 				pg.endConnection(callback);
 			});
 		});
