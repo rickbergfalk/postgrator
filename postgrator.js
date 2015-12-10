@@ -134,8 +134,8 @@ exports.runQuery = runQuery;
 function runMigrationQuery (useKnex, query, cb) {
 	if(!useKnex) {
 		runQuery(query, cb);
-	} else {
-		query(commonClient.knex, Promise).then(function(){
+	} else if(query) {
+		Promise.all(query(commonClient.knex)).then(function(){
 			cb();
 		});
 	}
@@ -307,7 +307,7 @@ var getRelevantMigrations = function (currentVersion, targetVersion) {
 		console.log('migrating up to ' + targetVersion);
 		migrations.forEach(function(migration) {
 			if (migration.action == 'knex') {
-				migration.knexjs = require(config.migrationDirectory + '/' + migration.filename).up;
+				migration.knexjs = require(config.migrationDirectory + '/' + migration.filename)['do'];
 			}
 
 			if ((migration.action == 'do' || migration.action == 'knex') && migration.version > 0 && migration.version <= currentVersion && (config.driver === 'pg' || config.driver === 'pg.js')) {
@@ -325,7 +325,7 @@ var getRelevantMigrations = function (currentVersion, targetVersion) {
 		console.log('migrating down to ' + targetVersion);
 		migrations.forEach(function(migration) {
 			if (migration.action == 'knex') {
-				migration.knexjs = require(config.migrationDirectory + '/' + migration.filename).down;
+				migration.knexjs = require(config.migrationDirectory + '/' + migration.filename)['undo'];
 			}
 
 			if ((migration.action == 'undo' || migration.action =='knex') && migration.version <= currentVersion && migration.version > targetVersion) {
