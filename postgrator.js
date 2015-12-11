@@ -137,17 +137,27 @@ function runMigrationQuery (useKnex, query, cb) {
 	if(!useKnex) {
 		runQuery(query, cb);
 	} else if(query) {
-		knexQueries = query(commonClient.knex);
+		commonClient.knex.transaction(function(trx){
+			knexQueries = query(trx);
 
-		if(_.isArray(knexQueries)) {
-			Promise.all(knexQueries).then(function(){
-				cb();
-			});
-		} else {
-			knexQueries.then(function(){
-				cb();
-			})
-		}
+			if(_.isArray(knexQueries)) {
+				Promise.all(knexQueries).then(function(){
+					trx.commit();
+					cb();
+				}).catch(function(err){
+					trx.rollback();
+					cb(err);
+				});
+			} else {
+				knexQueries.then(function(){
+					trx.commit();
+					cb();
+				}).catch(function(err) {
+					trx.rollback();
+					cb(err);
+				})
+			}
+		});
 	}
 }
 
