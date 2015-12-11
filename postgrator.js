@@ -32,6 +32,7 @@
 
 ================================================================= */
 
+var _ = require('lodash');
 var fs = require('fs');
 var crypto = require('crypto');
 var Promise = require('knex/lib/promise');
@@ -132,12 +133,21 @@ exports.runQuery = runQuery;
     Execute the function to run the migration query
 ================================================================= */
 function runMigrationQuery (useKnex, query, cb) {
+	var knexQueries;
 	if(!useKnex) {
 		runQuery(query, cb);
 	} else if(query) {
-		Promise.all(query(commonClient.knex)).then(function(){
-			cb();
-		});
+		knexQueries = query(commonClient.knex);
+
+		if(_.isArray(knexQueries)) {
+			Promise.all(knexQueries).then(function(){
+				cb();
+			});
+		} else {
+			knexQueries.then(function(){
+				cb();
+			})
+		}
 	}
 }
 
