@@ -85,6 +85,7 @@ postgrator.setConfig({
     database: 'databasename',
     username: 'username',
     password: 'password',
+    requestTimeout: 1000 * 60 * 60, //optional. default is one hour
     options: {
         encrypt: true
     }
