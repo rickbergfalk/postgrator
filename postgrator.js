@@ -52,7 +52,7 @@ exports.config = config;
 exports.setConfig = function (configuration) {
     config = configuration;
     config.schemaTable = config.schemaTable || 'schemaversion';
-    config.logProgress = config.logProgress !== null ? config.logProgress : true;
+    config.logProgress = config.logProgress != null ? config.logProgress : true;
     
     commonClient = createCommonClient(config);
 };

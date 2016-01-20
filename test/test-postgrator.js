@@ -149,7 +149,8 @@ buildTestsForConfig({
 	host: 'localhost',
 	database: 'postgrator',
 	username: 'postgrator',
-	password: 'postgrator'
+	password: 'postgrator',
+	logProgress: false
 });
 
 
