@@ -52,7 +52,8 @@ exports.config = config;
 exports.setConfig = function (configuration) {
     config = configuration;
     config.schemaTable = config.schemaTable || 'schemaversion';
-
+    config.logProgress = config.logProgress !== null ? config.logProgress : true;
+    
     commonClient = createCommonClient(config);
 };
 
@@ -179,8 +180,10 @@ var getVersions = function (callback) {
 	versions.max = Math.max.apply(null, migrations.map(function (migration) { return migration.version; }));
 	getCurrentVersion(function(err, version) {
 		if (err) {
-			console.log('Error in postgrator{isLatestVersion}');
-			console.log('Error:' + err)
+		    if (config.logProgress) {
+		        console.log('Error in postgrator{isLatestVersion}');
+                console.log('Error:' + err);
+		    }
 		} else {
 			versions.current = version;
 		}
@@ -208,16 +211,16 @@ var runMigrations = function (migrations, currentVersion, targetVersion, finishe
 	var runNext = function (i) {
 		var sql = fs.readFileSync((config.migrationDirectory + '/' + migrations[i].filename), 'utf8');
 		if (migrations[i].md5Sql) {
-			console.log('verifying checksum of migration ' + migrations[i].filename);
+			config.logProgress && console.log('verifying checksum of migration ' + migrations[i].filename);
 			runQuery(migrations[i].md5Sql, function (err, result) {
 				if (err) {
-					console.log('Error in runMigrations() while retrieving existing migrations');
+					config.logProgress && console.log('Error in runMigrations() while retrieving existing migrations');
 					if (finishedCallback) {
 						finishedCallback(err, migrations);
 					}
 				} else {
 					if (result.rows[0] && result.rows[0].md5 && result.rows[0].md5 !== migrations[i].md5) {
-						console.log('Error in runMigrations() while verifying checksums of existing migrations');
+						config.logProgress && console.log('Error in runMigrations() while verifying checksums of existing migrations');
 
 						if (finishedCallback) {
 							finishedCallback(new Error("For migration [" + migrations[i].version + "], expected MD5 checksum [" + migrations[i].md5 + "] but got [" + result.rows[0].md5 + "]"), migrations);
@@ -235,10 +238,10 @@ var runMigrations = function (migrations, currentVersion, targetVersion, finishe
 				}
 			});
 		} else {
-			console.log('running ' + migrations[i].filename);
+			config.logProgress && console.log('running ' + migrations[i].filename);
 			runQuery(sql, function (err, result) {
 				if (err) {
-					console.log('Error in runMigrations()');
+					config.logProgress && console.log('Error in runMigrations()');
 					if (finishedCallback) {
 						finishedCallback(err, migrations);
 					}
@@ -248,8 +251,10 @@ var runMigrations = function (migrations, currentVersion, targetVersion, finishe
 					runQuery(migrations[i].schemaVersionSQL, function (err, result) {
 						if (err) {
 							// SQL to update config.schemaTable failed.
-							console.log('error updating the ' + config.schemaTable + ' table');
-							console.log(err);
+							if (config.logProgress) {
+							    console.log('error updating the ' + config.schemaTable + ' table');
+                                console.log(err);
+							}
 						} else {
 							// config.schemaTable successfully recorded.
 							// move on to next migration
@@ -286,7 +291,7 @@ var getRelevantMigrations = function (currentVersion, targetVersion) {
 	if (targetVersion >= currentVersion) {
 		// we are migrating up
 		// get all up migrations > currentVersion and <= targetVersion
-		console.log('migrating up to ' + targetVersion);
+		config.logProgress && console.log('migrating up to ' + targetVersion);
 		migrations.forEach(function(migration) {
 			if (migration.action == 'do' && migration.version > 0 && migration.version <= currentVersion && (config.driver === 'pg' || config.driver === 'pg.js')) {
 				migration.md5Sql = 'SELECT md5 FROM ' + config.schemaTable + ' WHERE version = ' + migration.version + ';';
@@ -300,7 +305,7 @@ var getRelevantMigrations = function (currentVersion, targetVersion) {
 		relevantMigrations = relevantMigrations.sort(sortMigrationsAsc);
 	} else if (targetVersion < currentVersion) {
 		// we are going to migrate down
-		console.log('migrating down to ' + targetVersion);
+		config.logProgress && console.log('migrating down to ' + targetVersion);
 		migrations.forEach(function(migration) {
 			if (migration.action == 'undo' && migration.version <= currentVersion && migration.version > targetVersion) {
 				migration.schemaVersionSQL = 'DELETE FROM ' + config.schemaTable + ' WHERE version = ' + migration.version + ';';
@@ -336,12 +341,12 @@ function migrate (target, finishedCallback) {
 		}
 		getCurrentVersion(function(err, currentVersion) {
 			if (err) {
-				console.log('error getting current version');
+				config.logProgress && console.log('error getting current version');
 				if (finishedCallback) finishedCallback(err);
 			} else {
-				console.log('version of database is: ' + currentVersion);
+				config.logProgress && console.log('version of database is: ' + currentVersion);
 				if (targetVersion === undefined) {
-					console.log('no target version supplied - no migrations performed');
+					config.logProgress && console.log('no target version supplied - no migrations performed');
 				} else {
 					var relevantMigrations = getRelevantMigrations(currentVersion, targetVersion);
 					if (relevantMigrations.length > 0) {
@@ -400,7 +405,7 @@ function prep (callback) {
 					callback();
 				}
 			} else {
-				console.log('table ' + config.schemaTable + ' does not exist - creating it.');
+				config.logProgress && console.log('table ' + config.schemaTable + ' does not exist - creating it.');
 				runQuery(commonClient.queries.makeTable, function(err, result) {
 					if (err) {
 						err.helpfulDescription = 'Prep() table BUILD query Failed';
@@ -430,7 +435,7 @@ function fileChecksum (filename, newline) {
 function checksum (str, nl) {
   if (nl) {
     var newline = require('newline');
-    console.log('Converting newline from: ', newline.detect(str), 'to:', nl);
+    config.logProgress && console.log('Converting newline from: ', newline.detect(str), 'to:', nl);
     str = newline.set(str, nl);
   }
 	return crypto.createHash('md5').update(str, 'utf8').digest('hex');
