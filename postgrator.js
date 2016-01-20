@@ -216,8 +216,9 @@ var runMigrations = function (migrations, currentVersion, targetVersion, finishe
 						finishedCallback(err, migrations);
 					}
 				} else {
-					if (result.rows[0].md5 && result.rows[0].md5 !== migrations[i].md5) {
+					if (result.rows[0] && result.rows[0].md5 && result.rows[0].md5 !== migrations[i].md5) {
 						console.log('Error in runMigrations() while verifying checksums of existing migrations');
+
 						if (finishedCallback) {
 							finishedCallback(new Error("For migration [" + migrations[i].version + "], expected MD5 checksum [" + migrations[i].md5 + "] but got [" + result.rows[0].md5 + "]"), migrations);
 						}
