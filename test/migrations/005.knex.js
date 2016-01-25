@@ -1,13 +1,7 @@
-exports.up = function(knex, Promise) {
-	return Promise.all([
-		knex('person').insert({name: 'knex', age: 3 })
-	]);
+exports.do = function(knex, done) {
+	knex('person').insert({name: 'knex', age: 3 }).asCallback(done);
 };
 
-exports.down = function(knex, Promise) {
-	return Promise.all([
-		knex('person')
-			.where('name', 'knex')
-			.del()
-	]);
+exports.undo = function(knex, done) {
+	knex('person').where('name', 'knex').del().asCallback(done);
 };
