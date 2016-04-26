@@ -40,6 +40,7 @@ postgrator.setConfig({
     schemaTable: 'schemaversion', // optional. default is 'schemaversion'
     driver: 'pg', // or pg.js, mysql, mssql, tedious
     host: '127.0.0.1',
+    port: 5432, // optionally provide port
     database: 'databasename',
     username: 'username',
     password: 'password'
