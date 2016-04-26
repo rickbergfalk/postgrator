@@ -1,6 +1,6 @@
 # Postgrator
 
-A Node.js SQL migration tool using a directory of plain SQL scripts. 
+A Node.js SQL migration tool using a directory of plain SQL scripts.
 Supports Postgres, MySQL, and SQL Server.
 
 
@@ -20,35 +20,35 @@ migrations/
   |- ... and so on
 ```
 
-The files must follow the convention [version].[action].[optional-description].sql. 
+The files must follow the convention [version].[action].[optional-description].sql.
 
-**Version** must be a number, but you may start and increment the numbers in any way you'd like. 
-If you choose to use a purely sequential numbering scheme instead of something based off a timestamp, 
-you will find it helpful to start with 000s or some large number for file organization purposes. 
+**Version** must be a number, but you may start and increment the numbers in any way you'd like.
+If you choose to use a purely sequential numbering scheme instead of something based off a timestamp,
+you will find it helpful to start with 000s or some large number for file organization purposes.
 
-**Action** must be either "do" or "undo". Do implements the version, and undo undoes it. 
+**Action** must be either "do" or "undo". Do implements the version, and undo undoes it.
 
 **Optional-description** can be a label or tag to help keep track of what happens inside the script. Descriptions should not contain periods.
 
 To run your sql migrations with Postgrator, write a Node.js script or integrate postgrator with your application in some way:
 
-```js  
+```js
 var postgrator = require('postgrator');
 
 postgrator.setConfig({
-    migrationDirectory: __dirname + '/migrations', 
+    migrationDirectory: __dirname + '/migrations',
     schemaTable: 'schemaversion', // optional. default is 'schemaversion'
     driver: 'pg', // or pg.js, mysql, mssql, tedious
     host: '127.0.0.1',
     database: 'databasename',
     username: 'username',
     password: 'password'
-}); 
+});
 
 postgrator.migrate('002', function (err, migrations) {
 	if (err) {
         console.log(err)
-    } else { 
+    } else {
         console.log(migrations)
     }
     postgrator.endConnection(function () {
@@ -62,12 +62,12 @@ postgrator.migrate('002', function (err, migrations) {
 
 Alternatively, for Postgres you may provide a connection string containing the database and authentication details:
 
-```js  
+```js
 postgrator.config.set({
     migrationDirectory: __dirname + '/migrations',
     driver: 'pg',
     connectionString: 'tcp://username:password@hosturl/databasename'
-}); 
+});
 
 ```
 
@@ -76,9 +76,9 @@ postgrator.config.set({
 
 For SQL Server, you may optionally provide an additional options configuration. This may be necessary if requiring a secure connection for Azure.
 
-```js  
+```js
 postgrator.setConfig({
-    migrationDirectory: __dirname + '/migrations', 
+    migrationDirectory: __dirname + '/migrations',
     schemaTable: 'schemaversion', // optional. default is 'schemaversion'
     driver: 'pg', // or pg.js, mysql, mssql, tedious
     host: '127.0.0.1',
@@ -89,7 +89,7 @@ postgrator.setConfig({
     options: {
         encrypt: true
     }
-}); 
+});
 
 ```
 
@@ -98,9 +98,9 @@ Reference options for mssql for more details: [https://www.npmjs.com/package/mss
 
 ## Compatible Drivers
 
-Acceptable values for **driver** are: pg, pg.js, mysql, tedious, or mssql (the last 2 being MS SQL Server drivers). 
+Acceptable values for **driver** are: pg, pg.js, mysql, tedious, or mssql (the last 2 being MS SQL Server drivers).
 
-Despite the driver specified, Postgrator will use either pg.js, mysql, or mssql (which is wrapper around tedious) behind the scenes. All these drivers are purely javascript based, requiring no extra compilation. 
+Despite the driver specified, Postgrator will use either pg.js, mysql, or mssql (which is wrapper around tedious) behind the scenes. All these drivers are purely javascript based, requiring no extra compilation.
 
 
 
@@ -124,7 +124,7 @@ Despite the major version bump, postgrator's API has not changed. Some of its be
 
 ## What Postgrator is doing
 
-When first run against your database, *Postgrator will create the table specified by config.schemaTable.* Postgrator relies on this table to track what version the database is at. 
+When first run against your database, *Postgrator will create the table specified by config.schemaTable.* Postgrator relies on this table to track what version the database is at.
 
 Postgrator automatically determines whether it needs to go "up" or "down", and will update the schemaTable accordingly. If the database is already at the version specified to migrate to, Postgrator does nothing.
 
@@ -136,7 +136,7 @@ Line feeds: Unix/Mac uses LF, Windows uses 'CRLF', this causes problems for post
 
 ```
 postgrator.setConfig({
-    migrationDirectory: __dirname + '/migrations', 
+    migrationDirectory: __dirname + '/migrations',
     driver: 'pg', // or pg.js, mysql, mssql, tedious
     host: '127.0.0.1',
     database: 'databasename',
@@ -155,7 +155,14 @@ Under the hood this uses the [newline](www.npmjs.com/package/newline) module for
 npm install postgrator
 ```
 
+## Tests
+To run postgrator tests locally, you'll need:
+- A [postgreSQL](http://www.postgresql.org/download/) instance running on default port (5432), with a `postgrator` (password `postgrator`) account and a `postgrator` database
+- A [MySQL](https://dev.mysql.com/downloads/) instance running on default port (3306), with a `root` (password `root`) account and a `test` database
+- A [SQL Server]() instance running on default port (1433), with a `testuser` (password `testuser`) account and a `Utility` database
 
-## License 
+then run `npm test`
+
+## License
 
 MIT

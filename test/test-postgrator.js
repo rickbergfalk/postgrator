@@ -2,7 +2,7 @@ var assert = require('assert');
 var async = require('async');
 
 var tests = [];
-var pgUrl = "tcp://postgrator:postgrator@localhost/postgrator";
+var pgUrl = "tcp://postgrator:postgrator@localhost:5432/postgrator";
 
 //process.env.PGSSLMODE = 'require';
 
@@ -42,8 +42,8 @@ tests.push(function (callback) {
    postgres, mysql, sql server, etc.
 ============================================================================= */
 var buildTestsForConfig = function (config) {
-    
-    
+
+
 	/* Go 2 migrations up.
 	------------------------------------------------------------------------- */
 	tests.push(function (callback) {
@@ -59,7 +59,7 @@ var buildTestsForConfig = function (config) {
 			});
 		});
 	});
-	
+
 	/* try migrating to current version.
     ------------------------------------------------------------------------- */
     tests.push(function (callback) {
@@ -127,7 +127,7 @@ var buildTestsForConfig = function (config) {
             });
 		}, 10000);
 	});
-	
+
 	/* remove version table for next run (to test table creation)
     ------------------------------------------------------------------------- */
     tests.push(function (callback) {
@@ -147,6 +147,7 @@ buildTestsForConfig({
 	migrationDirectory: __dirname + '/migrations',
 	driver: 'pg.js',
 	host: 'localhost',
+	port: 5432,
 	database: 'postgrator',
 	username: 'postgrator',
 	password: 'postgrator',
@@ -158,21 +159,21 @@ buildTestsForConfig({
 	migrationDirectory: __dirname + '/migrations',
 	driver: 'mysql',
 	host: 'localhost',
+	port: 3306,
 	database: 'test',
 	username: 'root',
-	password: ''
+	password: 'root'
 });
 
-/*
 buildTestsForConfig({
 	migrationDirectory: __dirname + '/migrations',
 	driver: 'tedious',
 	host: '127.0.0.1',
+	port: 1433,
 	database: 'Utility',
 	username: 'testuser',
 	password: 'testuser'
 });
-*/
 
 /* Run the tests in an asyncy way
 ============================================================================= */
@@ -182,4 +183,5 @@ async.eachSeries(tests, function(testFunc, callback) {
 }, function (err) {
 	assert.ifError(err); // this won't ever happen, as we don't pass errors on in our test. But just in case we do some day...
 	console.log('\nEverythings gonna be alright');
+	process.exit(0);
 });
