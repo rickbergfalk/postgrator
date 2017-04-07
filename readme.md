@@ -69,9 +69,17 @@ postgrator.setConfig({
     driver: 'pg',
     connectionString: 'tcp://username:password@hosturl/databasename'
 });
-
 ```
 
+Postgres also supports simple ssl config
+```js
+postgrator.setConfig({
+    migrationDirectory: __dirname + '/migrations',
+    driver: 'pg',
+    ssl: true,
+    // rest of postgres config
+});
+```
 
 ### SQL Server specific notes:
 
