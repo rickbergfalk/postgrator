@@ -1,9 +1,9 @@
 # Postgrator
 
-A Node.js SQL migration tool using a directory of plain SQL scripts.
+A Node.js SQL migration library using a directory of plain SQL scripts.
 Supports Postgres, MySQL, and SQL Server.
 
-
+Available as a cli tool: https://www.npmjs.com/package/postgrator-cli.
 
 ## Usage
 
