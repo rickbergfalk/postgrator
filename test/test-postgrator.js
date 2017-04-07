@@ -7,8 +7,6 @@ var pgUrl = 'tcp://postgrator:postgrator@localhost:5432/postgrator'
 
 var migrationDirectory = path.join(__dirname, 'migrations')
 
-// process.env.PGSSLMODE = 'require';
-
 /* Test postgres connection string API
 ============================================================================= */
 tests.push(function (callback) {

@@ -36,25 +36,26 @@ To run your sql migrations with Postgrator, write a Node.js script or integrate 
 var postgrator = require('postgrator');
 
 postgrator.setConfig({
-    migrationDirectory: __dirname + '/migrations',
-    schemaTable: 'schemaversion', // optional. default is 'schemaversion'
-    driver: 'pg', // or mysql, mssql
-    host: '127.0.0.1',
-    port: 5432, // optionally provide port
-    database: 'databasename',
-    username: 'username',
-    password: 'password'
+  migrationDirectory: __dirname + '/migrations',
+  schemaTable: 'schemaversion', // optional. default is 'schemaversion'
+  driver: 'pg', // or mysql, mssql
+  host: '127.0.0.1',
+  port: 5432, // optionally provide port
+  database: 'databasename',
+  username: 'username',
+  password: 'password'
 });
 
+// migrate to version specified, or supply 'max' to go all the way up
 postgrator.migrate('002', function (err, migrations) {
-	if (err) {
-        console.log(err)
-    } else {
-        console.log(migrations)
-    }
-    postgrator.endConnection(function () {
-        // connection is closed, or will close in the case of SQL Server
-    });
+  if (err) {
+    console.log(err)
+  } else {
+    console.log(migrations)
+  }
+  postgrator.endConnection(function () {
+    // connection is closed, or will close in the case of SQL Server
+  });
 });
 ```
 
@@ -65,20 +66,20 @@ Alternatively, for Postgres you may provide a connection string containing the d
 
 ```js
 postgrator.setConfig({
-    migrationDirectory: __dirname + '/migrations',
-    driver: 'pg',
-    connectionString: 'tcp://username:password@hosturl/databasename'
-});
+  migrationDirectory: __dirname + '/migrations',
+  driver: 'pg',
+  connectionString: 'tcp://username:password@hosturl/databasename'
+})
 ```
 
 Postgres also supports simple ssl config
 ```js
 postgrator.setConfig({
-    migrationDirectory: __dirname + '/migrations',
-    driver: 'pg',
-    ssl: true,
-    // rest of postgres config
-});
+  migrationDirectory: __dirname + '/migrations',
+  driver: 'pg',
+  ssl: true,
+  // rest of postgres config
+})
 ```
 
 ### SQL Server specific notes:
@@ -87,17 +88,17 @@ For SQL Server, you may optionally provide an additional options configuration. 
 
 ```js
 postgrator.setConfig({
-    migrationDirectory: __dirname + '/migrations',
-    schemaTable: 'schemaversion', // optional. default is 'schemaversion'
-    driver: 'mssql', 
-    host: '127.0.0.1',
-    database: 'databasename',
-    username: 'username',
-    password: 'password',
-    requestTimeout: 1000 * 60 * 60, //optional. default is one hour
-    options: {
-        encrypt: true
-    }
+  migrationDirectory: __dirname + '/migrations',
+  schemaTable: 'schemaversion', // optional. default is 'schemaversion'
+  driver: 'mssql', 
+  host: '127.0.0.1',
+  database: 'databasename',
+  username: 'username',
+  password: 'password',
+  requestTimeout: 1000 * 60 * 60, //optional. default is one hour
+  options: {
+    encrypt: true
+  }
 });
 
 ```

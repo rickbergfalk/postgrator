@@ -1,36 +1,3 @@
-/*
-
-  API:
-
-    var postgrator = require('postgrator');
-
-    postgrator.setConfig({
-        driver: 'pg', // or pg.js, mysql, mssql, tedious
-        migrationDirectory: '',
-        logProgress: true,
-        schemaTable: '', // default is 'schemaversion'
-        host: '',
-        database: '',
-        username: '',
-        password: ''
-    });
-
-    postgrator.migrate(version, function (err, migrations) {
-        // handle the error, and if you want end the connection
-        postgrator.endConnection();
-    });
-
-  NOTES:
-
-  If the table specified by config.schemaTable is not present, it will be created automatically!
-  If no migration version is supplied, no migration is performed
-
-  THINGS TO IMPLEMENT SOMEDAY (MAYBE)
-
-  postgrator.migrate('max', callback); // migrate to the latest migration available
-
-================================================================= */
-
 var fs = require('fs')
 var crypto = require('crypto')
 var createCommonClient = require('./lib/create-common-client.js')
@@ -74,7 +41,6 @@ var sortMigrationsDesc = function (a, b) {
   Internal function
   Reads the migration directory for all the migration files.
   It is SYNC out of laziness and simplicity
-
 ================================================================= */
 var getMigrations = function () {
   migrations = []
@@ -95,15 +61,16 @@ var getMigrations = function () {
   })
 }
 
-/*  runQuery
-    connects the database driver if it is not currently connected.
-    Executes an arbitrary sql query using the common client
+/*
+  runQuery
+
+  connects the database driver if it is not currently connected.
+  Executes an arbitrary sql query using the common client
 ================================================================= */
 function runQuery (query, cb) {
   if (commonClient.connected) {
     commonClient.runQuery(query, cb)
   } else {
-    // connect common client
     commonClient.createConnection(function (err) {
       if (err) cb(err)
       else {
@@ -115,8 +82,9 @@ function runQuery (query, cb) {
 }
 exports.runQuery = runQuery
 
-/*  endConnection
-    Ends the commonClient's connection to the database
+/*
+  endConnection
+  Ends the commonClient's connection to the database
 ================================================================= */
 function endConnection (cb) {
   if (commonClient.connected) {
