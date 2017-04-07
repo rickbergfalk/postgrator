@@ -154,11 +154,26 @@ npm install postgrator
 
 ## Tests
 To run postgrator tests locally, you'll need:
-- A [postgreSQL](http://www.postgresql.org/download/) instance running on default port (5432), with a `postgrator` (password `postgrator`) account and a `postgrator` database
-- A [MySQL](https://dev.mysql.com/downloads/) instance running on default port (3306), with a `root` (password `root`) account and a `test` database
-- A [SQL Server]() instance running on default port (1433), with a `testuser` (password `testuser`) account and a `Utility` database
+- A `postgreSQL` instance running on default port (5432), with a `postgrator` (password `postgrator`) account and a `postgrator` database.
+- A `MySQL` instance running on default port (3306), with a `root` (password `root`) account and a `test` database
+- Optionally a `SQL Server` instance running on default port (1433), with a `testuser` (password `testuser`) account and a `Utility` database (SQL Server tests are commented out)
 
-then run `npm test`
+If you have docker installed you can run the following containers
+
+```sh
+docker run --name postgratorpg -p 5432:5432 -e POSTGRES_USER=postgrator -e POSTGRES_PASSWORD=postgrator -d postgres
+docker run --name postgratormysql -p 3306:3306 -e MYSQL_ROOT_PASSWORD=root -e MYSQL_DATABASE=test -d mysql
+# mssql docker needs lots of ram and an initial script or something :(
+# docker run --name postgratormssql -e 'ACCEPT_EULA=Y' -e 'SA_PASSWORD=testuser' -p 1433:1433 -d microsoft/mssql-server-linux
+```
+
+Then run `npm test`. To remove the images after you're done you can run the following commands, 
+though this won't remove the postges/mysql images cached.
+
+```sh
+docker rm postgratorpg
+docker rm postgratormysql
+```
 
 ## License
 
