@@ -203,6 +203,9 @@ var runMigrations = function (migrations, currentVersion, targetVersion, finishe
                 console.log('error updating the ' + config.schemaTable + ' table')
                 console.log(err)
               }
+              if (finishedCallback) {
+                finishedCallback(err, migrations)
+              }
             } else {
               // config.schemaTable successfully recorded.
               // move on to next migration
