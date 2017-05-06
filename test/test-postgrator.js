@@ -97,7 +97,7 @@ var buildTestsForConfig = function (config) {
       /*
        using this to demo that you use environment variables to generate sql
        */
-      process.env.TEST_NAME = 'aesthete';
+      process.env.TEST_NAME = 'aesthete'
 
       pg.migrate('005', function (err, migrations) {
         assert.ifError(err)
@@ -105,7 +105,7 @@ var buildTestsForConfig = function (config) {
         pg.runQuery('SELECT name, age FROM person', function (err, result) {
           assert.ifError(err)
           assert.equal(result.rows.length, 5, 'person table should have 5 records at this point')
-          assert.equal(result.rows[4].name , process.env.TEST_NAME);
+          assert.equal(result.rows[4].name, process.env.TEST_NAME)
           pg.endConnection(callback)
         })
       })
@@ -122,7 +122,7 @@ var buildTestsForConfig = function (config) {
       /*
        using this to demo that you use environment variables to generate sql
        */
-      process.env.TEST_ANOTHER_NAME = 'sop';
+      process.env.TEST_ANOTHER_NAME = 'sop'
 
       pg.migrate('006', function (err, migrations) {
         assert.ifError(err)
@@ -130,8 +130,8 @@ var buildTestsForConfig = function (config) {
         pg.runQuery('SELECT name, age FROM person', function (err, result) {
           assert.ifError(err)
           assert.equal(result.rows.length, 6, 'person table should have 6 records at this point')
-          assert.equal(result.rows[4].name , process.env.TEST_NAME);
-          assert.equal(result.rows[5].name , process.env.TEST_ANOTHER_NAME);
+          assert.equal(result.rows[4].name, process.env.TEST_NAME)
+          assert.equal(result.rows[5].name, process.env.TEST_ANOTHER_NAME)
           pg.endConnection(callback)
         })
       })
@@ -153,9 +153,6 @@ var buildTestsForConfig = function (config) {
       })
     })
   })
-
-
-
 
   /* Go down to 0
    ------------------------------------------------------------------------- */
@@ -205,15 +202,15 @@ buildTestsForConfig({
   password: 'root'
 })
 
-buildTestsForConfig({
-  migrationDirectory: migrationDirectory,
-  driver: 'tedious',
-  host: '127.0.0.1',
-  port: 1433,
-  database: 'Utility',
-  username: 'sa',
-  password: 'testuser'
-})
+// buildTestsForConfig({
+//   migrationDirectory: migrationDirectory,
+//   driver: 'tedious',
+//   host: '127.0.0.1',
+//   port: 1433,
+//   database: 'Utility',
+//   username: 'sa',
+//   password: 'testuser'
+// })
 
 /* Run the tests in an asyncy way
 ============================================================================= */
