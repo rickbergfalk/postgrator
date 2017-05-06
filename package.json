@@ -1,6 +1,6 @@
 {
   "name": "postgrator",
-  "version": "2.9.0",
+  "version": "2.10.0",
   "author": "Rick Bergfalk <rick.bergfalk@gmail.com>",
   "description": "Postgrator is a SQL migration tool for SQL people",
   "keywords": [
