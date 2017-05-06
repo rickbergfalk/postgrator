@@ -17,10 +17,12 @@ migrations/
   |- 002.undo.optional-description-of-script.sql
   |- 003.do.sql
   |- 003.undo.sql
+  |- 004.do.js
+  |- 004.undo.js
   |- ... and so on
 ```
 
-The files must follow the convention [version].[action].[optional-description].sql.
+The files must follow the convention [version].[action].[optional-description].sql or  [version].[action].[optional-description].js  
 
 **Version** must be a number, but you may start and increment the numbers in any way you'd like.
 If you choose to use a purely sequential numbering scheme instead of something based off a timestamp,
@@ -29,6 +31,17 @@ you will find it helpful to start with 000s or some large number for file organi
 **Action** must be either "do" or "undo". Do implements the version, and undo undoes it.
 
 **Optional-description** can be a label or tag to help keep track of what happens inside the script. Descriptions should not contain periods.
+
+**SQL or JS**
+You have a choice of either using a plain SQL file or you can also generate your SQL via a javascript module. The javascript module should export a function called generateSql() that returns back a string representing the SQL. For example:
+   
+```javascript
+module.exports.generateSql = function () {
+  return "CREATE USER transaction_user WITH PASSWORD '"+process.env.TRANSACTION_USER_PASSWORD+"'";
+};
+```   
+
+You might want to choose the JS file approach, in order to make use (secret) environment variables such as the above.
 
 To run your sql migrations with Postgrator, write a Node.js script or integrate postgrator with your application in some way:
 
