@@ -48,6 +48,7 @@ var getMigrations = function () {
   migrationFiles.forEach(function (file) {
     var m = file.split('.')
     var name = m.length >= 3 ? m.slice(2, m.length - 1).join('.') : file
+    var filename = config.migrationDirectory + '/' + file;
     if (m[m.length - 1] === 'sql') {
       migrations.push({
         version: Number(m[0]),
@@ -55,7 +56,24 @@ var getMigrations = function () {
         action: m[1],
         filename: file,
         name: name,
-        md5: fileChecksum(config.migrationDirectory + '/' + file, config.newline)
+        md5: fileChecksum(filename, config.newline),
+        getSql: function(){
+          return fs.readFileSync(filename, 'utf8')
+        }
+      })
+    } else if(m[m.length - 1] === 'js') {
+      var jsModule = require(filename);
+      var sql = jsModule.generateSql();
+      migrations.push({
+        version: Number(m[0]),
+        direction: m[1],
+        action: m[1],
+        filename: file,
+        name: name,
+        md5: checksum(sql, config.newline),
+        getSql: function(){
+          return sql;
+        }
       })
     }
   })
@@ -157,7 +175,7 @@ exports.getVersions = getVersions
 ================================================================= */
 var runMigrations = function (migrations, currentVersion, targetVersion, finishedCallback) {
   var runNext = function (i) {
-    var sql = fs.readFileSync((config.migrationDirectory + '/' + migrations[i].filename), 'utf8')
+    var sql = migrations[i].getSql();
     if (migrations[i].md5Sql) {
       config.logProgress && console.log('verifying checksum of migration ' + migrations[i].filename)
       runQuery(migrations[i].md5Sql, function (err, result) {
