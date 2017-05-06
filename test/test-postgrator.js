@@ -205,15 +205,15 @@ buildTestsForConfig({
   password: 'root'
 })
 
-// buildTestsForConfig({
-//   migrationDirectory: migrationDirectory,
-//   driver: 'tedious',
-//   host: '127.0.0.1',
-//   port: 1433,
-//   database: 'Utility',
-//   username: 'sa',
-//   password: 'testuser'
-// })
+buildTestsForConfig({
+  migrationDirectory: migrationDirectory,
+  driver: 'tedious',
+  host: '127.0.0.1',
+  port: 1433,
+  database: 'Utility',
+  username: 'sa',
+  password: 'testuser'
+})
 
 /* Run the tests in an asyncy way
 ============================================================================= */
