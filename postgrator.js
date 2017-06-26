@@ -180,6 +180,7 @@ var getCurrentVersion = function (callback) {
 			console.error('something went wrong getting the Current Version from the ' + config.schemaTable + ' table');
 		} else {
 			if (result.rows.length > 0) currentVersion = result.rows[0].version;
+			else if (result && result.length > 0) currentVersion = result[0].version;
 			else currentVersion = 0;
 		}
 		callback(err, currentVersion);
@@ -409,7 +410,7 @@ function prep (callback) {
 			err.helpfulDescription = 'Prep() table CHECK query Failed';
 			callback(err);
 		} else {
-			if (result.rows && result.rows.length > 0) {
+			if ((result.rows && result.rows.length > 0) || (result && result.length > 0)) {
 				if (config.driver === 'pg' || config.driver === 'pg.js') {
 					// config.schemaTable exists, does it have the md5 column? (PostgreSQL only)
 					runQuery("SELECT column_name, data_type, character_maximum_length FROM INFORMATION_SCHEMA.COLUMNS WHERE table_name = '" + config.schemaTable + "' AND column_name = 'md5';", function (err, result) {
