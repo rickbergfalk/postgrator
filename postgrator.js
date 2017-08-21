@@ -149,8 +149,8 @@ var getVersions = function (callback) {
   getCurrentVersion(function (err, version) {
     if (err) {
       if (config.logProgress) {
-        console.log('Error in postgrator{isLatestVersion}')
-        console.log('Error:' + err)
+        logMessage('Error in postgrator{isLatestVersion}',1)
+        logMessage('Error:' + err,1)
       }
     } else {
       versions.current = version
@@ -177,16 +177,16 @@ var runMigrations = function (migrations, currentVersion, targetVersion, finishe
   var runNext = function (i) {
     var sql = migrations[i].getSql()
     if (migrations[i].md5Sql) {
-      config.logProgress && console.log('verifying checksum of migration ' + migrations[i].filename)
+      logMessage('verifying checksum of migration ' + migrations[i].filename)
       runQuery(migrations[i].md5Sql, function (err, result) {
         if (err) {
-          config.logProgress && console.log('Error in runMigrations() while retrieving existing migrations')
+          logMessage('Error in runMigrations() while retrieving existing migrations')
           if (finishedCallback) {
             finishedCallback(err, migrations)
           }
         } else {
           if (result.rows[0] && result.rows[0].md5 && result.rows[0].md5 !== migrations[i].md5) {
-            config.logProgress && console.log('Error in runMigrations() while verifying checksums of existing migrations')
+            logMessage('Error in runMigrations() while verifying checksums of existing migrations')
 
             if (finishedCallback) {
               finishedCallback(new Error('For migration [' + migrations[i].version + '], expected MD5 checksum [' + migrations[i].md5 + '] but got [' + result.rows[0].md5 + ']'), migrations)
@@ -204,10 +204,10 @@ var runMigrations = function (migrations, currentVersion, targetVersion, finishe
         }
       })
     } else {
-      config.logProgress && console.log('running ' + migrations[i].filename)
+      logMessage('running ' + migrations[i].filename)
       runQuery(sql, function (err, result) {
         if (err) {
-          config.logProgress && console.log('Error in runMigrations()')
+          logMessage('Error in runMigrations()')
           if (finishedCallback) {
             finishedCallback(err, migrations)
           }
@@ -218,8 +218,8 @@ var runMigrations = function (migrations, currentVersion, targetVersion, finishe
             if (err) {
               // SQL to update config.schemaTable failed.
               if (config.logProgress) {
-                console.log('error updating the ' + config.schemaTable + ' table')
-                console.log(err)
+                logMessage('error updating the ' + config.schemaTable + ' table',1)
+                logMessage(err,1)
               }
               if (finishedCallback) {
                 finishedCallback(err, migrations)
@@ -257,7 +257,7 @@ var getRelevantMigrations = function (currentVersion, targetVersion) {
   if (targetVersion >= currentVersion) {
     // we are migrating up
     // get all up migrations > currentVersion and <= targetVersion
-    config.logProgress && console.log('migrating up to ' + targetVersion)
+    logMessage('migrating up to ' + targetVersion)
     migrations.forEach(function (migration) {
       if (migration.action === 'do' && migration.version > 0 && migration.version <= currentVersion && (config.driver === 'pg' || config.driver === 'pg.js')) {
         migration.md5Sql = 'SELECT md5 FROM ' + config.schemaTable + ' WHERE version = ' + migration.version + ';'
@@ -271,7 +271,7 @@ var getRelevantMigrations = function (currentVersion, targetVersion) {
     relevantMigrations = relevantMigrations.sort(sortMigrationsAsc)
   } else if (targetVersion < currentVersion) {
     // we are going to migrate down
-    config.logProgress && console.log('migrating down to ' + targetVersion)
+    logMessage('migrating down to ' + targetVersion)
     migrations.forEach(function (migration) {
       if (migration.action === 'undo' && migration.version <= currentVersion && migration.version > targetVersion) {
         migration.schemaVersionSQL = 'DELETE FROM ' + config.schemaTable + ' WHERE version = ' + migration.version + ';'
@@ -305,12 +305,12 @@ function migrate (target, finishedCallback) {
     }
     getCurrentVersion(function (err, currentVersion) {
       if (err) {
-        config.logProgress && console.log('error getting current version')
+        logMessage('error getting current version')
         if (finishedCallback) finishedCallback(err)
       } else {
-        config.logProgress && console.log('version of database is: ' + currentVersion)
+        logMessage('version of database is: ' + currentVersion)
         if (targetVersion === undefined) {
-          config.logProgress && console.log('no target version supplied - no migrations performed')
+          logMessage('no target version supplied - no migrations performed')
         } else {
           var relevantMigrations = getRelevantMigrations(currentVersion, targetVersion)
           if (relevantMigrations.length > 0) {
@@ -367,7 +367,7 @@ function prep (callback) {
           callback()
         }
       } else {
-        config.logProgress && console.log('table ' + config.schemaTable + ' does not exist - creating it.')
+        logMessage('table ' + config.schemaTable + ' does not exist - creating it.')
         runQuery(commonClient.queries.makeTable, function (err, result) {
           if (err) {
             err.helpfulDescription = 'Prep() table BUILD query Failed'
@@ -379,6 +379,22 @@ function prep (callback) {
       }
     }
   })
+}
+
+/*
+  .logMessage(message, alwaysLog)
+  
+  Centralized spot to send log messages
+  
+  message - The message to log
+  alwaysLog - optional boolean value, set to 1 to log a message (like an error) regardless of the users logging preferences.
+================================================================= */
+function logMessage(message, alwaysLog){
+  if(!config.logProgress && !alwaysLog){ return; }
+  
+  //Using the system default time locale/options for now
+  var messagePrefix = '['+(new Date().toLocaleTimeString())+']';
+  console.log(messagePrefix + ' ' + message);
 }
 
 /*
@@ -396,7 +412,7 @@ function fileChecksum (filename, newline) {
 function checksum (str, nl) {
   if (nl) {
     var newline = require('newline')
-    config.logProgress && console.log('Converting newline from: ', newline.detect(str), 'to:', nl)
+    logMessage('Converting newline from: ', newline.detect(str), 'to:', nl)
     str = newline.set(str, nl)
   }
   return crypto.createHash('md5').update(str, 'utf8').digest('hex')
