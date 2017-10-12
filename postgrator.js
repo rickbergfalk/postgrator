@@ -145,7 +145,7 @@ exports.getCurrentVersion = getCurrentVersion
 var getVersions = function (callback) {
   var versions = {}
   getMigrations()
-  versions.max = Math.max.apply(null, migrations.map(function (migration) { return migration.version }))
+  versions.max = Math.max.apply(null, migrations.map(function (migration) { return migration.version }).filter(function(version){ return !isNaN(version) }) )
   getCurrentVersion(function (err, version) {
     if (err) {
       if (config.logProgress) {
@@ -299,7 +299,7 @@ function migrate (target, finishedCallback) {
     }
     getMigrations()
     if (target && target === 'max') {
-      targetVersion = Math.max.apply(null, migrations.map(function (migration) { return migration.version }))
+      targetVersion = Math.max.apply(null, migrations.map(function (migration) { return migration.version }).filter(function(version){ return !isNaN(version) }) )
     } else if (target) {
       targetVersion = Number(target)
     }
@@ -383,15 +383,15 @@ function prep (callback) {
 
 /*
   .logMessage(message, alwaysLog)
-  
+
   Centralized spot to send log messages
-  
+
   message - The message to log
   alwaysLog - optional boolean value, set to 1 to log a message (like an error) regardless of the users logging preferences.
 ================================================================= */
 function logMessage(message, alwaysLog){
   if(!config.logProgress && !alwaysLog){ return; }
-  
+
   //Using the system default time locale/options for now
   var messagePrefix = '['+(new Date().toLocaleTimeString())+']';
   console.log(messagePrefix + ' ' + message);
