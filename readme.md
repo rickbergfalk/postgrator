@@ -22,7 +22,7 @@ migrations/
   |- ... and so on
 ```
 
-The files must follow the convention [version].[action].[optional-description].sql or  [version].[action].[optional-description].js  
+The files must follow the convention [version].[action].[optional-description].sql or  [version].[action].[optional-description].js
 
 **Version** must be a number, but you may start and increment the numbers in any way you'd like.
 If you choose to use a purely sequential numbering scheme instead of something based off a timestamp,
@@ -34,12 +34,12 @@ you will find it helpful to start with 000s or some large number for file organi
 
 **SQL or JS**
 You have a choice of either using a plain SQL file or you can also generate your SQL via a javascript module. The javascript module should export a function called generateSql() that returns back a string representing the SQL. For example:
-   
+
 ```javascript
 module.exports.generateSql = function () {
   return "CREATE USER transaction_user WITH PASSWORD '"+process.env.TRANSACTION_USER_PASSWORD+"'";
 };
-```   
+```
 
 You might want to choose the JS file approach, in order to make use (secret) environment variables such as the above.
 
@@ -103,7 +103,7 @@ For SQL Server, you may optionally provide an additional options configuration. 
 postgrator.setConfig({
   migrationDirectory: __dirname + '/migrations',
   schemaTable: 'schemaversion', // optional. default is 'schemaversion'
-  driver: 'mssql', 
+  driver: 'mssql',
   host: '127.0.0.1',
   database: 'databasename',
   username: 'username',
@@ -163,6 +163,10 @@ Under the hood this uses the [newline](www.npmjs.com/package/newline) module for
 
 ```js
 npm install postgrator
+# install necessary db engine(s) if they are not installed yet
+npm install pg
+npm install mysql
+npm install mssql
 ```
 
 
@@ -181,7 +185,7 @@ docker run --name postgratormysql -p 3306:3306 -e MYSQL_ROOT_PASSWORD=root -e MY
 # docker run --name postgratormssql -e 'ACCEPT_EULA=Y' -e 'SA_PASSWORD=testuser' -p 1433:1433 -d microsoft/mssql-server-linux
 ```
 
-Then run `npm test`. To remove the images after you're done you can run the following commands, 
+Then run `npm test`. To remove the images after you're done you can run the following commands,
 though this won't remove the postges/mysql images cached.
 
 ```sh
