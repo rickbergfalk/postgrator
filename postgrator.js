@@ -146,6 +146,7 @@ var getVersions = function (callback) {
   var versions = {}
   getMigrations()
   versions.max = Math.max.apply(null, migrations.map(function (migration) { return migration.version }).filter(function(version){ return !isNaN(version) }) )
+  versions.migrations = migrations;
   getCurrentVersion(function (err, version) {
     if (err) {
       if (config.logProgress) {
