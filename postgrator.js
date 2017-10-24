@@ -145,7 +145,8 @@ exports.getCurrentVersion = getCurrentVersion
 var getVersions = function (callback) {
   var versions = {}
   getMigrations()
-  versions.max = Math.max.apply(null, migrations.map(function (migration) { return migration.version }).filter(function(version){ return !isNaN(version) }) )
+  versions.migrations = migrations.map(function (migration) { return migration.version }).filter(function(version){ return !isNaN(version) })
+  versions.max = Math.max.apply(null, versions.migrations)
   getCurrentVersion(function (err, version) {
     if (err) {
       if (config.logProgress) {
