@@ -13,7 +13,7 @@ exports.config = config
 
 /*  Set Config
 ================================================================= */
-exports.setConfig = function (configuration) {
+exports.setConfig = function(configuration) {
   config = configuration
   config.schemaTable = config.schemaTable || 'schemaversion'
   config.logProgress = config.logProgress != null ? config.logProgress : true
@@ -23,15 +23,23 @@ exports.setConfig = function (configuration) {
 
 /*  Migration Sorting Functions
 ================================================================= */
-var sortMigrationsAsc = function (a, b) {
-  if (a.version < b.version) { return -1 }
-  if (a.version > b.version) { return 1 }
+var sortMigrationsAsc = function(a, b) {
+  if (a.version < b.version) {
+    return -1
+  }
+  if (a.version > b.version) {
+    return 1
+  }
   return 0
 }
 
-var sortMigrationsDesc = function (a, b) {
-  if (a.version < b.version) { return 1 }
-  if (a.version > b.version) { return -1 }
+var sortMigrationsDesc = function(a, b) {
+  if (a.version < b.version) {
+    return 1
+  }
+  if (a.version > b.version) {
+    return -1
+  }
   return 0
 }
 
@@ -42,10 +50,10 @@ var sortMigrationsDesc = function (a, b) {
   Reads the migration directory for all the migration files.
   It is SYNC out of laziness and simplicity
 ================================================================= */
-var getMigrations = function () {
+var getMigrations = function() {
   migrations = []
   var migrationFiles = fs.readdirSync(config.migrationDirectory)
-  migrationFiles.forEach(function (file) {
+  migrationFiles.forEach(function(file) {
     var m = file.split('.')
     var name = m.length >= 3 ? m.slice(2, m.length - 1).join('.') : file
     var filename = config.migrationDirectory + '/' + file
@@ -57,7 +65,7 @@ var getMigrations = function () {
         filename: file,
         name: name,
         md5: fileChecksum(filename, config.newline),
-        getSql: function () {
+        getSql: function() {
           return fs.readFileSync(filename, 'utf8')
         }
       })
@@ -71,7 +79,7 @@ var getMigrations = function () {
         filename: file,
         name: name,
         md5: checksum(sql, config.newline),
-        getSql: function () {
+        getSql: function() {
           return sql
         }
       })
@@ -85,11 +93,11 @@ var getMigrations = function () {
   connects the database driver if it is not currently connected.
   Executes an arbitrary sql query using the common client
 ================================================================= */
-function runQuery (query, cb) {
+function runQuery(query, cb) {
   if (commonClient.connected) {
     commonClient.runQuery(query, cb)
   } else {
-    commonClient.createConnection(function (err) {
+    commonClient.createConnection(function(err) {
       if (err) cb(err)
       else {
         commonClient.connected = true
@@ -104,9 +112,9 @@ exports.runQuery = runQuery
   endConnection
   Ends the commonClient's connection to the database
 ================================================================= */
-function endConnection (cb) {
+function endConnection(cb) {
   if (commonClient.connected) {
-    commonClient.endConnection(function () {
+    commonClient.endConnection(function() {
       commonClient.connected = false
       cb()
     })
@@ -122,10 +130,15 @@ exports.endConnection = endConnection
   Internal & External function
   Gets the current version of the schema from the database.
 ================================================================= */
-var getCurrentVersion = function (callback) {
-  runQuery(commonClient.queries.getCurrentVersion, function (err, result) {
-    if (err) { // means the table probably doesn't exist yet. To lazy to check.
-      console.error('something went wrong getting the Current Version from the ' + config.schemaTable + ' table')
+var getCurrentVersion = function(callback) {
+  runQuery(commonClient.queries.getCurrentVersion, function(err, result) {
+    if (err) {
+      // means the table probably doesn't exist yet. To lazy to check.
+      console.error(
+        'something went wrong getting the Current Version from the ' +
+          config.schemaTable +
+          ' table'
+      )
     } else {
       if (result.rows.length > 0) currentVersion = result.rows[0].version
       else currentVersion = 0
@@ -142,16 +155,22 @@ exports.getCurrentVersion = getCurrentVersion
   Returns an object with the current applied version of the schema from
   the database and the max version of migration available.
 ================================================================= */
-var getVersions = function (callback) {
+var getVersions = function(callback) {
   var versions = {}
   getMigrations()
-  versions.migrations = migrations.map(function (migration) { return migration.version }).filter(function(version){ return !isNaN(version) })
+  versions.migrations = migrations
+    .map(function(migration) {
+      return migration.version
+    })
+    .filter(function(version) {
+      return !isNaN(version)
+    })
   versions.max = Math.max.apply(null, versions.migrations)
-  getCurrentVersion(function (err, version) {
+  getCurrentVersion(function(err, version) {
     if (err) {
       if (config.logProgress) {
-        logMessage('Error in postgrator{isLatestVersion}',1)
-        logMessage('Error:' + err,1)
+        logMessage('Error in postgrator{isLatestVersion}', 1)
+        logMessage('Error:' + err, 1)
       }
     } else {
       versions.current = version
@@ -174,23 +193,47 @@ exports.getVersions = getVersions
   - if all goes as planned, we run the next migration
   - once all migrations have been run, we call the callback.
 ================================================================= */
-var runMigrations = function (migrations, currentVersion, targetVersion, finishedCallback) {
-  var runNext = function (i) {
+var runMigrations = function(
+  migrations,
+  currentVersion,
+  targetVersion,
+  finishedCallback
+) {
+  var runNext = function(i) {
     var sql = migrations[i].getSql()
     if (migrations[i].md5Sql) {
       logMessage('verifying checksum of migration ' + migrations[i].filename)
-      runQuery(migrations[i].md5Sql, function (err, result) {
+      runQuery(migrations[i].md5Sql, function(err, result) {
         if (err) {
-          logMessage('Error in runMigrations() while retrieving existing migrations')
+          logMessage(
+            'Error in runMigrations() while retrieving existing migrations'
+          )
           if (finishedCallback) {
             finishedCallback(err, migrations)
           }
         } else {
-          if (result.rows[0] && result.rows[0].md5 && result.rows[0].md5 !== migrations[i].md5) {
-            logMessage('Error in runMigrations() while verifying checksums of existing migrations')
+          if (
+            result.rows[0] &&
+            result.rows[0].md5 &&
+            result.rows[0].md5 !== migrations[i].md5
+          ) {
+            logMessage(
+              'Error in runMigrations() while verifying checksums of existing migrations'
+            )
 
             if (finishedCallback) {
-              finishedCallback(new Error('For migration [' + migrations[i].version + '], expected MD5 checksum [' + migrations[i].md5 + '] but got [' + result.rows[0].md5 + ']'), migrations)
+              finishedCallback(
+                new Error(
+                  'For migration [' +
+                    migrations[i].version +
+                    '], expected MD5 checksum [' +
+                    migrations[i].md5 +
+                    '] but got [' +
+                    result.rows[0].md5 +
+                    ']'
+                ),
+                migrations
+              )
             }
           } else {
             i = i + 1
@@ -206,7 +249,7 @@ var runMigrations = function (migrations, currentVersion, targetVersion, finishe
       })
     } else {
       logMessage('running ' + migrations[i].filename)
-      runQuery(sql, function (err, result) {
+      runQuery(sql, function(err, result) {
         if (err) {
           logMessage('Error in runMigrations()')
           if (finishedCallback) {
@@ -215,12 +258,15 @@ var runMigrations = function (migrations, currentVersion, targetVersion, finishe
         } else {
           // migration ran successfully
           // add version to config.schemaTable table.
-          runQuery(migrations[i].schemaVersionSQL, function (err, result) {
+          runQuery(migrations[i].schemaVersionSQL, function(err, result) {
             if (err) {
               // SQL to update config.schemaTable failed.
               if (config.logProgress) {
-                logMessage('error updating the ' + config.schemaTable + ' table',1)
-                logMessage(err,1)
+                logMessage(
+                  'error updating the ' + config.schemaTable + ' table',
+                  1
+                )
+                logMessage(err, 1)
               }
               if (finishedCallback) {
                 finishedCallback(err, migrations)
@@ -253,19 +299,48 @@ var runMigrations = function (migrations, currentVersion, targetVersion, finishe
   returns an array of relevant migrations based on the target and current version passed.
   returned array is sorted in the order it needs to be run
 ================================================================= */
-var getRelevantMigrations = function (currentVersion, targetVersion) {
+var getRelevantMigrations = function(currentVersion, targetVersion) {
   var relevantMigrations = []
   if (targetVersion >= currentVersion) {
     // we are migrating up
     // get all up migrations > currentVersion and <= targetVersion
     logMessage('migrating up to ' + targetVersion)
-    migrations.forEach(function (migration) {
-      if (migration.action === 'do' && migration.version > 0 && migration.version <= currentVersion && (config.driver === 'pg' || config.driver === 'pg.js')) {
-        migration.md5Sql = 'SELECT md5 FROM ' + config.schemaTable + ' WHERE version = ' + migration.version + ';'
+    migrations.forEach(function(migration) {
+      if (
+        migration.action === 'do' &&
+        migration.version > 0 &&
+        migration.version <= currentVersion &&
+        (config.driver === 'pg' || config.driver === 'pg.js')
+      ) {
+        migration.md5Sql =
+          'SELECT md5 FROM ' +
+          config.schemaTable +
+          ' WHERE version = ' +
+          migration.version +
+          ';'
         relevantMigrations.push(migration)
       }
-      if (migration.action === 'do' && migration.version > currentVersion && migration.version <= targetVersion) {
-        migration.schemaVersionSQL = config.driver === 'pg' || config.driver === 'pg.js' ? 'INSERT INTO ' + config.schemaTable + ' (version, name, md5) VALUES (' + migration.version + ", '" + migration.name + "', '" + migration.md5 + "');" : 'INSERT INTO ' + config.schemaTable + ' (version) VALUES (' + migration.version + ');'
+      if (
+        migration.action === 'do' &&
+        migration.version > currentVersion &&
+        migration.version <= targetVersion
+      ) {
+        migration.schemaVersionSQL =
+          config.driver === 'pg' || config.driver === 'pg.js'
+            ? 'INSERT INTO ' +
+              config.schemaTable +
+              ' (version, name, md5) VALUES (' +
+              migration.version +
+              ", '" +
+              migration.name +
+              "', '" +
+              migration.md5 +
+              "');"
+            : 'INSERT INTO ' +
+              config.schemaTable +
+              ' (version) VALUES (' +
+              migration.version +
+              ');'
         relevantMigrations.push(migration)
       }
     })
@@ -273,9 +348,18 @@ var getRelevantMigrations = function (currentVersion, targetVersion) {
   } else if (targetVersion < currentVersion) {
     // we are going to migrate down
     logMessage('migrating down to ' + targetVersion)
-    migrations.forEach(function (migration) {
-      if (migration.action === 'undo' && migration.version <= currentVersion && migration.version > targetVersion) {
-        migration.schemaVersionSQL = 'DELETE FROM ' + config.schemaTable + ' WHERE version = ' + migration.version + ';'
+    migrations.forEach(function(migration) {
+      if (
+        migration.action === 'undo' &&
+        migration.version <= currentVersion &&
+        migration.version > targetVersion
+      ) {
+        migration.schemaVersionSQL =
+          'DELETE FROM ' +
+          config.schemaTable +
+          ' WHERE version = ' +
+          migration.version +
+          ';'
         relevantMigrations.push(migration)
       }
     })
@@ -293,18 +377,27 @@ var getRelevantMigrations = function (currentVersion, targetVersion) {
   target - version to migrate to as string or number (will be handled as numbers internally)
   callback - callback to run after migrations have finished. function (err, migrations) {}
 ================================================================= */
-function migrate (target, finishedCallback) {
-  prep(function (err) {
+function migrate(target, finishedCallback) {
+  prep(function(err) {
     if (err) {
       if (finishedCallback) finishedCallback(err)
     }
     getMigrations()
     if (target && target === 'max') {
-      targetVersion = Math.max.apply(null, migrations.map(function (migration) { return migration.version }).filter(function(version){ return !isNaN(version) }) )
+      targetVersion = Math.max.apply(
+        null,
+        migrations
+          .map(function(migration) {
+            return migration.version
+          })
+          .filter(function(version) {
+            return !isNaN(version)
+          })
+      )
     } else if (target) {
       targetVersion = Number(target)
     }
-    getCurrentVersion(function (err, currentVersion) {
+    getCurrentVersion(function(err, currentVersion) {
       if (err) {
         logMessage('error getting current version')
         if (finishedCallback) finishedCallback(err)
@@ -313,11 +406,19 @@ function migrate (target, finishedCallback) {
         if (targetVersion === undefined) {
           logMessage('no target version supplied - no migrations performed')
         } else {
-          var relevantMigrations = getRelevantMigrations(currentVersion, targetVersion)
+          var relevantMigrations = getRelevantMigrations(
+            currentVersion,
+            targetVersion
+          )
           if (relevantMigrations.length > 0) {
-            runMigrations(relevantMigrations, currentVersion, targetVersion, function (err, migrations) {
-              finishedCallback(err, migrations)
-            })
+            runMigrations(
+              relevantMigrations,
+              currentVersion,
+              targetVersion,
+              function(err, migrations) {
+                finishedCallback(err, migrations)
+              }
+            )
           } else {
             if (finishedCallback) finishedCallback(err)
           }
@@ -335,8 +436,8 @@ exports.migrate = migrate
 
   callback - function called after schema version table is built. function (err, results) {}
 ================================================================= */
-function prep (callback) {
-  runQuery(commonClient.queries.checkTable, function (err, result) {
+function prep(callback) {
+  runQuery(commonClient.queries.checkTable, function(err, result) {
     if (err) {
       err.helpfulDescription = 'Prep() table CHECK query Failed'
       callback(err)
@@ -344,32 +445,46 @@ function prep (callback) {
       if (result.rows && result.rows.length > 0) {
         if (config.driver === 'pg' || config.driver === 'pg.js') {
           // config.schemaTable exists, does it have the md5 column? (PostgreSQL only)
-          runQuery("SELECT column_name, data_type, character_maximum_length FROM INFORMATION_SCHEMA.COLUMNS WHERE table_name = '" + config.schemaTable + "' AND column_name = 'md5';", function (err, result) {
-            if (err) {
-              err.helpfulDescription = 'Prep() table CHECK MD5 COLUMN query Failed'
-              callback(err)
-            } else {
-              if (!result.rows || result.rows.length === 0) {
-                // md5 column doesn't exist, add it
-                runQuery('ALTER TABLE ' + config.schemaTable + " ADD COLUMN md5 text DEFAULT '';", function (err, result) {
-                  if (err) {
-                    err.helpfulDescription = 'Prep() table ADD MD5 COLUMN query Failed'
-                    callback(err)
-                  } else {
-                    callback()
-                  }
-                })
+          runQuery(
+            "SELECT column_name, data_type, character_maximum_length FROM INFORMATION_SCHEMA.COLUMNS WHERE table_name = '" +
+              config.schemaTable +
+              "' AND column_name = 'md5';",
+            function(err, result) {
+              if (err) {
+                err.helpfulDescription =
+                  'Prep() table CHECK MD5 COLUMN query Failed'
+                callback(err)
               } else {
-                callback()
+                if (!result.rows || result.rows.length === 0) {
+                  // md5 column doesn't exist, add it
+                  runQuery(
+                    'ALTER TABLE ' +
+                      config.schemaTable +
+                      " ADD COLUMN md5 text DEFAULT '';",
+                    function(err, result) {
+                      if (err) {
+                        err.helpfulDescription =
+                          'Prep() table ADD MD5 COLUMN query Failed'
+                        callback(err)
+                      } else {
+                        callback()
+                      }
+                    }
+                  )
+                } else {
+                  callback()
+                }
               }
             }
-          })
+          )
         } else {
           callback()
         }
       } else {
-        logMessage('table ' + config.schemaTable + ' does not exist - creating it.')
-        runQuery(commonClient.queries.makeTable, function (err, result) {
+        logMessage(
+          'table ' + config.schemaTable + ' does not exist - creating it.'
+        )
+        runQuery(commonClient.queries.makeTable, function(err, result) {
           if (err) {
             err.helpfulDescription = 'Prep() table BUILD query Failed'
             callback(err)
@@ -390,12 +505,14 @@ function prep (callback) {
   message - The message to log
   alwaysLog - optional boolean value, set to 1 to log a message (like an error) regardless of the users logging preferences.
 ================================================================= */
-function logMessage(message, alwaysLog){
-  if(!config.logProgress && !alwaysLog){ return; }
+function logMessage(message, alwaysLog) {
+  if (!config.logProgress && !alwaysLog) {
+    return
+  }
 
-  //Using the system default time locale/options for now
-  var messagePrefix = '['+(new Date().toLocaleTimeString())+']';
-  console.log(messagePrefix + ' ' + message);
+  // Using the system default time locale/options for now
+  var messagePrefix = '[' + new Date().toLocaleTimeString() + ']'
+  console.log(messagePrefix + ' ' + message)
 }
 
 /*
@@ -406,15 +523,18 @@ function logMessage(message, alwaysLog){
   filename - calculate MD5 checksum of contents of this file
 ================================================================= */
 
-function fileChecksum (filename, newline) {
+function fileChecksum(filename, newline) {
   return checksum(fs.readFileSync(filename, 'utf8'), newline)
 }
 
-function checksum (str, nl) {
+function checksum(str, nl) {
   if (nl) {
     var newline = require('newline')
     logMessage('Converting newline from: ', newline.detect(str), 'to:', nl)
     str = newline.set(str, nl)
   }
-  return crypto.createHash('md5').update(str, 'utf8').digest('hex')
+  return crypto
+    .createHash('md5')
+    .update(str, 'utf8')
+    .digest('hex')
 }
