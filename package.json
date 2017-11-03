@@ -12,9 +12,16 @@
     "sql server",
     "sql"
   ],
+  "prettier": {
+    "semi": false,
+    "singleQuote": true
+  },
+  "lint-staged": {
+    "*.{js,json,css}": ["prettier --write", "git add"]
+  },
   "scripts": {
-    "standard": "standard",
-    "standard-fix": "standard --fix",
+    "precommit": "lint-staged",
+    "lint": "eslint '**/*.js'",
     "test": "node test/test-postgrator.js"
   },
   "dependencies": {
@@ -27,6 +34,10 @@
   },
   "main": "postgrator",
   "devDependencies": {
-    "standard": "^10.0.1"
+    "eslint": "^4.10.0",
+    "eslint-config-prettier": "^2.7.0",
+    "husky": "^0.14.3",
+    "lint-staged": "^4.3.0",
+    "prettier": "^1.7.4"
   }
 }
