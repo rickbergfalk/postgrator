@@ -35,7 +35,7 @@ you will find it helpful to start with 000s or some large number for file organi
 **SQL or JS**
 You have a choice of either using a plain SQL file or you can also generate your SQL via a javascript module. The javascript module should export a function called generateSql() that returns back a string representing the SQL. For example:
 
-```javascript
+```js
 module.exports.generateSql = function () {
   return "CREATE USER transaction_user WITH PASSWORD '"+process.env.TRANSACTION_USER_PASSWORD+"'";
 };
@@ -119,6 +119,13 @@ postgrator.setConfig({
 Reference options for mssql for more details: [https://www.npmjs.com/package/mssql](https://www.npmjs.com/package/mssql)
 
 
+## Version 3.0 Breaking changes (unreleased/in dev)
+
+- DB drivers must be installed prior to use (`pg`, `mysql`, `mssql`)
+- pg.js is no longer valid driver config option
+- callback is required (might be replaced with promise)
+
+
 
 ## Version 2.0 Notes
 
@@ -143,15 +150,15 @@ If a migration fails, Postgrator will stop running any further migrations. It is
 
 Line feeds: Unix/Mac uses LF, Windows uses 'CRLF', this causes problems for postgrator when calculating the md5 checksum of the migration files - particularly if some developers are on windows, some are on mac, etc. To negate this, you can use the `newline` config flag to tell postgrator to always use a particular line feed, e.g.
 
-```
+```js
 postgrator.setConfig({
-    migrationDirectory: __dirname + '/migrations',
-    driver: 'pg', // or pg.js, mysql, mssql, tedious
-    host: '127.0.0.1',
-    database: 'databasename',
-    username: 'username',
-    password: 'password',
-    newline: 'CRLF'
+  migrationDirectory: __dirname + '/migrations',
+  driver: 'pg', // or pg.js, mysql, mssql, tedious
+  host: '127.0.0.1',
+  database: 'databasename',
+  username: 'username',
+  password: 'password',
+  newline: 'CRLF'
 });
 ```
 
