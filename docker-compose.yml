@@ -1,0 +1,18 @@
+version: '3'
+services:
+  postgres:
+    image: postgres:9.6-alpine
+    environment:
+      POSTGRES_USER: postgrator
+      POSTGRES_DB: postgrator
+    ports: 
+      - "5432:5432"
+  mariadb:
+    image: mariadb:10.3
+    environment:
+      MYSQL_ROOT_PASSWORD: postgrator
+      MYSQL_DATABASE: postgrator
+      MYSQL_USER: postgrator
+      MYSQL_PASSWORD: postgrator
+    ports:
+      - "3306:3306"
