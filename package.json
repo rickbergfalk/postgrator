@@ -25,7 +25,6 @@
     "test": "mocha"
   },
   "dependencies": {
-    "async": "0.2.x",
     "newline": "0.0.3"
   },
   "repository": {
