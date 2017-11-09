@@ -6,7 +6,7 @@ const createCommonClient = require('./lib/create-common-client.js')
 let commonClient
 let currentVersion
 let targetVersion
-const migrations = [] // array of objects like: {version: n, action: 'do', direction: 'up', filename: '0001.up.sql'}
+let migrations = [] // array of objects like: {version: n, action: 'do', direction: 'up', filename: '0001.up.sql'}
 
 let config = {}
 
@@ -51,6 +51,8 @@ function sortMigrationsDesc(a, b) {
   Reads the migration directory for all the migration files.
 ================================================================= */
 function getMigrations() {
+  // TODO STOP THIS GLOBAL MADNESS
+  migrations = []
   const migrationFiles = fs.readdirSync(config.migrationDirectory)
   migrationFiles.forEach(function(file) {
     const m = file.split('.')
@@ -218,11 +220,9 @@ function runMigrations(
           log('Error in runMigrations()')
           return finishedCallback(err, migrations)
         }
-        // Migration ran successfully
-        // Add version to config.schemaTable table.
+        // Migration ran successfully. Add version to config.schemaTable table.
         runQuery(migrations[i].schemaVersionSQL, function(err, result) {
           if (err) {
-            // SQL to update config.schemaTable failed.
             if (config.logProgress) {
               log('error updating the ' + config.schemaTable + ' table', 1)
               log(err, 1)
