@@ -122,8 +122,9 @@ Reference options for mssql for more details: [https://www.npmjs.com/package/mss
 ## Version 3.0 Breaking changes (unreleased/in dev)
 
 - DB drivers must be installed prior to use (`pg`, `mysql`, `mssql`)
-- pg.js is no longer valid driver config option
+- `pg.js` and `tedious` are no longer valid driver config option
 - callback is required (might be replaced with promise)
+- Node 6 or greater
 
 
 
