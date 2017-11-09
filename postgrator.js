@@ -1,7 +1,6 @@
 const fs = require('fs')
 const createCommonClient = require('./lib/create-common-client.js')
 const {
-  log,
   fileChecksum,
   checksum,
   sortMigrationsAsc,
@@ -28,7 +27,6 @@ module.exports = {
 function setConfig(configuration) {
   config = configuration
   config.schemaTable = config.schemaTable || 'schemaversion'
-  config.logProgress = config.logProgress != null ? config.logProgress : true
 
   commonClient = createCommonClient(config)
 }
@@ -169,7 +167,6 @@ function runMigrations(
   function runNext(i) {
     const sql = migrations[i].getSql()
     if (migrations[i].md5Sql) {
-      log('verifying checksum of migration ' + migrations[i].filename)
       runQuery(migrations[i].md5Sql, (err, result) => {
         if (err) {
           return finishedCallback(err, migrations)
@@ -189,7 +186,6 @@ function runMigrations(
         return finishedCallback(null, migrations)
       })
     } else {
-      log('running ' + migrations[i].filename)
       runQuery(sql, (err, result) => {
         if (err) {
           return finishedCallback(err, migrations)
@@ -224,7 +220,6 @@ function getRelevantMigrations(currentVersion, targetVersion) {
   let relevantMigrations = []
   if (targetVersion >= currentVersion) {
     // get all up migrations > currentVersion and <= targetVersion
-    log('migrating up to ' + targetVersion)
     migrations.forEach(migration => {
       if (
         migration.action === 'do' &&
@@ -255,7 +250,6 @@ function getRelevantMigrations(currentVersion, targetVersion) {
     })
     relevantMigrations = relevantMigrations.sort(sortMigrationsAsc)
   } else if (targetVersion < currentVersion) {
-    log('migrating down to ' + targetVersion)
     migrations.forEach(migration => {
       if (
         migration.action === 'undo' &&
@@ -296,16 +290,13 @@ function migrate(target, finishedCallback) {
     }
 
     if (targetVersion === undefined) {
-      log('no target version supplied - no migrations performed')
-      return finishedCallback('no target version supplied')
+      return finishedCallback(new Error('No target version supplied'))
     }
 
     getCurrentVersion((err, currentVersion) => {
       if (err) {
-        log('error getting current version')
         return finishedCallback(err)
       }
-      log('version of database is: ' + currentVersion)
       const relevantMigrations = getRelevantMigrations(
         currentVersion,
         targetVersion
@@ -367,7 +358,6 @@ function prep(callback) {
       }
       return callback()
     }
-    log(`table ${config.schemaTable} does not exist - creating it.`)
     return runQuery(commonClient.queries.makeTable, (err, result) => {
       if (err) {
         err.helpfulDescription = 'Prep() table BUILD query Failed'
