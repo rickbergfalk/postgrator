@@ -1,7 +1,12 @@
 const fs = require('fs')
-const crypto = require('crypto')
-const newline = require('newline')
 const createCommonClient = require('./lib/create-common-client.js')
+const {
+  log,
+  fileChecksum,
+  checksum,
+  sortMigrationsAsc,
+  sortMigrationsDesc
+} = require('./lib/utils.js')
 
 let commonClient
 let currentVersion
@@ -10,11 +15,17 @@ let migrations = [] // array of objects like: {version: n, action: 'do', directi
 
 let config = {}
 
-exports.config = config
+module.exports = {
+  config,
+  setConfig,
+  runQuery,
+  endConnection,
+  getCurrentVersion,
+  getVersions,
+  migrate
+}
 
-/*  Set Config
-================================================================= */
-exports.setConfig = function(configuration) {
+function setConfig(configuration) {
   config = configuration
   config.schemaTable = config.schemaTable || 'schemaversion'
   config.logProgress = config.logProgress != null ? config.logProgress : true
@@ -22,34 +33,10 @@ exports.setConfig = function(configuration) {
   commonClient = createCommonClient(config)
 }
 
-/*  Migration Sorting Functions
-================================================================= */
-function sortMigrationsAsc(a, b) {
-  if (a.version < b.version) {
-    return -1
-  }
-  if (a.version > b.version) {
-    return 1
-  }
-  return 0
-}
-
-function sortMigrationsDesc(a, b) {
-  if (a.version < b.version) {
-    return 1
-  }
-  if (a.version > b.version) {
-    return -1
-  }
-  return 0
-}
-
-/*
-  getMigrations()
-
-  Internal function
-  Reads the migration directory for all the migration files.
-================================================================= */
+/**
+ * Internal
+ * Reads all migrations from directory
+ */
 function getMigrations() {
   // TODO STOP THIS GLOBAL MADNESS
   migrations = []
@@ -84,12 +71,13 @@ function getMigrations() {
   })
 }
 
-/*
-  runQuery
-
-  connects the database driver if it is not currently connected.
-  Executes an arbitrary sql query using the common client
-================================================================= */
+/**
+ * Exposed for testing, but otherwise internal
+ * Connects the database driver if it is not currently connected.
+ * Executes an arbitrary sql query using the common client
+ * @param {*} query
+ * @param {*} cb
+ */
 function runQuery(query, cb) {
   if (commonClient.connected) {
     commonClient.runQuery(query, cb)
@@ -103,12 +91,11 @@ function runQuery(query, cb) {
     })
   }
 }
-exports.runQuery = runQuery
 
-/*
-  endConnection
-  Ends the commonClient's connection to the database
-================================================================= */
+/**
+ * Ends the commonClient's connection to database
+ * @param {*} cb
+ */
 function endConnection(cb) {
   if (commonClient.connected) {
     return commonClient.endConnection(() => {
@@ -118,18 +105,17 @@ function endConnection(cb) {
   }
   cb()
 }
-exports.endConnection = endConnection
 
-/*
-  getCurrentVersion(callback)
-
-  Internal & External function
-  Gets the current version of the schema from the database.
-================================================================= */
+/**
+ * Gets the current version of the schema from the database.
+ * @param {*} callback
+ */
 function getCurrentVersion(callback) {
   runQuery(commonClient.queries.getCurrentVersion, (err, result) => {
     if (err) {
-      const msg = `Error getting current version from table: ${config.schemaTable}`
+      const msg = `Error getting current version from table: ${
+        config.schemaTable
+      }`
       console.error(msg)
       return callback(err)
     }
@@ -141,15 +127,12 @@ function getCurrentVersion(callback) {
     callback(err, currentVersion)
   })
 }
-exports.getCurrentVersion = getCurrentVersion
 
-/*
-  getVersions(callback)
-
-  Internal & External function
-  Returns an object with the current applied version of the schema from
-  the database and the max version of migration available.
-================================================================= */
+/**
+ * Returns an object with current applied version of the schema from
+ * the database and max version of migration available
+ * @param {*} callback
+ */
 function getVersions(callback) {
   const versions = {}
   getMigrations()
@@ -161,30 +144,22 @@ function getVersions(callback) {
   versions.max = Math.max.apply(null, versions.migrations)
 
   getCurrentVersion((err, version) => {
-    if (err && config.logProgress) {
-      log('Error in postgrator{isLatestVersion}', 1)
-      log('Error:' + err, 1)
-    } else {
-      versions.current = version
+    if (err) {
+      return callback(err)
     }
-    callback(err, versions)
+    versions.current = version
+    callback(null, versions)
   })
 }
-exports.getVersions = getVersions
 
-/*
-  runMigrations(migrations, finishedCallback)
-
-  Internal function
-  Runs the migrations in the order provided, using a recursive kind of approach
-  For each migration run:
-  - the contents of the script is read (sync because I'm lazy)
-  - script is run.
-    if error, the callback is called and we don't run anything else
-    if success, we then add/remove a record from the config.schemaTable to keep track of the migration we just ran
-  - if all goes as planned, we run the next migration
-  - once all migrations have been run, we call the callback.
-================================================================= */
+/**
+ * Internal function
+ * Runs the migrations in the order provided, using a recursive approach
+ * Each relevant migration is run.
+ * On error, callback is called and nothing else is run
+ * On success, a record is added/removed from config.schemaTable to keep track of the migration we just ran
+ * Migrations are run until target version reached.
+ */
 function runMigrations(
   migrations,
   currentVersion,
@@ -197,14 +172,14 @@ function runMigrations(
       log('verifying checksum of migration ' + migrations[i].filename)
       runQuery(migrations[i].md5Sql, (err, result) => {
         if (err) {
-          log('Error in runMigrations() while retrieving existing migrations')
           return finishedCallback(err, migrations)
         }
         const row = result.rows[0]
         const m = migrations[i]
         if (row && row.md5 && row.md5 !== m.md5) {
-          const msg = `For migration [${m.version}], expected MD5 checksum [${m.md5}] but got [${row.md5}]`
-          log('Error verifying checksums of existing migrations')
+          const msg = `For migration [${m.version}], expected MD5 checksum [${
+            m.md5
+          }] but got [${row.md5}]`
           return finishedCallback(new Error(msg), migrations)
         }
         i = i + 1
@@ -217,16 +192,11 @@ function runMigrations(
       log('running ' + migrations[i].filename)
       runQuery(sql, (err, result) => {
         if (err) {
-          log('Error in runMigrations()')
           return finishedCallback(err, migrations)
         }
         // Migration ran successfully. Add version to config.schemaTable table.
         runQuery(migrations[i].schemaVersionSQL, function(err, result) {
           if (err) {
-            if (config.logProgress) {
-              log('error updating the ' + config.schemaTable + ' table', 1)
-              log(err, 1)
-            }
             return finishedCallback(err, migrations)
           }
           // config.schemaTable successfully recorded
@@ -244,12 +214,12 @@ function runMigrations(
   runNext(0)
 }
 
-/*
-  .getRelevantMigrations(currentVersion, targetVersion)
-
-  returns an array of relevant migrations based on the target and current version passed.
-  returned array is sorted in the order it needs to be run
-================================================================= */
+/**
+ * returns an array of relevant migrations based on the target and current version passed.
+ * returned array is sorted in the order it needs to be run
+ * @param {*} currentVersion
+ * @param {*} targetVersion
+ */
 function getRelevantMigrations(currentVersion, targetVersion) {
   let relevantMigrations = []
   if (targetVersion >= currentVersion) {
@@ -262,7 +232,9 @@ function getRelevantMigrations(currentVersion, targetVersion) {
         migration.version <= currentVersion &&
         (config.driver === 'pg' || config.driver === 'pg.js')
       ) {
-        migration.md5Sql = `SELECT md5 FROM ${config.schemaTable} WHERE version = ${migration.version};`
+        migration.md5Sql = `SELECT md5 FROM ${
+          config.schemaTable
+        } WHERE version = ${migration.version};`
         relevantMigrations.push(migration)
       }
       if (
@@ -272,8 +244,12 @@ function getRelevantMigrations(currentVersion, targetVersion) {
       ) {
         migration.schemaVersionSQL =
           config.driver === 'pg'
-            ? `INSERT INTO ${config.schemaTable} (version, name, md5) VALUES (${migration.version}, '${migration.name}', '${migration.md5}');`
-            : `INSERT INTO ${config.schemaTable} (version) VALUES (${migration.version});`
+            ? `INSERT INTO ${config.schemaTable} (version, name, md5) VALUES (${
+                migration.version
+              }, '${migration.name}', '${migration.md5}');`
+            : `INSERT INTO ${config.schemaTable} (version) VALUES (${
+                migration.version
+              });`
         relevantMigrations.push(migration)
       }
     })
@@ -286,7 +262,9 @@ function getRelevantMigrations(currentVersion, targetVersion) {
         migration.version <= currentVersion &&
         migration.version > targetVersion
       ) {
-        migration.schemaVersionSQL = `DELETE FROM ${config.schemaTable} WHERE version = ${migration.version};`
+        migration.schemaVersionSQL = `DELETE FROM ${
+          config.schemaTable
+        } WHERE version = ${migration.version};`
         relevantMigrations.push(migration)
       }
     })
@@ -295,15 +273,12 @@ function getRelevantMigrations(currentVersion, targetVersion) {
   return relevantMigrations
 }
 
-/*
-  .migrate(target, callback)
-
-  Main method to move a schema to a particular version.
-  A target must be specified, otherwise nothing is run.
-
-  target - version to migrate to as string or number (will be handled as numbers internally)
-  callback - callback to run after migrations have finished. function (err, migrations) {}
-================================================================= */
+/**
+ * Main method to move a schema to a particular version.
+ * A target must be specified, otherwise nothing is run.
+ * @param {*} target - version to migrate as string or number (handled as  numbers internally)
+ * @param {*} finishedCallback - called when completed. function (err, migrations)
+ */
 function migrate(target, finishedCallback) {
   prep(err => {
     if (err) {
@@ -347,15 +322,11 @@ function migrate(target, finishedCallback) {
     })
   })
 }
-exports.migrate = migrate
 
-/*
-  .prep(callback)
-
-  Creates the table required for Postgrator to keep track of which migrations have been run.
-
-  callback - function called after schema version table is built. function (err, results) {}
-================================================================= */
+/**
+ * Creates the table required for Postgrator to keep track of which migrations have been run.
+ * @param {*} callback - function called after schema version table is built. function (err, results) {}
+ */
 function prep(callback) {
   return runQuery(commonClient.queries.checkTable, (err, result) => {
     if (err) {
@@ -379,7 +350,9 @@ function prep(callback) {
           }
           if (!result.rows || result.rows.length === 0) {
             // md5 column doesn't exist, add it
-            const sql = `ALTER TABLE ${config.schemaTable} ADD COLUMN md5 text DEFAULT '';`
+            const sql = `ALTER TABLE ${
+              config.schemaTable
+            } ADD COLUMN md5 text DEFAULT '';`
             return runQuery(sql, (err, result) => {
               if (err) {
                 err.helpfulDescription =
@@ -403,44 +376,4 @@ function prep(callback) {
       return callback()
     })
   })
-}
-
-/**
- * 
- * @param {string} message - The message to log
- * @param {boolean} alwaysLog - optional boolean value, set to 1 to log a message (like an error) regardless of the users logging preferences.
- */
-function log(message, alwaysLog) {
-  if (config.logProgress || alwaysLog) {
-    const prefix = '[' + new Date().toLocaleTimeString() + ']'
-    console.log(prefix + ' ' + message)
-  }
-}
-
-/**
- * Calculate checksum of file to detect changes to migrations that have already run.
- * @param {string} filename 
- * @param {string} lineEnding - newline setting string for newline lib
- */
-function fileChecksum(filename, lineEnding) {
-  const content = fs.readFileSync(filename, 'utf8')
-  return checksum(content, lineEnding)
-}
-
-/**
- * 
- * @param {string} content - Content to checksum
- * @param {string} lineEnding - newline setting string for newline lib
- */
-function checksum(content, lineEnding) {
-  if (lineEnding) {
-    log(
-      `Converting newline from: ${lineEnding.detect(content)} to: ${lineEnding}`
-    )
-    content = newline.set(content, lineEnding)
-  }
-  return crypto
-    .createHash('md5')
-    .update(content, 'utf8')
-    .digest('hex')
 }

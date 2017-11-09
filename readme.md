@@ -125,6 +125,8 @@ Reference options for mssql for more details: [https://www.npmjs.com/package/mss
 - `pg.js` and `tedious` are no longer valid driver config option
 - callback is required (might be replaced with promise)
 - Node 6 or greater
+- config.logProgress removed: config.log replaces it with a function, errors propagate up to user
+- config.log added: function to log info messages
 
 
 
