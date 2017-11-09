@@ -65,7 +65,6 @@ describe('Config API', function() {
   it('Handles current version', function(done) {
     postgrator.migrate('002', function(err, migrations) {
       if (err) throw err
-      console.log('migrated to 002, current version')
       postgrator.endConnection(done)
     })
   })
