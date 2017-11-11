@@ -288,9 +288,9 @@ class Postgrator {
             if (!result.rows || result.rows.length === 0) {
               // md5 column doesn't exist, add it
               const sql = `
-              ALTER TABLE ${config.schemaTable} 
-              ADD COLUMN md5 text DEFAULT '';
-            `
+                ALTER TABLE ${config.schemaTable} 
+                ADD COLUMN md5 text DEFAULT '';
+              `
               return this.runQuery(sql)
             }
           })
