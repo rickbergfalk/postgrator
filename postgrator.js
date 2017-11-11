@@ -141,35 +141,66 @@ class Postgrator {
   }
 
   /**
+   * Validate md5 checksums for applied migrations
+   *
+   * @returns {Promise}
+   * @param {Number} currentVersion
+   * @param {Number} targetVersion
+   */
+  validateMigrations(currentVersion, targetVersion) {
+    const { config } = this
+    const validateMigrations = []
+    return this.getMigrations().then(migrations => {
+      if (targetVersion >= currentVersion) {
+        migrations.forEach(migration => {
+          if (
+            migration.action === 'do' &&
+            migration.version > 0 &&
+            migration.version <= currentVersion &&
+            config.driver === 'pg'
+          ) {
+            migration.md5Sql = `SELECT md5 FROM ${
+              config.schemaTable
+            } WHERE version = ${migration.version};`
+            validateMigrations.push(migration)
+          }
+        })
+      }
+
+      let seq = Promise.resolve()
+      const validatedMigrations = []
+      validateMigrations.forEach(migration => {
+        seq = seq.then(() => this.runQuery(migration.md5Sql)).then(result => {
+          const row = result.rows[0]
+          if (row && row.md5 && row.md5 !== migration.md5) {
+            const msg = `For migration [${
+              migration.version
+            }], expected MD5 checksum [${migration.md5}] but got [${row.md5}]`
+            throw new Error(msg)
+          }
+        })
+      })
+      return seq.then(() => validatedMigrations)
+    })
+  }
+
+  /**
    * Runs the migrations in the order to reach target version
    *
    * @returns {Promise} - Array of migration objects to appled to database
    * @param {Array} migrations - Array of migration objects to apply to database
    */
   runMigrations(migrations = []) {
-    let seq = Promise.resolve()
+    let sequence = Promise.resolve()
     const appliedMigrations = []
     migrations.forEach(migration => {
-      seq = seq.then(() => {
-        const sql = migration.getSql()
-        if (migration.md5Sql) {
-          return this.runQuery(migration.md5Sql).then(result => {
-            const row = result.rows[0]
-            if (row && row.md5 && row.md5 !== migration.md5) {
-              const msg = `For migration [${
-                migration.version
-              }], expected MD5 checksum [${migration.md5}] but got [${row.md5}]`
-              throw new Error(msg)
-            }
-          })
-        } else {
-          return this.runQuery(sql)
-            .then(() => this.runQuery(migration.schemaVersionSQL))
-            .then(() => appliedMigrations.push(migration))
-        }
-      })
+      sequence = sequence
+        .then(() => migration.getSql())
+        .then(sql => this.runQuery(sql))
+        .then(() => this.runQuery(migration.schemaVersionSQL))
+        .then(() => appliedMigrations.push(migration))
     })
-    return seq.then(() => appliedMigrations)
+    return sequence.then(() => appliedMigrations)
   }
 
   /**
@@ -184,19 +215,7 @@ class Postgrator {
     let relevantMigrations = []
     const { config, migrations } = this
     if (targetVersion >= currentVersion) {
-      // get all up migrations > currentVersion and <= targetVersion
       migrations.forEach(migration => {
-        if (
-          migration.action === 'do' &&
-          migration.version > 0 &&
-          migration.version <= currentVersion &&
-          config.driver === 'pg'
-        ) {
-          migration.md5Sql = `SELECT md5 FROM ${
-            config.schemaTable
-          } WHERE version = ${migration.version};`
-          relevantMigrations.push(migration)
-        }
         if (
           migration.action === 'do' &&
           migration.version > currentVersion &&
@@ -242,6 +261,7 @@ class Postgrator {
    * @param {String} target - version to migrate as string or number (handled as  numbers internally)
    */
   migrate(target = '') {
+    const data = {}
     return this.prep()
       .then(() => this.getMigrations())
       .then(() => {
@@ -255,15 +275,20 @@ class Postgrator {
         if (targetVersion === undefined) {
           throw new Error('No target version supplied')
         }
+        data.targetVersion = targetVersion
         return this.getCurrentVersion()
-          .then(currentVersion => {
-            return this.getRelevantMigrations(currentVersion, targetVersion)
-          })
-          .then(relevantMigrations => {
-            if (relevantMigrations.length > 0) {
-              return this.runMigrations(relevantMigrations)
-            }
-          })
+      })
+      .then(currentVersion => (data.currentVersion = currentVersion))
+      .then(() =>
+        this.validateMigrations(data.currentVersion, data.targetVersion)
+      )
+      .then(() =>
+        this.getRelevantMigrations(data.currentVersion, data.targetVersion)
+      )
+      .then(relevantMigrations => {
+        if (relevantMigrations.length > 0) {
+          return this.runMigrations(relevantMigrations)
+        }
       })
   }
 
