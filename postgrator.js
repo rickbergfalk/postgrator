@@ -74,7 +74,7 @@ Postgrator.prototype.getMigrations = function getMigrations() {
  * Executes an arbitrary sql query using the common client
  *
  * @returns {Promise} result of query
- * @param {*} query sql query to execute
+ * @param {String} query sql query to execute
  */
 Postgrator.prototype.runQuery = function runQuery(query) {
   const { commonClient } = this
@@ -180,8 +180,8 @@ Postgrator.prototype.runMigrations = function runMigrations(migrations = []) {
  * returned array is sorted in the order it needs to be run
  *
  * @returns {Array} Sorted array of relevant migration objects
- * @param {*} currentVersion
- * @param {*} targetVersion
+ * @param {Number} currentVersion
+ * @param {Number} targetVersion
  */
 Postgrator.prototype.getRelevantMigrations = function getRelevantMigrations(
   currentVersion,
@@ -243,7 +243,7 @@ Postgrator.prototype.getRelevantMigrations = function getRelevantMigrations(
  * A target must be specified, otherwise nothing is run.
  *
  * @returns {Promise}
- * @param {*} target - version to migrate as string or number (handled as  numbers internally)
+ * @param {String} target - version to migrate as string or number (handled as  numbers internally)
  */
 Postgrator.prototype.migrate = function(target = '') {
   return this.prep()
