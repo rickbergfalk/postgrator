@@ -1,32 +1,16 @@
-# Postgrator 3.x.x
+# Postgrator 2.x.x
 
 A Node.js SQL migration library using a directory of plain SQL scripts.
 Supports Postgres, MySQL, and SQL Server.
 
 Available as a cli tool: https://www.npmjs.com/package/postgrator-cli.
 
-**The docs below are for Postgrator 3, which is still in development. Version 2 docs available at [README.v2.md](README.v2.md).**
-
 
 ## Installation
 
 ```sh
 npm install postgrator
-# install necessary db engine(s) if they are not installed yet
-npm install pg
-npm install mysql
-npm install mssql
 ```
-
-
-## Version 3.0 Breaking changes (unreleased, in development)
-
-- DB drivers must be installed prior to use (`pg`, `mysql`, `mssql`)
-- `pg.js` and `tedious` are no longer valid driver config option
-- All callback functions have been replaced with promise-based functions
-- `.getVersions()` has been removed in favor of `.getMaxVersion()`, `.getCurrentVersion()`, and `.getMigrations()`
-- Node 6 or greater is now required
-- logging to console has been removed (and so has config.logProgress)
 
 
 ## Usage
@@ -70,9 +54,9 @@ You might want to choose the JS file approach, in order to make use (secret) env
 To run your sql migrations with Postgrator, write a Node.js script or integrate postgrator with your application in some way:
 
 ```js
-const Postgrator = require('postgrator');
+const postgrator = require('postgrator');
 
-const postgrator = new Postgrator({
+postgrator.setConfig({
   migrationDirectory: __dirname + '/migrations',
   schemaTable: 'schemaversion', // optional. default is 'schemaversion'
   driver: 'pg', // or mysql, mssql
@@ -83,38 +67,49 @@ const postgrator = new Postgrator({
   password: 'password'
 });
 
-// Migrate to version specified, or supply 'max' to go all the way up
-postgrator.migrate('002')
-  .then(migrations => {
-    console.log(migrations);
-    // return endConnection(), which also returns a promise
-    return postgrator.endConnection();
-  })
-  .catch(error => console.log(error));
+// migrate to version specified, or supply 'max' to go all the way up
+postgrator.migrate('002', function (err, migrations) {
+  if (err) {
+    console.log(err)
+  } else {
+    console.log(migrations)
+  }
+  postgrator.endConnection(function () {
+    // connection is closed, or will close in the case of SQL Server
+  });
+});
 ```
 
 
 ### Postgres specific notes:
 
-Postgres supports connection string url as well as simple ssl config:
+Alternatively, for Postgres you may provide a connection string containing the database and authentication details:
 
 ```js
-const postgrator = new Postgrator({
+postgrator.setConfig({
   migrationDirectory: __dirname + '/migrations',
   driver: 'pg',
-  connectionString: 'tcp://username:password@hosturl/databasename',
-  ssl: true
-});
+  connectionString: 'tcp://username:password@hosturl/databasename'
+})
+```
+
+Postgres also supports simple ssl config
+```js
+postgrator.setConfig({
+  migrationDirectory: __dirname + '/migrations',
+  driver: 'pg',
+  ssl: true,
+  // rest of postgres config
+})
 ```
 
 
 ### SQL Server specific notes:
 
-For SQL Server, you may optionally provide an additional options configuration. 
-This may be necessary if requiring a secure connection for Azure.
+For SQL Server, you may optionally provide an additional options configuration. This may be necessary if requiring a secure connection for Azure.
 
 ```js
-const postgrator = new Postgrator({
+postgrator.setConfig({
   migrationDirectory: __dirname + '/migrations',
   schemaTable: 'schemaversion', // optional. default is 'schemaversion'
   driver: 'mssql',
@@ -127,9 +122,18 @@ const postgrator = new Postgrator({
     encrypt: true
   }
 });
+
 ```
 
 Reference options for mssql for more details: [https://www.npmjs.com/package/mssql](https://www.npmjs.com/package/mssql)
+
+
+## Version 2.0 Changes
+
+Despite the major version bump, postgrator's API has not changed. Some of its behavior has however:
+
+- Migrating against a Postgres database now logs script checksums. Future migrations will confirm the checksum to ensure any previously run scripts have not been changed. This is a Postgres-only feature for now.
+- Postgrator can always migrate to the latest version available by running ```postgrator.migrate('max', callback);```
 
 
 ## What Postgrator is doing
