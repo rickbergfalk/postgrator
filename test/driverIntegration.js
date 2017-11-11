@@ -1,10 +1,9 @@
-/* global it, describe */
+/* global after, it, describe */
 const assert = require('assert')
 const Postgrator = require('../postgrator')
 
 const path = require('path')
 const migrationDirectory = path.join(__dirname, 'migrations')
-const pgUrl = 'tcp://postgrator:postgrator@localhost:5432/postgrator'
 
 testConfig({
   migrationDirectory: migrationDirectory,
@@ -26,7 +25,7 @@ testConfig({
 })
 
 function testConfig(config) {
-  describe(`Config API ${config.driver}`, function() {
+  describe(`Driver: ${config.driver}`, function() {
     const postgrator = new Postgrator(config)
 
     it('Migrates multiple versions up (000 -> 002)', function() {
@@ -96,32 +95,10 @@ function testConfig(config) {
       return postgrator.migrate('00').then(() => postgrator.endConnection())
     })
 
-    it('Drops the schemaversion table', function() {
+    after(function() {
       return postgrator
         .runQuery('DROP TABLE schemaversion')
         .then(() => postgrator.endConnection())
     })
   })
 }
-
-describe('Postgres connection string API', function() {
-  const postgrator = new Postgrator({
-    driver: 'pg',
-    migrationDirectory: migrationDirectory,
-    connectionString: pgUrl
-  })
-
-  it('Migrates up to 003', function() {
-    return postgrator.migrate('003').then(migrations => {
-      assert.equal(migrations.length, 3, '3 migrations run')
-      return postgrator.endConnection()
-    })
-  })
-
-  it('Migrates down to 000', function() {
-    return postgrator.migrate('000').then(migrations => {
-      assert.equal(migrations.length, 3, '3 migrations run')
-      return postgrator.endConnection()
-    })
-  })
-})
