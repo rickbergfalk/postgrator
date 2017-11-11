@@ -1,5 +1,5 @@
 const fs = require('fs')
-const createCommonClient = require('./lib/create-common-client.js')
+const commonClient = require('./lib/commonClient.js')
 const {
   fileChecksum,
   checksum,
@@ -7,65 +7,61 @@ const {
   sortMigrationsDesc
 } = require('./lib/utils.js')
 
-let commonClient
-let currentVersion
-let targetVersion
-let migrations = [] // array of objects like: {version: n, action: 'do', direction: 'up', filename: '0001.up.sql'}
+module.exports = Postgrator
 
-let config = {}
-
-module.exports = {
-  config,
-  setConfig,
-  runQuery,
-  endConnection,
-  getCurrentVersion,
-  getVersions,
-  migrate
-}
-
-function setConfig(configuration) {
-  config = configuration
+function Postgrator(config) {
   config.schemaTable = config.schemaTable || 'schemaversion'
-
-  commonClient = createCommonClient(config)
+  this.config = config
+  this.commonClient = commonClient(config)
 }
 
 /**
- * Internal
  * Reads all migrations from directory
+ * Returns promise of array of objects in format:
+ * {version: n, action: 'do', filename: '0001.up.sql'}
+ *
+ * @returns {Promise} array of migration objects
  */
-function getMigrations() {
-  // TODO STOP THIS GLOBAL MADNESS
-  migrations = []
-  const migrationFiles = fs.readdirSync(config.migrationDirectory)
-  migrationFiles.forEach(function(file) {
-    const m = file.split('.')
-    const name = m.length >= 3 ? m.slice(2, m.length - 1).join('.') : file
-    const filename = config.migrationDirectory + '/' + file
-    if (m[m.length - 1] === 'sql') {
-      migrations.push({
-        version: Number(m[0]),
-        direction: m[1],
-        action: m[1],
-        filename: file,
-        name: name,
-        md5: fileChecksum(filename, config.newline),
-        getSql: () => fs.readFileSync(filename, 'utf8')
-      })
-    } else if (m[m.length - 1] === 'js') {
-      const jsModule = require(filename)
-      const sql = jsModule.generateSql()
-      migrations.push({
-        version: Number(m[0]),
-        direction: m[1],
-        action: m[1],
-        filename: file,
-        name: name,
-        md5: checksum(sql, config.newline),
-        getSql: () => sql
-      })
-    }
+Postgrator.prototype.getMigrations = function getMigrations() {
+  const { migrationDirectory, newline } = this.config
+  const migrations = []
+
+  return new Promise((resolve, reject) => {
+    fs.readdir(migrationDirectory, (err, files) => {
+      if (err) {
+        return reject(err)
+      }
+      resolve(files)
+    })
+  }).then(migrationFiles => {
+    migrationFiles.forEach(file => {
+      const m = file.split('.')
+      const name = m.length >= 3 ? m.slice(2, m.length - 1).join('.') : file
+      const filename = migrationDirectory + '/' + file
+      if (m[m.length - 1] === 'sql') {
+        migrations.push({
+          version: Number(m[0]),
+          action: m[1],
+          filename: file,
+          name: name,
+          md5: fileChecksum(filename, newline),
+          getSql: () => fs.readFileSync(filename, 'utf8')
+        })
+      } else if (m[m.length - 1] === 'js') {
+        const jsModule = require(filename)
+        const sql = jsModule.generateSql()
+        migrations.push({
+          version: Number(m[0]),
+          action: m[1],
+          filename: file,
+          name: name,
+          md5: checksum(sql, newline),
+          getSql: () => sql
+        })
+      }
+    })
+    this.migrations = migrations.filter(migration => !isNaN(migration.version))
+    return this.migrations
   })
 }
 
@@ -73,151 +69,122 @@ function getMigrations() {
  * Exposed for testing, but otherwise internal
  * Connects the database driver if it is not currently connected.
  * Executes an arbitrary sql query using the common client
- * @param {*} query
- * @param {*} cb
+ *
+ * @returns {Promise} result of query
+ * @param {*} query sql query to execute
  */
-function runQuery(query, cb) {
+Postgrator.prototype.runQuery = function runQuery(query) {
+  const { commonClient } = this
+
   if (commonClient.connected) {
-    commonClient.runQuery(query, cb)
+    return commonClient.runQuery(query)
   } else {
-    commonClient.createConnection(function(err) {
-      if (err) cb(err)
-      else {
-        commonClient.connected = true
-        commonClient.runQuery(query, cb)
-      }
+    return commonClient.createConnection().then(() => {
+      commonClient.connected = true
+      return commonClient.runQuery(query)
     })
   }
 }
 
 /**
  * Ends the commonClient's connection to database
- * @param {*} cb
+ *
+ * @returns {Promise}
  */
-function endConnection(cb) {
+Postgrator.prototype.endConnection = function endConnection() {
+  const { commonClient } = this
   if (commonClient.connected) {
-    return commonClient.endConnection(() => {
+    return commonClient.endConnection().then(() => {
       commonClient.connected = false
-      cb()
     })
   }
-  cb()
+  return Promise.resolve()
 }
 
 /**
  * Gets the current version of the schema from the database.
- * @param {*} callback
+ * Otherwise 0 if no version has been run
+ *
+ * @returns {Promise} current schema version
  */
-function getCurrentVersion(callback) {
-  runQuery(commonClient.queries.getCurrentVersion, (err, result) => {
-    if (err) {
-      const msg = `Error getting current version from table: ${
-        config.schemaTable
-      }`
-      console.error(msg)
-      return callback(err)
-    }
+Postgrator.prototype.getCurrentVersion = function getCurrentVersion() {
+  const currentVersionSql = this.commonClient.queries.getCurrentVersion
+  return this.runQuery(currentVersionSql).then(result => {
     if (result.rows.length > 0) {
-      currentVersion = result.rows[0].version
+      return result.rows[0].version
     } else {
-      currentVersion = 0
+      return 0
     }
-    callback(err, currentVersion)
   })
 }
 
 /**
  * Returns an object with current applied version of the schema from
  * the database and max version of migration available
- * @param {*} callback
+ *
+ * @returns {Promise}
  */
-function getVersions(callback) {
-  const versions = {}
-  getMigrations()
-
-  versions.migrations = migrations
-    .map(migration => migration.version)
-    .filter(version => !isNaN(version))
-
-  versions.max = Math.max.apply(null, versions.migrations)
-
-  getCurrentVersion((err, version) => {
-    if (err) {
-      return callback(err)
-    }
-    versions.current = version
-    callback(null, versions)
-  })
+Postgrator.prototype.getMaxVersion = function getMaxVersion() {
+  const { migrations } = this
+  return Promise.resolve()
+    .then(() => {
+      if (migrations.length) {
+        return migrations
+      } else {
+        return this.getMigrations()
+      }
+    })
+    .then(migrations => {
+      const versions = migrations.map(migration => migration.version)
+      return Math.max.apply(null, versions)
+    })
 }
 
 /**
- * Internal function
- * Runs the migrations in the order provided, using a recursive approach
- * Each relevant migration is run.
- * On error, callback is called and nothing else is run
- * On success, a record is added/removed from config.schemaTable to keep track of the migration we just ran
- * Migrations are run until target version reached.
+ * Runs the migrations in the order to reach target version
+ *
+ * @returns {Promise} - Array of migration objects to appled to database
+ * @param {Array} migrations - Array of migration objects to apply to database
  */
-function runMigrations(
-  migrations,
-  currentVersion,
-  targetVersion,
-  finishedCallback
-) {
-  function runNext(i) {
-    const sql = migrations[i].getSql()
-    if (migrations[i].md5Sql) {
-      runQuery(migrations[i].md5Sql, (err, result) => {
-        if (err) {
-          return finishedCallback(err, migrations)
-        }
-        const row = result.rows[0]
-        const m = migrations[i]
-        if (row && row.md5 && row.md5 !== m.md5) {
-          const msg = `For migration [${m.version}], expected MD5 checksum [${
-            m.md5
-          }] but got [${row.md5}]`
-          return finishedCallback(new Error(msg), migrations)
-        }
-        i = i + 1
-        if (i < migrations.length) {
-          return runNext(i)
-        }
-        return finishedCallback(null, migrations)
-      })
-    } else {
-      runQuery(sql, (err, result) => {
-        if (err) {
-          return finishedCallback(err, migrations)
-        }
-        // Migration ran successfully. Add version to config.schemaTable table.
-        runQuery(migrations[i].schemaVersionSQL, function(err, result) {
-          if (err) {
-            return finishedCallback(err, migrations)
+Postgrator.prototype.runMigrations = function runMigrations(migrations = []) {
+  let seq = Promise.resolve()
+  migrations.forEach(migration => {
+    seq = seq.then(() => {
+      const sql = migration.getSql()
+      if (migration.md5Sql) {
+        return this.runQuery(migration.md5Sql).then(result => {
+          const row = result.rows[0]
+          if (row && row.md5 && row.md5 !== migration.md5) {
+            const msg = `For migration [${
+              migration.version
+            }], expected MD5 checksum [${migration.md5}] but got [${row.md5}]`
+            throw new Error(msg)
           }
-          // config.schemaTable successfully recorded
-          // Continue on to next migration
-          i = i + 1
-          if (i < migrations.length) {
-            return runNext(i)
-          }
-          // We are done running the migrations.
-          return finishedCallback(null, migrations)
         })
-      })
-    }
-  }
-  runNext(0)
+      } else {
+        return this.runQuery(sql).then(() =>
+          this.runQuery(migration.schemaVersionSQL)
+        )
+      }
+    })
+  })
+  return seq.then(() => migrations)
 }
 
 /**
  * returns an array of relevant migrations based on the target and current version passed.
  * returned array is sorted in the order it needs to be run
+ *
+ * @returns {Array} Sorted array of relevant migration objects
  * @param {*} currentVersion
  * @param {*} targetVersion
  */
-function getRelevantMigrations(currentVersion, targetVersion) {
+Postgrator.prototype.getRelevantMigrations = function getRelevantMigrations(
+  currentVersion,
+  targetVersion
+) {
   let relevantMigrations = []
+  const { config, migrations } = this
   if (targetVersion >= currentVersion) {
     // get all up migrations > currentVersion and <= targetVersion
     migrations.forEach(migration => {
@@ -270,62 +237,47 @@ function getRelevantMigrations(currentVersion, targetVersion) {
 /**
  * Main method to move a schema to a particular version.
  * A target must be specified, otherwise nothing is run.
+ *
+ * @returns {Promise}
  * @param {*} target - version to migrate as string or number (handled as  numbers internally)
- * @param {*} finishedCallback - called when completed. function (err, migrations)
+
  */
-function migrate(target, finishedCallback) {
-  prep(err => {
-    if (err) {
-      return finishedCallback(err)
-    }
-    getMigrations()
-
-    if (target === 'max') {
-      const versions = migrations
-        .map(migration => migration.version)
-        .filter(version => !isNaN(version))
-      targetVersion = Math.max.apply(null, versions)
-    } else if (target) {
-      targetVersion = Number(target)
-    }
-
-    if (targetVersion === undefined) {
-      return finishedCallback(new Error('No target version supplied'))
-    }
-
-    getCurrentVersion((err, currentVersion) => {
-      if (err) {
-        return finishedCallback(err)
+Postgrator.prototype.migrate = function(target = '') {
+  return this.prep()
+    .then(() => this.getMigrations())
+    .then(() => {
+      if (target.toLowerCase() === 'max') {
+        return this.getMaxVersion()
+      } else {
+        return Number(target)
       }
-      const relevantMigrations = getRelevantMigrations(
-        currentVersion,
-        targetVersion
-      )
-      if (relevantMigrations.length > 0) {
-        return runMigrations(
-          relevantMigrations,
-          currentVersion,
-          targetVersion,
-          finishedCallback
-        )
-      }
-      return finishedCallback()
     })
-  })
+    .then(targetVersion => {
+      if (targetVersion === undefined) {
+        throw new Error('No target version supplied')
+      }
+      return this.getCurrentVersion()
+        .then(currentVersion => {
+          return this.getRelevantMigrations(currentVersion, targetVersion)
+        })
+        .then(relevantMigrations => {
+          if (relevantMigrations.length > 0) {
+            return this.runMigrations(relevantMigrations)
+          }
+        })
+    })
 }
 
 /**
  * Creates the table required for Postgrator to keep track of which migrations have been run.
- * @param {*} callback - function called after schema version table is built. function (err, results) {}
+ *
+ * @returns {Promise}
  */
-function prep(callback) {
-  return runQuery(commonClient.queries.checkTable, (err, result) => {
-    if (err) {
-      err.helpfulDescription = 'Prep() table CHECK query Failed'
-      return callback(err)
-    }
+Postgrator.prototype.prep = function prep() {
+  const { commonClient, config } = this
+  return this.runQuery(commonClient.queries.checkTable).then(result => {
     if (result.rows && result.rows.length > 0) {
-      if (config.driver === 'pg' || config.driver === 'pg.js') {
+      if (config.driver === 'pg') {
         // config.schemaTable exists, does it have the md5 column? (PostgreSQL only)
         const sql = `
           SELECT column_name, data_type, character_maximum_length 
@@ -333,37 +285,19 @@ function prep(callback) {
           WHERE table_name = '${config.schemaTable}' 
           AND column_name = 'md5';
         `
-        return runQuery(sql, (err, result) => {
-          if (err) {
-            err.helpfulDescription =
-              'Prep() table CHECK MD5 COLUMN query Failed'
-            return callback(err)
-          }
+        return this.runQuery(sql).then(result => {
           if (!result.rows || result.rows.length === 0) {
             // md5 column doesn't exist, add it
-            const sql = `ALTER TABLE ${
-              config.schemaTable
-            } ADD COLUMN md5 text DEFAULT '';`
-            return runQuery(sql, (err, result) => {
-              if (err) {
-                err.helpfulDescription =
-                  'Prep() table ADD MD5 COLUMN query Failed'
-                return callback(err)
-              }
-              return callback()
-            })
+            const sql = `
+              ALTER TABLE ${config.schemaTable} 
+              ADD COLUMN md5 text DEFAULT '';
+            `
+            return this.runQuery(sql)
           }
-          return callback()
         })
       }
-      return callback()
+    } else {
+      return this.runQuery(commonClient.queries.makeTable)
     }
-    return runQuery(commonClient.queries.makeTable, (err, result) => {
-      if (err) {
-        err.helpfulDescription = 'Prep() table BUILD query Failed'
-        return callback(err)
-      }
-      return callback()
-    })
   })
 }
