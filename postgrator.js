@@ -212,15 +212,16 @@ class Postgrator {
    * @param {Number} targetVersion
    */
   getRelevantMigrations(currentVersion, targetVersion) {
-    let relevantMigrations = []
     const { config, migrations } = this
     if (targetVersion >= currentVersion) {
-      migrations.forEach(migration => {
-        if (
-          migration.action === 'do' &&
-          migration.version > currentVersion &&
-          migration.version <= targetVersion
-        ) {
+      return migrations
+        .filter(
+          migration =>
+            migration.action === 'do' &&
+            migration.version > currentVersion &&
+            migration.version <= targetVersion
+        )
+        .map(migration => {
           migration.schemaVersionSQL =
             config.driver === 'pg'
               ? `INSERT INTO ${
@@ -231,26 +232,27 @@ class Postgrator {
               : `INSERT INTO ${config.schemaTable} (version) VALUES (${
                   migration.version
                 });`
-          relevantMigrations.push(migration)
-        }
-      })
-      relevantMigrations = relevantMigrations.sort(sortMigrationsAsc)
-    } else if (targetVersion < currentVersion) {
-      migrations.forEach(migration => {
-        if (
-          migration.action === 'undo' &&
-          migration.version <= currentVersion &&
-          migration.version > targetVersion
-        ) {
+          return migration
+        })
+        .sort(sortMigrationsAsc)
+    }
+    if (targetVersion < currentVersion) {
+      return migrations
+        .filter(
+          migration =>
+            migration.action === 'undo' &&
+            migration.version <= currentVersion &&
+            migration.version > targetVersion
+        )
+        .map(migration => {
           migration.schemaVersionSQL = `DELETE FROM ${
             config.schemaTable
           } WHERE version = ${migration.version};`
-          relevantMigrations.push(migration)
-        }
-      })
-      relevantMigrations = relevantMigrations.sort(sortMigrationsDesc)
+          return migration
+        })
+        .sort(sortMigrationsDesc)
     }
-    return relevantMigrations
+    return []
   }
 
   /**
