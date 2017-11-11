@@ -21,12 +21,20 @@ npm install mssql
 
 ## Version 3.0 Breaking changes (unreleased, in development)
 
-- DB drivers must be installed prior to use (`pg`, `mysql`, `mssql`)
-- `pg.js` and `tedious` are no longer valid driver config option
-- All callback functions have been replaced with promise-based functions
-- `.getVersions()` has been removed in favor of `.getMaxVersion()`, `.getCurrentVersion()`, and `.getMigrations()`
-- Node 6 or greater is now required
-- logging to console has been removed (and so has config.logProgress)
+[x] Node 6 or greater now required
+[x] DB drivers must be installed prior to use (`pg`, `mysql`, `mssql`)
+[x] `pg.js` and `tedious` no longer valid driver config option
+[x] Callback API replaced with promise-based functions
+[x] `.getVersions()` removed in favor of `.getMaxVersion()`, `.getCurrentVersion()`, and `.getMigrations()`
+[x] Logging to console removed (and so has config.logProgress)
+
+### TODO 
+[ ] Add checksums for mysql, mssql
+[ ] Use ES6 class
+[ ] Auto close connection at end of migration
+[ ] Checksum for multiple line endings (remove newline dep)
+[ ] Make checksum optional
+[ ] Add timestamp to migration table
 
 
 ## Usage
