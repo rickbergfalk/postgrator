@@ -190,7 +190,7 @@ class Postgrator {
           migration.action === 'do' &&
           migration.version > 0 &&
           migration.version <= currentVersion &&
-          (config.driver === 'pg' || config.driver === 'pg.js')
+          config.driver === 'pg'
         ) {
           migration.md5Sql = `SELECT md5 FROM ${
             config.schemaTable
