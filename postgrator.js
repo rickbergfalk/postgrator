@@ -279,11 +279,11 @@ class Postgrator {
         if (config.driver === 'pg') {
           // config.schemaTable exists, does it have the md5 column? (PostgreSQL only)
           const sql = `
-          SELECT column_name, data_type, character_maximum_length 
-          FROM INFORMATION_SCHEMA.COLUMNS 
-          WHERE table_name = '${config.schemaTable}' 
-          AND column_name = 'md5';
-        `
+            SELECT column_name, data_type, character_maximum_length 
+            FROM INFORMATION_SCHEMA.COLUMNS 
+            WHERE table_name = '${config.schemaTable}' 
+            AND column_name = 'md5';
+          `
           return this.runQuery(sql).then(result => {
             if (!result.rows || result.rows.length === 0) {
               // md5 column doesn't exist, add it
