@@ -46,7 +46,7 @@ You might want to choose the JS file approach, in order to make use (secret) env
 To run your sql migrations with Postgrator, write a Node.js script or integrate postgrator with your application in some way:
 
 ```js
-var postgrator = require('postgrator');
+const postgrator = require('postgrator');
 
 postgrator.setConfig({
   migrationDirectory: __dirname + '/migrations',
@@ -108,7 +108,7 @@ postgrator.setConfig({
   database: 'databasename',
   username: 'username',
   password: 'password',
-  requestTimeout: 1000 * 60 * 60, //optional. default is one hour
+  requestTimeout: 1000 * 60 * 60, // optional. default is one hour
   options: {
     encrypt: true
   }
@@ -125,6 +125,8 @@ Reference options for mssql for more details: [https://www.npmjs.com/package/mss
 - `pg.js` and `tedious` are no longer valid driver config option
 - callback is required (might be replaced with promise)
 - Node 6 or greater
+- config.logProgress removed
+- logging to console removed
 
 
 
