@@ -67,7 +67,6 @@ class Postgrator {
   }
 
   /**
-   * Exposed for testing, but otherwise internal
    * Connects the database driver if it is not currently connected.
    * Executes an arbitrary sql query using the common client
    *
