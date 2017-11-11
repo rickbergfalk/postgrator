@@ -1,4 +1,4 @@
-# Postgrator 3.x.x
+# Postgrator 3
 
 A Node.js SQL migration library using a directory of plain SQL scripts.
 Supports Postgres, MySQL, and SQL Server.
@@ -21,20 +21,20 @@ npm install mssql
 
 ## Version 3.0 Breaking changes (unreleased, in development)
 
-[x] Node 6 or greater now required
-[x] DB drivers must be installed prior to use (`pg`, `mysql`, `mssql`)
-[x] `pg.js` and `tedious` no longer valid driver config option
-[x] Callback API replaced with promise-based functions
-[x] `.getVersions()` removed in favor of `.getMaxVersion()`, `.getCurrentVersion()`, and `.getMigrations()`
-[x] Logging to console removed (and so has config.logProgress)
+- [x] Node 6 or greater now required
+- [x] DB drivers must be installed prior to use (`pg`, `mysql`, `mssql`)
+- [x] `pg.js` and `tedious` no longer valid driver config option
+- [x] Callback API replaced with promise-based functions
+- [x] `.getVersions()` removed in favor of `.getMaxVersion()`, `.getCurrentVersion()`, and `.getMigrations()`
+- [x] Logging to console removed (and so has config.logProgress)
 
 ### TODO 
-[ ] Add checksums for mysql, mssql
-[ ] Use ES6 class
-[ ] Auto close connection at end of migration
-[ ] Checksum for multiple line endings (remove newline dep)
-[ ] Make checksum optional
-[ ] Add timestamp to migration table
+- [ ] Add checksums for mysql, mssql
+- [ ] Use ES6 class
+- [ ] Auto close connection at end of migration
+- [ ] Checksum for multiple line endings (remove newline dep)
+- [ ] Make checksum optional
+- [ ] Add timestamp to migration table
 
 
 ## Usage
