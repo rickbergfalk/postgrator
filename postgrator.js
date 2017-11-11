@@ -240,7 +240,6 @@ Postgrator.prototype.getRelevantMigrations = function getRelevantMigrations(
  *
  * @returns {Promise}
  * @param {*} target - version to migrate as string or number (handled as  numbers internally)
-
  */
 Postgrator.prototype.migrate = function(target = '') {
   return this.prep()
