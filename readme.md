@@ -27,9 +27,10 @@ npm install mssql
 - [x] Callback API replaced with promise-based functions
 - [x] `.getVersions()` removed in favor of `.getMaxVersion()`, `.getCurrentVersion()`, and `.getMigrations()`
 - [x] Logging to console removed (and so has config.logProgress)
-- [x] Use ES6 class
+- [x] Calling `.migrate()` without input migrates to latest/max
 
 ### TODO 
+- [x] Use ES6 class
 - [ ] Add checksums for mysql, mssql
 - [ ] Auto close connection at end of migration
 - [ ] Checksum for multiple line endings (remove newline dep)

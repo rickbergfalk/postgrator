@@ -95,6 +95,20 @@ function testConfig(config) {
       return postgrator.migrate('00').then(() => postgrator.endConnection())
     })
 
+    it('Migrates to latest without input', function() {
+      return postgrator
+        .migrate()
+        .then(migrations => postgrator.runQuery('SELECT name, age FROM person'))
+        .then(result => {
+          assert.equal(result.rows.length, 6)
+          return postgrator.endConnection()
+        })
+    })
+
+    it('Migrates down to 000 again', function() {
+      return postgrator.migrate('00').then(() => postgrator.endConnection())
+    })
+
     after(function() {
       return postgrator
         .runQuery('DROP TABLE schemaversion')

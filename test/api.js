@@ -29,7 +29,7 @@ describe('API', function() {
 
   it('Implements getMigrations', function() {
     return postgrator.getMigrations().then(migrations => {
-      assert.equal(migrations.length, 11)
+      assert.equal(migrations.length, 12)
       const m = migrations[0]
       assert.equal(m.version, 1)
       assert.equal(m.action, 'do')

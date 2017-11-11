@@ -266,7 +266,8 @@ class Postgrator {
     return this.prep()
       .then(() => this.getMigrations())
       .then(() => {
-        if (target.toLowerCase() === 'max') {
+        const cleaned = target.toLowerCase().trim()
+        if (cleaned === 'max' || cleaned === '') {
           return this.getMaxVersion()
         } else {
           return Number(target)
@@ -274,7 +275,7 @@ class Postgrator {
       })
       .then(targetVersion => {
         if (targetVersion === undefined) {
-          throw new Error('No target version supplied')
+          throw new Error('targetVersion undefined')
         }
         data.targetVersion = targetVersion
         return this.getCurrentVersion()
