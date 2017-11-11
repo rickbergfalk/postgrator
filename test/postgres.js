@@ -1,6 +1,6 @@
 /* global it, describe */
 const assert = require('assert')
-const postgrator = require('../postgrator')
+const Postgrator = require('../postgrator')
 
 const path = require('path')
 const migrationDirectory = path.join(__dirname, 'migrations')
@@ -18,149 +18,101 @@ const config = {
 }
 
 describe('Postgres connection string API', function() {
-  postgrator.setConfig({
+  const postgrator = new Postgrator({
     driver: 'pg',
     migrationDirectory: migrationDirectory,
     connectionString: pgUrl
   })
 
-  it('Migrates up to 003', function(done) {
-    postgrator.migrate('003', function(err, migrations) {
-      assert.ifError(err)
+  it('Migrates up to 003', function() {
+    return postgrator.migrate('003').then(migrations => {
       assert.equal(migrations.length, 3, '3 migrations run')
-      postgrator.endConnection(done)
+      return postgrator.endConnection()
     })
   })
 
-  it('Migrates down to 000', function(done) {
-    postgrator.migrate('000', function(err, migrations) {
-      assert.ifError(err)
+  it('Migrates down to 000', function() {
+    return postgrator.migrate('000').then(migrations => {
       assert.equal(migrations.length, 3, '3 migrations run')
-      postgrator.endConnection(done)
+      return postgrator.endConnection()
     })
   })
 })
 
 describe('Config API', function() {
-  postgrator.setConfig(config)
+  const postgrator = new Postgrator(config)
 
-  it('Migrates multiple versions up (000 -> 002)', function(done) {
-    postgrator.migrate('002', function(err, migrations) {
-      assert.ifError(err)
-      postgrator.runQuery('SELECT name, age FROM person', function(
-        err,
-        result
-      ) {
-        assert.ifError(err)
-        assert.equal(
-          result.rows.length,
-          1,
-          'person table should have 1 record at this point'
-        )
-        postgrator.endConnection(done)
+  it('Migrates multiple versions up (000 -> 002)', function() {
+    return postgrator
+      .migrate('002')
+      .then(migrations => postgrator.runQuery('SELECT name FROM person'))
+      .then(results => {
+        assert.equal(results.rows.length, 1)
+        return postgrator.endConnection()
       })
+  })
+
+  it('Handles current version', function() {
+    return postgrator.migrate('002').then(migrations => {
+      console.log(migrations)
+      assert.equal(migrations.length, 0)
+      return postgrator.endConnection()
     })
   })
 
-  it('Handles current version', function(done) {
-    postgrator.migrate('002', function(err, migrations) {
-      if (err) throw err
-      postgrator.endConnection(done)
-    })
-  })
-
-  it('Migrates one version up (002 -> 003', function(done) {
-    postgrator.migrate('003', function(err, migrations) {
-      assert.ifError(err)
-      postgrator.runQuery('SELECT name, age FROM person', function(
-        err,
-        result
-      ) {
-        assert.ifError(err)
-        assert.equal(
-          result.rows.length,
-          3,
-          'person table should have 3 records at this point'
-        )
-        postgrator.endConnection(done)
+  it('Migrates one version up (002 -> 003', function() {
+    return postgrator
+      .migrate('003')
+      .then(migrations => postgrator.runQuery('SELECT name FROM person'))
+      .then(results => {
+        assert.equal(results.rows.length, 3)
+        return postgrator.endConnection()
       })
-    })
   })
 
-  it('Migrates generated SQL', function(done) {
+  it('Migrates generated SQL', function() {
     // using this to demo that you use environment variables to generate sql
     process.env.TEST_NAME = 'aesthete'
-
-    postgrator.migrate('005', function(err, migrations) {
-      assert.ifError(err)
-      assert.ifError(err)
-      postgrator.runQuery('SELECT name, age FROM person', function(
-        err,
-        result
-      ) {
-        assert.ifError(err)
-        assert.equal(
-          result.rows.length,
-          5,
-          'person table should have 5 records at this point'
-        )
+    return postgrator
+      .migrate('005')
+      .then(migrations => postgrator.runQuery('SELECT name, age FROM person'))
+      .then(result => {
+        assert.equal(result.rows.length, 5)
         assert.equal(result.rows[4].name, process.env.TEST_NAME)
-        postgrator.endConnection(done)
+        return postgrator.endConnection()
       })
-    })
   })
 
-  it('Checksums generated SQL', function(done) {
+  it('Checksums generated SQL', function() {
     process.env.TEST_ANOTHER_NAME = 'sop'
-    postgrator.migrate('006', function(err, migrations) {
-      assert.ifError(err)
-      assert.ifError(err)
-      postgrator.runQuery('SELECT name, age FROM person', function(
-        err,
-        result
-      ) {
-        assert.ifError(err)
-        assert.equal(
-          result.rows.length,
-          6,
-          'person table should have 6 records at this point'
-        )
+    return postgrator
+      .migrate('006')
+      .then(migrations => postgrator.runQuery('SELECT name, age FROM person'))
+      .then(result => {
+        assert.equal(result.rows.length, 6)
         assert.equal(result.rows[4].name, process.env.TEST_NAME)
         assert.equal(result.rows[5].name, process.env.TEST_ANOTHER_NAME)
-        postgrator.endConnection(done)
+        return postgrator.endConnection()
       })
-    })
   })
 
-  it('Migrates to "max"', function(done) {
-    postgrator.migrate('max', function(err, migrations) {
-      assert.ifError(err)
-      postgrator.runQuery('SELECT name, age FROM person', function(
-        err,
-        result
-      ) {
-        assert.ifError(err)
-        assert.equal(
-          result.rows.length,
-          6,
-          'person table should have 6 records at this point'
-        )
-        postgrator.endConnection(done)
+  it('Migrates to "max"', function() {
+    return postgrator
+      .migrate('max')
+      .then(migrations => postgrator.runQuery('SELECT name, age FROM person'))
+      .then(result => {
+        assert.equal(result.rows.length, 6)
+        return postgrator.endConnection()
       })
-    })
   })
 
-  it('Migrates down to 000', function(done) {
-    postgrator.migrate('00', function(err, migrations) {
-      assert.ifError(err)
-      postgrator.endConnection(done)
-    })
+  it('Migrates down to 000', function() {
+    return postgrator.migrate('00').then(() => postgrator.endConnection())
   })
 
-  it('Drops the schemaversion table', function(done) {
-    postgrator.runQuery('DROP TABLE schemaversion', function(err) {
-      assert.ifError(err)
-      postgrator.endConnection(done)
-    })
+  it('Drops the schemaversion table', function() {
+    return postgrator
+      .runQuery('DROP TABLE schemaversion')
+      .then(() => postgrator.endConnection())
   })
 })
