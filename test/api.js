@@ -24,15 +24,21 @@ describe('API', function() {
   it('Implements getCurrentVersion', function(done) {
     postgrator.getCurrentVersion(function(err, currentVersion) {
       assert.ifError(err)
-      console.log(currentVersion)
+      assert.equal(currentVersion, 3)
       postgrator.endConnection(done)
     })
   })
 
+  // TODO replace this with getMigrations(), getMax()
   it('Implements getVersions', function(done) {
     postgrator.getVersions(function(err, versions) {
       assert.ifError(err)
-      console.log(versions)
+      assert(versions)
+      assert.equal(versions.current, 3)
+      assert.equal(versions.max, 6)
+      // NOTE versions.migrations is array of version numbers
+      // (do and undo, so they are duplicated)
+      assert(Array.isArray(versions.migrations))
       postgrator.endConnection(done)
     })
   })
