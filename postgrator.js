@@ -148,38 +148,41 @@ class Postgrator {
    */
   validateMigrations(currentVersion, targetVersion) {
     const { config } = this
-    const validateMigrations = []
     return this.getMigrations().then(migrations => {
       if (targetVersion >= currentVersion) {
-        migrations.forEach(migration => {
-          if (
-            migration.action === 'do' &&
-            migration.version > 0 &&
-            migration.version <= currentVersion &&
-            config.driver === 'pg'
-          ) {
+        const validateMigrations = migrations
+          .filter(
+            migration =>
+              migration.action === 'do' &&
+              migration.version > 0 &&
+              migration.version <= currentVersion &&
+              config.driver === 'pg'
+          )
+          .map(migration => {
             migration.md5Sql = `SELECT md5 FROM ${
               config.schemaTable
             } WHERE version = ${migration.version};`
-            validateMigrations.push(migration)
-          }
-        })
-      }
+            return migration
+          })
 
-      let seq = Promise.resolve()
-      const validatedMigrations = []
-      validateMigrations.forEach(migration => {
-        seq = seq.then(() => this.runQuery(migration.md5Sql)).then(result => {
-          const row = result.rows[0]
-          if (row && row.md5 && row.md5 !== migration.md5) {
-            const msg = `For migration [${
-              migration.version
-            }], expected MD5 checksum [${migration.md5}] but got [${row.md5}]`
-            throw new Error(msg)
-          }
+        let sequence = Promise.resolve()
+        validateMigrations.forEach(migration => {
+          sequence = sequence
+            .then(() => this.runQuery(migration.md5Sql))
+            .then(result => {
+              const row = result.rows[0]
+              if (row && row.md5 && row.md5 !== migration.md5) {
+                const msg = `For migration [${
+                  migration.version
+                }], expected MD5 checksum [${migration.md5}] but got [${
+                  row.md5
+                }]`
+                throw new Error(msg)
+              }
+            })
         })
-      })
-      return seq.then(() => validatedMigrations)
+        return sequence.then(() => validateMigrations)
+      }
     })
   }
 
