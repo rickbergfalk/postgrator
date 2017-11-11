@@ -54,7 +54,6 @@ describe('Config API', function() {
 
   it('Handles current version', function() {
     return postgrator.migrate('002').then(migrations => {
-      console.log(migrations)
       assert.equal(migrations.length, 0)
       return postgrator.endConnection()
     })

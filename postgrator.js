@@ -12,6 +12,7 @@ module.exports = Postgrator
 function Postgrator(config) {
   config.schemaTable = config.schemaTable || 'schemaversion'
   this.config = config
+  this.migrations = []
   this.commonClient = commonClient(config)
 }
 
@@ -24,7 +25,7 @@ function Postgrator(config) {
  */
 Postgrator.prototype.getMigrations = function getMigrations() {
   const { migrationDirectory, newline } = this.config
-  const migrations = []
+  this.migrations = []
 
   return new Promise((resolve, reject) => {
     fs.readdir(migrationDirectory, (err, files) => {
@@ -39,7 +40,7 @@ Postgrator.prototype.getMigrations = function getMigrations() {
       const name = m.length >= 3 ? m.slice(2, m.length - 1).join('.') : file
       const filename = migrationDirectory + '/' + file
       if (m[m.length - 1] === 'sql') {
-        migrations.push({
+        this.migrations.push({
           version: Number(m[0]),
           action: m[1],
           filename: file,
@@ -50,7 +51,7 @@ Postgrator.prototype.getMigrations = function getMigrations() {
       } else if (m[m.length - 1] === 'js') {
         const jsModule = require(filename)
         const sql = jsModule.generateSql()
-        migrations.push({
+        this.migrations.push({
           version: Number(m[0]),
           action: m[1],
           filename: file,
@@ -60,7 +61,9 @@ Postgrator.prototype.getMigrations = function getMigrations() {
         })
       }
     })
-    this.migrations = migrations.filter(migration => !isNaN(migration.version))
+    this.migrations = this.migrations.filter(
+      migration => !isNaN(migration.version)
+    )
     return this.migrations
   })
 }
@@ -148,6 +151,7 @@ Postgrator.prototype.getMaxVersion = function getMaxVersion() {
  */
 Postgrator.prototype.runMigrations = function runMigrations(migrations = []) {
   let seq = Promise.resolve()
+  const appliedMigrations = []
   migrations.forEach(migration => {
     seq = seq.then(() => {
       const sql = migration.getSql()
@@ -162,13 +166,13 @@ Postgrator.prototype.runMigrations = function runMigrations(migrations = []) {
           }
         })
       } else {
-        return this.runQuery(sql).then(() =>
-          this.runQuery(migration.schemaVersionSQL)
-        )
+        return this.runQuery(sql)
+          .then(() => this.runQuery(migration.schemaVersionSQL))
+          .then(() => appliedMigrations.push(migration))
       }
     })
   })
-  return seq.then(() => migrations)
+  return seq.then(() => appliedMigrations)
 }
 
 /**
