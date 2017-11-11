@@ -211,7 +211,7 @@ class Postgrator {
    * @param {Number} currentVersion
    * @param {Number} targetVersion
    */
-  getRelevantMigrations(currentVersion, targetVersion) {
+  getRunnableMigrations(currentVersion, targetVersion) {
     const { config, migrations } = this
     if (targetVersion >= currentVersion) {
       return migrations
@@ -285,13 +285,9 @@ class Postgrator {
         this.validateMigrations(data.currentVersion, data.targetVersion)
       )
       .then(() =>
-        this.getRelevantMigrations(data.currentVersion, data.targetVersion)
+        this.getRunnableMigrations(data.currentVersion, data.targetVersion)
       )
-      .then(relevantMigrations => {
-        if (relevantMigrations.length > 0) {
-          return this.runMigrations(relevantMigrations)
-        }
-      })
+      .then(runnableMigrations => this.runMigrations(runnableMigrations))
   }
 
   /**
