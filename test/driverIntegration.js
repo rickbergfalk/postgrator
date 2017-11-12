@@ -34,7 +34,6 @@ function testConfig(config) {
         .then(migrations => postgrator.runQuery('SELECT name FROM person'))
         .then(results => {
           assert.equal(results.rows.length, 1)
-          return postgrator.endConnection()
         })
     })
 
@@ -51,7 +50,6 @@ function testConfig(config) {
         .then(migrations => postgrator.runQuery('SELECT name FROM person'))
         .then(results => {
           assert.equal(results.rows.length, 3)
-          return postgrator.endConnection()
         })
     })
 
@@ -64,7 +62,6 @@ function testConfig(config) {
         .then(result => {
           assert.equal(result.rows.length, 5)
           assert.equal(result.rows[4].name, process.env.TEST_NAME)
-          return postgrator.endConnection()
         })
     })
 
@@ -77,7 +74,6 @@ function testConfig(config) {
           assert.equal(result.rows.length, 6)
           assert.equal(result.rows[4].name, process.env.TEST_NAME)
           assert.equal(result.rows[5].name, process.env.TEST_ANOTHER_NAME)
-          return postgrator.endConnection()
         })
     })
 
@@ -87,7 +83,6 @@ function testConfig(config) {
         .then(migrations => postgrator.runQuery('SELECT name, age FROM person'))
         .then(result => {
           assert.equal(result.rows.length, 6)
-          return postgrator.endConnection()
         })
     })
 
@@ -101,7 +96,6 @@ function testConfig(config) {
         .then(migrations => postgrator.runQuery('SELECT name, age FROM person'))
         .then(result => {
           assert.equal(result.rows.length, 6)
-          return postgrator.endConnection()
         })
     })
 

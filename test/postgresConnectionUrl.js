@@ -16,14 +16,12 @@ describe('Postgres connection url', function() {
   it('Migrates up to 003', function() {
     return postgrator.migrate('003').then(migrations => {
       assert.equal(migrations.length, 3, '3 migrations run')
-      return postgrator.endConnection()
     })
   })
 
   it('Migrates down to 000', function() {
     return postgrator.migrate('000').then(migrations => {
       assert.equal(migrations.length, 3, '3 migrations run')
-      return postgrator.endConnection()
     })
   })
 
