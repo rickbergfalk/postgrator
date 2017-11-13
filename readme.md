@@ -31,8 +31,8 @@ npm install mssql
 
 ### TODO 
 - [x] Use ES6 class
+- [x] Auto close connection at end of migration
 - [ ] Add checksums for mysql, mssql
-- [ ] Auto close connection at end of migration
 - [ ] Checksum for multiple line endings (remove newline dep)
 - [ ] Make checksum optional
 - [ ] Add timestamp to migration table

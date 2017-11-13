@@ -40,7 +40,6 @@ function testConfig(config) {
     it('Handles current version', function() {
       return postgrator.migrate('002').then(migrations => {
         assert.equal(migrations.length, 0)
-        return postgrator.endConnection()
       })
     })
 
@@ -87,7 +86,7 @@ function testConfig(config) {
     })
 
     it('Migrates down to 000', function() {
-      return postgrator.migrate('00').then(() => postgrator.endConnection())
+      return postgrator.migrate('00')
     })
 
     it('Migrates to latest without input', function() {
@@ -100,13 +99,11 @@ function testConfig(config) {
     })
 
     it('Migrates down to 000 again', function() {
-      return postgrator.migrate('00').then(() => postgrator.endConnection())
+      return postgrator.migrate('00')
     })
 
     after(function() {
-      return postgrator
-        .runQuery('DROP TABLE schemaversion')
-        .then(() => postgrator.endConnection())
+      return postgrator.runQuery('DROP TABLE schemaversion')
     })
   })
 }

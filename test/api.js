@@ -49,8 +49,6 @@ describe('API', function() {
   })
 
   after(function() {
-    return postgrator
-      .runQuery('DROP TABLE schemaversion')
-      .then(() => postgrator.endConnection())
+    return postgrator.runQuery('DROP TABLE schemaversion')
   })
 })

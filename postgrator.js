@@ -67,37 +67,16 @@ class Postgrator {
   }
 
   /**
-   * Connects the database driver if it is not currently connected.
-   * Executes an arbitrary sql query using the common client
+   * Executes sql query using the common client and ends connection afterwards
    *
    * @returns {Promise} result of query
    * @param {String} query sql query to execute
    */
   runQuery(query) {
     const { commonClient } = this
-    if (commonClient.connected) {
-      return commonClient.runQuery(query)
-    } else {
-      return commonClient.createConnection().then(() => {
-        commonClient.connected = true
-        return commonClient.runQuery(query)
-      })
-    }
-  }
-
-  /**
-   * Ends the commonClient's connection to database
-   *
-   * @returns {Promise}
-   */
-  endConnection() {
-    const { commonClient } = this
-    if (commonClient.connected) {
-      return commonClient.endConnection().then(() => {
-        commonClient.connected = false
-      })
-    }
-    return Promise.resolve()
+    return commonClient.runQuery(query).then(results => {
+      return commonClient.endConnection().then(() => results)
+    })
   }
 
   /**
@@ -108,12 +87,10 @@ class Postgrator {
    */
   getCurrentVersion() {
     const currentVersionSql = this.commonClient.queries.getCurrentVersion
-    return this.runQuery(currentVersionSql).then(result => {
-      if (result.rows.length > 0) {
-        return result.rows[0].version
-      } else {
-        return 0
-      }
+    const { runQuery, endConnection } = this.commonClient
+    return runQuery(currentVersionSql).then(result => {
+      const version = result.rows.length > 0 ? result.rows[0].version : 0
+      return endConnection().then(() => version)
     })
   }
 
@@ -168,7 +145,7 @@ class Postgrator {
         let sequence = Promise.resolve()
         validateMigrations.forEach(migration => {
           sequence = sequence
-            .then(() => this.runQuery(migration.md5Sql))
+            .then(() => this.commonClient.runQuery(migration.md5Sql))
             .then(result => {
               const row = result.rows[0]
               if (row && row.md5 && row.md5 !== migration.md5) {
@@ -198,8 +175,8 @@ class Postgrator {
     migrations.forEach(migration => {
       sequence = sequence
         .then(() => migration.getSql())
-        .then(sql => this.runQuery(sql))
-        .then(() => this.runQuery(migration.schemaVersionSQL))
+        .then(sql => this.commonClient.runQuery(sql))
+        .then(() => this.commonClient.runQuery(migration.schemaVersionSQL))
         .then(() => appliedMigrations.push(migration))
     })
     return sequence.then(() => appliedMigrations)
@@ -291,6 +268,9 @@ class Postgrator {
         this.getRunnableMigrations(data.currentVersion, data.targetVersion)
       )
       .then(runnableMigrations => this.runMigrations(runnableMigrations))
+      .then(migrations =>
+        this.commonClient.endConnection().then(() => migrations)
+      )
   }
 
   /**
@@ -300,31 +280,33 @@ class Postgrator {
    */
   prep() {
     const { commonClient, config } = this
-    return this.runQuery(commonClient.queries.checkTable).then(result => {
-      if (result.rows && result.rows.length > 0) {
-        if (config.driver === 'pg') {
-          // config.schemaTable exists, does it have the md5 column? (PostgreSQL only)
-          const sql = `
+    return commonClient
+      .runQuery(commonClient.queries.checkTable)
+      .then(result => {
+        if (result.rows && result.rows.length > 0) {
+          if (config.driver === 'pg') {
+            // config.schemaTable exists, does it have the md5 column? (PostgreSQL only)
+            const sql = `
             SELECT column_name, data_type, character_maximum_length 
             FROM INFORMATION_SCHEMA.COLUMNS 
             WHERE table_name = '${config.schemaTable}' 
             AND column_name = 'md5';
           `
-          return this.runQuery(sql).then(result => {
-            if (!result.rows || result.rows.length === 0) {
-              // md5 column doesn't exist, add it
-              const sql = `
+            return commonClient.runQuery(sql).then(result => {
+              if (!result.rows || result.rows.length === 0) {
+                // md5 column doesn't exist, add it
+                const sql = `
                 ALTER TABLE ${config.schemaTable} 
                 ADD COLUMN md5 text DEFAULT '';
               `
-              return this.runQuery(sql)
-            }
-          })
+                return commonClient.runQuery(sql)
+              }
+            })
+          }
+        } else {
+          return commonClient.runQuery(commonClient.queries.makeTable)
         }
-      } else {
-        return this.runQuery(commonClient.queries.makeTable)
-      }
-    })
+      })
   }
 }
 
