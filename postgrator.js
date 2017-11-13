@@ -132,13 +132,12 @@ class Postgrator {
             migration =>
               migration.action === 'do' &&
               migration.version > 0 &&
-              migration.version <= currentVersion &&
-              config.driver === 'pg'
+              migration.version <= currentVersion
           )
           .map(migration => {
-            migration.md5Sql = `SELECT md5 FROM ${
-              config.schemaTable
-            } WHERE version = ${migration.version};`
+            migration.md5Sql = `
+              SELECT md5 FROM ${config.schemaTable} 
+              WHERE version = ${migration.version};`
             return migration
           })
 
@@ -201,16 +200,13 @@ class Postgrator {
             migration.version <= targetVersion
         )
         .map(migration => {
-          migration.schemaVersionSQL =
-            config.driver === 'pg'
-              ? `INSERT INTO ${
-                  config.schemaTable
-                } (version, name, md5) VALUES (${migration.version}, '${
-                  migration.name
-                }', '${migration.md5}');`
-              : `INSERT INTO ${config.schemaTable} (version) VALUES (${
-                  migration.version
-                });`
+          migration.schemaVersionSQL = `
+            INSERT INTO ${config.schemaTable} (version, name, md5) 
+            VALUES (
+              ${migration.version}, 
+              '${migration.name}', 
+              '${migration.md5}'
+            );`
           return migration
         })
         .sort(sortMigrationsAsc)
@@ -224,9 +220,9 @@ class Postgrator {
             migration.version > targetVersion
         )
         .map(migration => {
-          migration.schemaVersionSQL = `DELETE FROM ${
-            config.schemaTable
-          } WHERE version = ${migration.version};`
+          migration.schemaVersionSQL = `
+            DELETE FROM ${config.schemaTable} 
+            WHERE version = ${migration.version};`
           return migration
         })
         .sort(sortMigrationsDesc)
