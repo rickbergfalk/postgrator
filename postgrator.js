@@ -243,7 +243,8 @@ class Postgrator {
    */
   migrate(target = '') {
     const data = {}
-    return this.prep()
+    return this.commonClient
+      .ensureTable()
       .then(() => this.getMigrations())
       .then(() => {
         const cleaned = target.toLowerCase().trim()
@@ -271,26 +272,6 @@ class Postgrator {
       .then(migrations =>
         this.commonClient.endConnection().then(() => migrations)
       )
-  }
-
-  /**
-   * Creates the table required for Postgrator to keep track of which migrations have been run.
-   *
-   * @returns {Promise}
-   */
-  prep() {
-    const { commonClient } = this
-    return commonClient
-      .runQuery(commonClient.queries.checkTable)
-      .then(result => {
-        if (result.rows && result.rows.length > 0) {
-          return commonClient
-            .ensureColumn('name', 'text')
-            .then(() => commonClient.ensureColumn('md5', 'text'))
-        } else {
-          return commonClient.runQuery(commonClient.queries.makeTable)
-        }
-      })
   }
 }
 
