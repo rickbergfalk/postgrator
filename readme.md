@@ -157,6 +157,38 @@ const postgrator = new Postgrator({
 Reference options for mssql for more details: [https://www.npmjs.com/package/mssql](https://www.npmjs.com/package/mssql)
 
 
+### Utility methods
+
+Some of postgrator's methods may come in useful performing other migration tasks
+
+```js
+// To get max version available from filesystem
+// version returned as number, not string
+postgrator.getMaxVersion()
+  .then(version => console.log(version))
+  .catch(error => console.error(error))
+
+// "current" database schema version
+// version returned as number, not string
+postgrator.getDatabaseVersion()
+  .then(version => console.log(version))
+  .catch(error => console.error(error))
+
+// To get all migrations from directory and parse metadata
+postgrator.getMigrations()
+  .then(migrations => console.log(migrations))
+  .catch(error => console.error(error))
+
+// Run arbitrary SQL query against database
+// Connection is established, query is run, then connection is ended
+// `results.rows` will be an array of row objects, with column names as keys
+// `results` object may have other properties depending on db driver
+postgrator.runQuery('SELECT * FROM sometable')
+  .then(results => console.log(results))
+  .catch(error => console.error(error))
+```
+
+
 ## What Postgrator is doing
 
 When first run against your database, *Postgrator will create the table specified by config.schemaTable.* Postgrator relies on this table to track what version the database is at.
