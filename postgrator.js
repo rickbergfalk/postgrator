@@ -201,11 +201,15 @@ class Postgrator {
         )
         .map(migration => {
           migration.schemaVersionSQL = `
-            INSERT INTO ${config.schemaTable} (version, name, md5) 
+            INSERT INTO ${config.schemaTable} (version, name, md5, run_at) 
             VALUES (
               ${migration.version}, 
               '${migration.name}', 
-              '${migration.md5}'
+              '${migration.md5}',
+              '${new Date()
+                .toISOString()
+                .replace('T', ' ')
+                .replace('Z', '')}'
             );`
           return migration
         })

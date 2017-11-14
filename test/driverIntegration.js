@@ -43,6 +43,20 @@ function testConfig(config) {
       })
     })
 
+    it('Has migration details in schema table', function() {
+      return postgrator
+        .runQuery(
+          `SELECT version, name, md5, run_at 
+          FROM schemaversion 
+          WHERE version = 2`
+        )
+        .then(results => {
+          assert.equal(results.rows[0].name, 'some-description')
+          assert(results.rows[0].run_at)
+          assert(results.rows[0].md5)
+        })
+    })
+
     it('Migrates one version up (002 -> 003', function() {
       return postgrator
         .migrate('003')
