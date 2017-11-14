@@ -33,9 +33,9 @@ npm install mssql
 - [x] Use ES6 class
 - [x] Auto close connection at end of migration
 - [x] Add checksums for mysql, mssql
-- [ ] Make checksum optional
+- [x] Make checksum optional
 - [x] Add timestamp to migration table
-- [ ] change `.getCurrentVersion()` to `.getDatabaseVersion()`
+- [x] change `.getCurrentVersion()` to `.getDatabaseVersion()`
 
 
 ## Usage
@@ -82,24 +82,45 @@ To run your sql migrations with Postgrator, write a Node.js script or integrate 
 const Postgrator = require('postgrator');
 
 const postgrator = new Postgrator({
+  // Directory containing migration files
   migrationDirectory: __dirname + '/migrations',
-  schemaTable: 'schemaversion', // optional. default is 'schemaversion'
-  driver: 'pg', // or mysql, mssql
+  // Driver: must be pg, mysql, or mssql
+  driver: 'pg',
+  // Database connection config
   host: '127.0.0.1',
-  port: 5432, // optionally provide port
+  port: 5432,
   database: 'databasename',
   username: 'username',
-  password: 'password'
+  password: 'password',
+  // Schema table name. Optional. Default is schemaversion
+  schemaTable: 'schemaversion'
 });
 
-// Migrate to version specified, or supply 'max' to go all the way up
+// Migrate to specific version
 postgrator.migrate('002')
-  .then(migrations => {
-    console.log(migrations);
-    // return endConnection(), which also returns a promise
-    return postgrator.endConnection();
-  })
+  .then(appliedMigrations => console.log(appliedMigrations))
   .catch(error => console.log(error));
+
+// Migrate to max version (optionally can provide 'max')
+postgrator.migrate()
+  .then(appliedMigrations => console.log(appliedMigrations))
+  .catch(error => console.log(error));
+```
+
+
+### Checksum validation
+
+By default Postgrator will generate an md5 checksum for each migration file, and save the value to the schema table after a successful migration.
+
+Prior to applying migrations to a database, for any existing migration in the migration directory already run Postgrator will validate the md5 checksum to ensure the contents of the script have not changed. If a change is detected, migration will stop reporting an error.
+
+Because line endings may differ between environments/editors, an option is available to force a specific line ending prior to generating the checksum.
+
+```js
+const postgrator = new Postgrator({
+  validateChecksums: true, // Set to false to skip validation
+  newline: 'CRLF' // Force using 'CRLF' (windows) or 'LF' (unix/mac)
+});
 ```
 
 
@@ -109,8 +130,6 @@ Postgres supports connection string url as well as simple ssl config:
 
 ```js
 const postgrator = new Postgrator({
-  migrationDirectory: __dirname + '/migrations',
-  driver: 'pg',
   connectionString: 'tcp://username:password@hosturl/databasename',
   ssl: true
 });
@@ -124,14 +143,7 @@ This may be necessary if requiring a secure connection for Azure.
 
 ```js
 const postgrator = new Postgrator({
-  migrationDirectory: __dirname + '/migrations',
-  schemaTable: 'schemaversion', // optional. default is 'schemaversion'
-  driver: 'mssql',
-  host: '127.0.0.1',
-  database: 'databasename',
-  username: 'username',
-  password: 'password',
-  requestTimeout: 1000 * 60 * 60, // optional. default is one hour
+  requestTimeout: 1000 * 60 * 60, // Default 1 hour
   options: {
     encrypt: true
   }
@@ -148,25 +160,6 @@ When first run against your database, *Postgrator will create the table specifie
 Postgrator automatically determines whether it needs to go "up" or "down", and will update the schemaTable accordingly. If the database is already at the version specified to migrate to, Postgrator does nothing.
 
 If a migration fails, Postgrator will stop running any further migrations. It is up to you to migrate back down to the version you started at if you are running several migration scripts. Because of this, keep in mind how you write your SQL - You may (or may not) want to write your SQL defensively (ie, check for pre-existing objects before you create new ones).
-
-
-## Cross platform line feeds
-
-Line feeds: Unix/Mac uses LF, Windows uses 'CRLF', this causes problems for postgrator when calculating the md5 checksum of the migration files - particularly if some developers are on windows, some are on mac, etc. To negate this, you can use the `newline` config flag to tell postgrator to always use a particular line feed, e.g.
-
-```js
-const postgrator = new Postgrator({
-  migrationDirectory: __dirname + '/migrations',
-  driver: 'pg', // or pg.js, mysql, mssql, tedious
-  host: '127.0.0.1',
-  database: 'databasename',
-  username: 'username',
-  password: 'password',
-  newline: 'CRLF' // force using 'CRLF' or 'LF'
-});
-```
-
-Under the hood this uses the [newline](www.npmjs.com/package/newline) module for detecting and setting line feeds.
 
 
 ## Tests
