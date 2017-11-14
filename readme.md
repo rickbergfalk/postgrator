@@ -19,23 +19,27 @@ npm install mssql
 ```
 
 
-## Version 3.0 Breaking changes (unreleased, in development)
+## Version 3.0 Features & breaking changes (unreleased, in development)
 
-- [x] Node 6 or greater now required
-- [x] DB drivers must be installed prior to use (`pg`, `mysql`, `mssql`)
-- [x] `pg.js` and `tedious` no longer valid driver config option
-- [x] Callback API replaced with promise-based functions
-- [x] `.getVersions()` removed in favor of `.getMaxVersion()`, `.getCurrentVersion()`, and `.getMigrations()`
-- [x] Logging to console removed (and so has config.logProgress)
-- [x] Calling `.migrate()` without input migrates to latest/max
+### Features & Improvements
+- `run_at` timestamp column added to schema table
+- `md5` and `name` columns added for all implementations
+- Checksum validation now implemented for all drivers
+- Checksum validation may be skipped using config `validateChecksums: false`
+- Callback API replaced with Promises
+- Connections opened/closed automatically (no more `.endConnection()`)
+- Lots of tests
+
+### Breaking changes
+- Node 6 or greater now required
+- DB drivers must be installed prior to use (`pg`, `mysql`, `mssql`)
+- Calling `.migrate()` without input migrates to latest/max
+- `pg.js` and `tedious` no longer valid driver config option
+- None of the API is the same
+- Logging to console removed (and so has config.logProgress)
 
 ### TODO 
-- [x] Use ES6 class
-- [x] Auto close connection at end of migration
-- [x] Add checksums for mysql, mssql
-- [x] Make checksum optional
-- [x] Add timestamp to migration table
-- [x] change `.getCurrentVersion()` to `.getDatabaseVersion()`
+- [ ] document utility functions
 
 
 ## Usage
