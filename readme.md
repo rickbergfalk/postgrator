@@ -128,7 +128,7 @@ const postgrator = new Postgrator({
 ```
 
 
-### Postgres specific notes:
+### Postgres options:
 
 Postgres supports connection string url as well as simple ssl config:
 
@@ -140,7 +140,7 @@ const postgrator = new Postgrator({
 ```
 
 
-### SQL Server specific notes:
+### SQL Server options:
 
 For SQL Server, you may optionally provide an additional options configuration. 
 This may be necessary if requiring a secure connection for Azure.
