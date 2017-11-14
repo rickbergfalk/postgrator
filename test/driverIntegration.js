@@ -116,6 +116,26 @@ function testConfig(config) {
       return postgrator.migrate('00')
     })
 
+    it('Errors on invalid md5 check', function() {
+      return postgrator
+        .migrate('003')
+        .then(migrations =>
+          postgrator.runQuery(
+            `UPDATE schemaversion SET md5 = 'baddata' WHERE version = 2`
+          )
+        )
+        .then(() => postgrator.migrate('006'))
+        .catch(error => {
+          assert(error)
+          return postgrator.getCurrentVersion()
+        })
+        .then(currentVersion => assert.equal(currentVersion, 3))
+    })
+
+    it('Migrates down to 000 again', function() {
+      return postgrator.migrate('00')
+    })
+
     after(function() {
       return postgrator.runQuery('DROP TABLE schemaversion')
     })
