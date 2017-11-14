@@ -32,10 +32,10 @@ npm install mssql
 ### TODO 
 - [x] Use ES6 class
 - [x] Auto close connection at end of migration
-- [ ] Add checksums for mysql, mssql
-- [ ] Checksum for multiple line endings (remove newline dep)
+- [x] Add checksums for mysql, mssql
 - [ ] Make checksum optional
-- [ ] Add timestamp to migration table
+- [x] Add timestamp to migration table
+- [ ] change `.getCurrentVersion()` to `.getDatabaseVersion()`
 
 
 ## Usage
@@ -155,14 +155,14 @@ If a migration fails, Postgrator will stop running any further migrations. It is
 Line feeds: Unix/Mac uses LF, Windows uses 'CRLF', this causes problems for postgrator when calculating the md5 checksum of the migration files - particularly if some developers are on windows, some are on mac, etc. To negate this, you can use the `newline` config flag to tell postgrator to always use a particular line feed, e.g.
 
 ```js
-postgrator.setConfig({
+const postgrator = new Postgrator({
   migrationDirectory: __dirname + '/migrations',
   driver: 'pg', // or pg.js, mysql, mssql, tedious
   host: '127.0.0.1',
   database: 'databasename',
   username: 'username',
   password: 'password',
-  newline: 'CRLF'
+  newline: 'CRLF' // force using 'CRLF' or 'LF'
 });
 ```
 
