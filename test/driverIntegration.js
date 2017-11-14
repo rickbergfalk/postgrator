@@ -137,9 +137,9 @@ function testConfig(config) {
         .then(() => postgrator.migrate('006'))
         .catch(error => {
           assert(error)
-          return postgrator.getCurrentVersion()
+          return postgrator.getDatabaseVersion()
         })
-        .then(currentVersion => assert.equal(currentVersion, 3))
+        .then(version => assert.equal(version, 3))
     })
 
     it('Migrates down to 000 again', function() {

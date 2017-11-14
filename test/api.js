@@ -19,9 +19,9 @@ describe('API', function() {
     })
   })
 
-  it('Implements getCurrentVersion', function() {
-    return postgrator.getCurrentVersion().then(currentVersion => {
-      assert.equal(currentVersion, 3)
+  it('Implements getDatabaseVersion', function() {
+    return postgrator.getDatabaseVersion().then(version => {
+      assert.equal(version, 3)
     })
   })
 

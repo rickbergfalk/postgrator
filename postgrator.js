@@ -80,23 +80,22 @@ class Postgrator {
   }
 
   /**
-   * Gets the current version of the schema from the database.
+   * Gets the database version of the schema from the database.
    * Otherwise 0 if no version has been run
    *
-   * @returns {Promise} current schema version
+   * @returns {Promise} database schema version
    */
-  getCurrentVersion() {
-    const currentVersionSql = this.commonClient.queries.getCurrentVersion
+  getDatabaseVersion() {
+    const databaseVersionSql = this.commonClient.queries.getDatabaseVersion
     const { runQuery, endConnection } = this.commonClient
-    return runQuery(currentVersionSql).then(result => {
+    return runQuery(databaseVersionSql).then(result => {
       const version = result.rows.length > 0 ? result.rows[0].version : 0
       return endConnection().then(() => version)
     })
   }
 
   /**
-   * Returns an object with current applied version of the schema from
-   * the database and max version of migration available
+   * Returns an object with max version of migration available
    *
    * @returns {Promise}
    */
@@ -120,19 +119,19 @@ class Postgrator {
    * Validate md5 checksums for applied migrations
    *
    * @returns {Promise}
-   * @param {Number} currentVersion
+   * @param {Number} databaseVersion
    * @param {Number} targetVersion
    */
-  validateMigrations(currentVersion, targetVersion) {
+  validateMigrations(databaseVersion, targetVersion) {
     const { config } = this
     return this.getMigrations().then(migrations => {
-      if (targetVersion >= currentVersion) {
+      if (targetVersion >= databaseVersion) {
         const validateMigrations = migrations
           .filter(
             migration =>
               migration.action === 'do' &&
               migration.version > 0 &&
-              migration.version <= currentVersion
+              migration.version <= databaseVersion
           )
           .map(migration => {
             migration.md5Sql = `
@@ -182,21 +181,21 @@ class Postgrator {
   }
 
   /**
-   * returns an array of relevant migrations based on the target and current version passed.
+   * returns an array of relevant migrations based on the target and database version passed.
    * returned array is sorted in the order it needs to be run
    *
    * @returns {Array} Sorted array of relevant migration objects
-   * @param {Number} currentVersion
+   * @param {Number} databaseVersion
    * @param {Number} targetVersion
    */
-  getRunnableMigrations(currentVersion, targetVersion) {
+  getRunnableMigrations(databaseVersion, targetVersion) {
     const { config, migrations } = this
-    if (targetVersion >= currentVersion) {
+    if (targetVersion >= databaseVersion) {
       return migrations
         .filter(
           migration =>
             migration.action === 'do' &&
-            migration.version > currentVersion &&
+            migration.version > databaseVersion &&
             migration.version <= targetVersion
         )
         .map(migration => {
@@ -215,12 +214,12 @@ class Postgrator {
         })
         .sort(sortMigrationsAsc)
     }
-    if (targetVersion < currentVersion) {
+    if (targetVersion < databaseVersion) {
       return migrations
         .filter(
           migration =>
             migration.action === 'undo' &&
-            migration.version <= currentVersion &&
+            migration.version <= databaseVersion &&
             migration.version > targetVersion
         )
         .map(migration => {
@@ -259,14 +258,14 @@ class Postgrator {
           throw new Error('targetVersion undefined')
         }
         data.targetVersion = targetVersion
-        return this.getCurrentVersion()
+        return this.getDatabaseVersion()
       })
-      .then(currentVersion => (data.currentVersion = currentVersion))
+      .then(databaseVersion => (data.databaseVersion = databaseVersion))
       .then(() =>
-        this.validateMigrations(data.currentVersion, data.targetVersion)
+        this.validateMigrations(data.databaseVersion, data.targetVersion)
       )
       .then(() =>
-        this.getRunnableMigrations(data.currentVersion, data.targetVersion)
+        this.getRunnableMigrations(data.databaseVersion, data.targetVersion)
       )
       .then(runnableMigrations => this.runMigrations(runnableMigrations))
       .then(migrations =>
