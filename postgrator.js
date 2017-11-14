@@ -7,12 +7,16 @@ const {
   sortMigrationsDesc
 } = require('./lib/utils.js')
 
+const DEFAULT_CONFIG = {
+  schemaTable: 'schemaversion',
+  validateChecksums: true
+}
+
 class Postgrator {
   constructor(config) {
-    config.schemaTable = config.schemaTable || 'schemaversion'
-    this.config = config
+    this.config = Object.assign({}, DEFAULT_CONFIG, config)
     this.migrations = []
-    this.commonClient = commonClient(config)
+    this.commonClient = commonClient(this.config)
   }
 
   /**
@@ -135,7 +139,8 @@ class Postgrator {
           )
           .map(migration => {
             migration.md5Sql = `
-              SELECT md5 FROM ${config.schemaTable} 
+              SELECT md5 
+              FROM ${config.schemaTable} 
               WHERE version = ${migration.version};`
             return migration
           })
@@ -261,9 +266,14 @@ class Postgrator {
         return this.getDatabaseVersion()
       })
       .then(databaseVersion => (data.databaseVersion = databaseVersion))
-      .then(() =>
-        this.validateMigrations(data.databaseVersion, data.targetVersion)
-      )
+      .then(() => {
+        if (this.config.validateChecksums) {
+          return this.validateMigrations(
+            data.databaseVersion,
+            data.targetVersion
+          )
+        }
+      })
       .then(() =>
         this.getRunnableMigrations(data.databaseVersion, data.targetVersion)
       )

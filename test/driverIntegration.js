@@ -146,6 +146,25 @@ function testConfig(config) {
       return postgrator.migrate('00')
     })
 
+    it('Skips checksum validation if turned off', function() {
+      postgrator.config.validateChecksums = false
+      return postgrator
+        .migrate('003')
+        .then(migrations =>
+          postgrator.runQuery(
+            `UPDATE schemaversion SET md5 = 'baddata' WHERE version = 2`
+          )
+        )
+        .then(() => postgrator.migrate('006'))
+        .catch(error => assert.ifError(error))
+        .then(() => postgrator.getDatabaseVersion())
+        .then(version => assert.equal(version, 6))
+    })
+
+    it('Migrates down to 000 again', function() {
+      return postgrator.migrate('00')
+    })
+
     after(function() {
       return postgrator.runQuery('DROP TABLE schemaversion')
     })
