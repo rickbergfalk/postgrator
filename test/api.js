@@ -13,15 +13,36 @@ describe('API', function() {
     connectionString: pgUrl
   })
 
+  const vStarted = []
+  const vFinished = []
+  const mStarted = []
+  const mFinished = []
+  postgrator.on('validation-started', migration => vStarted.push(migration))
+  postgrator.on('validation-finished', migration => vFinished.push(migration))
+  postgrator.on('migration-started', migration => mStarted.push(migration))
+  postgrator.on('migration-finished', migration => mFinished.push(migration))
+
   it('Migrates up to 003', function() {
     return postgrator.migrate('003').then(migrations => {
       assert.equal(migrations.length, 3, '3 migrations run')
     })
   })
 
+  it('Emits migration events', function() {
+    assert.equal(mStarted.length, 3)
+    assert.equal(mFinished.length, 3)
+  })
+
+  it('Emits validation events', function() {
+    return postgrator.migrate('004').then(migrations => {
+      assert.equal(vStarted.length, 3)
+      assert.equal(vFinished.length, 3)
+    })
+  })
+
   it('Implements getDatabaseVersion', function() {
     return postgrator.getDatabaseVersion().then(version => {
-      assert.equal(version, 3)
+      assert.equal(version, 4)
     })
   })
 
@@ -44,7 +65,7 @@ describe('API', function() {
 
   it('Migrates down to 000', function() {
     return postgrator.migrate('000').then(migrations => {
-      assert.equal(migrations.length, 3, '3 migrations run')
+      assert.equal(migrations.length, 4, '4 migrations run')
     })
   })
 

@@ -1,4 +1,6 @@
 const fs = require('fs')
+const EventEmitter = require('events')
+
 const commonClient = require('./lib/commonClient.js')
 const {
   fileChecksum,
@@ -12,8 +14,9 @@ const DEFAULT_CONFIG = {
   validateChecksums: true
 }
 
-class Postgrator {
+class Postgrator extends EventEmitter {
   constructor(config) {
+    super()
     this.config = Object.assign({}, DEFAULT_CONFIG, config)
     this.migrations = []
     this.commonClient = commonClient(this.config)
@@ -148,6 +151,7 @@ class Postgrator {
         let sequence = Promise.resolve()
         validateMigrations.forEach(migration => {
           sequence = sequence
+            .then(() => this.emit('validation-started', migration))
             .then(() => this.commonClient.runQuery(migration.md5Sql))
             .then(result => {
               const row = result.rows[0]
@@ -160,6 +164,7 @@ class Postgrator {
                 throw new Error(msg)
               }
             })
+            .then(() => this.emit('validation-finished', migration))
         })
         return sequence.then(() => validateMigrations)
       }
@@ -177,10 +182,12 @@ class Postgrator {
     const appliedMigrations = []
     migrations.forEach(migration => {
       sequence = sequence
+        .then(() => this.emit('migration-started', migration))
         .then(() => migration.getSql())
         .then(sql => this.commonClient.runQuery(sql))
         .then(() => this.commonClient.runQuery(migration.schemaVersionSQL))
         .then(() => appliedMigrations.push(migration))
+        .then(() => this.emit('migration-finished', migration))
     })
     return sequence.then(() => appliedMigrations)
   }
