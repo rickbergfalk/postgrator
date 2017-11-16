@@ -185,7 +185,11 @@ class Postgrator extends EventEmitter {
         .then(() => this.emit('migration-started', migration))
         .then(() => migration.getSql())
         .then(sql => this.commonClient.runQuery(sql))
-        .then(() => this.commonClient.runQuery(migration.schemaVersionSQL))
+        .then(() =>
+          this.commonClient.runQuery(
+            this.commonClient.persistActionSql(migration)
+          )
+        )
         .then(() => appliedMigrations.push(migration))
         .then(() => this.emit('migration-finished', migration))
     })
@@ -201,7 +205,7 @@ class Postgrator extends EventEmitter {
    * @param {Number} targetVersion
    */
   getRunnableMigrations(databaseVersion, targetVersion) {
-    const { config, migrations } = this
+    const { migrations } = this
     if (targetVersion >= databaseVersion) {
       return migrations
         .filter(
@@ -210,20 +214,6 @@ class Postgrator extends EventEmitter {
             migration.version > databaseVersion &&
             migration.version <= targetVersion
         )
-        .map(migration => {
-          migration.schemaVersionSQL = `
-            INSERT INTO ${config.schemaTable} (version, name, md5, run_at) 
-            VALUES (
-              ${migration.version}, 
-              '${migration.name}', 
-              '${migration.md5}',
-              '${new Date()
-                .toISOString()
-                .replace('T', ' ')
-                .replace('Z', '')}'
-            );`
-          return migration
-        })
         .sort(sortMigrationsAsc)
     }
     if (targetVersion < databaseVersion) {
@@ -234,12 +224,6 @@ class Postgrator extends EventEmitter {
             migration.version <= databaseVersion &&
             migration.version > targetVersion
         )
-        .map(migration => {
-          migration.schemaVersionSQL = `
-            DELETE FROM ${config.schemaTable} 
-            WHERE version = ${migration.version};`
-          return migration
-        })
         .sort(sortMigrationsDesc)
     }
     return []
