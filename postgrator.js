@@ -95,7 +95,7 @@ class Postgrator extends EventEmitter {
    */
   getDatabaseVersion() {
     const { runQuery, endConnection, queries } = this.commonClient
-    return runQuery(queries.databaseVersionSql).then(result => {
+    return runQuery(queries.getDatabaseVersion).then(result => {
       const version = result.rows.length > 0 ? result.rows[0].version : 0
       return endConnection().then(() => version)
     })
@@ -130,36 +130,28 @@ class Postgrator extends EventEmitter {
    * @param {Number} targetVersion
    */
   validateMigrations(databaseVersion, targetVersion) {
-    const { config } = this
     return this.getMigrations().then(migrations => {
       if (targetVersion >= databaseVersion) {
-        const validateMigrations = migrations
-          .filter(
-            migration =>
-              migration.action === 'do' &&
-              migration.version > 0 &&
-              migration.version <= databaseVersion
-          )
-          .map(migration => {
-            migration.md5Sql = `
-              SELECT md5 
-              FROM ${config.schemaTable} 
-              WHERE version = ${migration.version};`
-            return migration
-          })
+        const validateMigrations = migrations.filter(
+          migration =>
+            migration.action === 'do' &&
+            migration.version > 0 &&
+            migration.version <= databaseVersion
+        )
 
         let sequence = Promise.resolve()
         validateMigrations.forEach(migration => {
           sequence = sequence
             .then(() => this.emit('validation-started', migration))
-            .then(() => this.commonClient.runQuery(migration.md5Sql))
-            .then(result => {
-              const row = result.rows[0]
-              if (row && row.md5 && row.md5 !== migration.md5) {
-                const msg = `For migration [${
+            .then(() => {
+              const sql = this.commonClient.queries.getMd5(migration)
+              return this.commonClient.runQuery(sql)
+            })
+            .then(results => {
+              const md5 = results.rows && results.rows[0] && results.rows[0].md5
+              if (md5 !== migration.md5) {
+                const msg = `MD5 checksum failed for migration [${
                   migration.version
-                }], expected MD5 checksum [${migration.md5}] but got [${
-                  row.md5
                 }]`
                 throw new Error(msg)
               }
@@ -236,7 +228,7 @@ class Postgrator extends EventEmitter {
    * @param {String} target - version to migrate as string or number (handled as  numbers internally)
    */
   migrate(target = '') {
-    const { commonClient } = this
+    const { commonClient, config } = this
     const data = {}
     return commonClient
       .ensureTable()
@@ -258,7 +250,7 @@ class Postgrator extends EventEmitter {
       })
       .then(databaseVersion => (data.databaseVersion = databaseVersion))
       .then(() => {
-        if (this.config.validateChecksums) {
+        if (config.validateChecksums) {
           return this.validateMigrations(
             data.databaseVersion,
             data.targetVersion
