@@ -1,4 +1,5 @@
 const fs = require('fs')
+const path = require('path')
 const EventEmitter = require('events')
 
 const commonClient = require('./lib/commonClient.js')
@@ -43,7 +44,7 @@ class Postgrator extends EventEmitter {
       migrationFiles.forEach(file => {
         const m = file.split('.')
         const name = m.length >= 3 ? m.slice(2, m.length - 1).join('.') : file
-        const filename = migrationDirectory + '/' + file
+        const filename = path.join(migrationDirectory, file)
         if (m[m.length - 1] === 'sql') {
           this.migrations.push({
             version: Number(m[0]),
@@ -93,9 +94,8 @@ class Postgrator extends EventEmitter {
    * @returns {Promise} database schema version
    */
   getDatabaseVersion() {
-    const databaseVersionSql = this.commonClient.queries.getDatabaseVersion
-    const { runQuery, endConnection } = this.commonClient
-    return runQuery(databaseVersionSql).then(result => {
+    const { runQuery, endConnection, queries } = this.commonClient
+    return runQuery(queries.databaseVersionSql).then(result => {
       const version = result.rows.length > 0 ? result.rows[0].version : 0
       return endConnection().then(() => version)
     })
@@ -178,17 +178,16 @@ class Postgrator extends EventEmitter {
    * @param {Array} migrations - Array of migration objects to apply to database
    */
   runMigrations(migrations = []) {
+    const { commonClient } = this
     let sequence = Promise.resolve()
     const appliedMigrations = []
     migrations.forEach(migration => {
       sequence = sequence
         .then(() => this.emit('migration-started', migration))
         .then(() => migration.getSql())
-        .then(sql => this.commonClient.runQuery(sql))
+        .then(sql => commonClient.runQuery(sql))
         .then(() =>
-          this.commonClient.runQuery(
-            this.commonClient.persistActionSql(migration)
-          )
+          commonClient.runQuery(commonClient.persistActionSql(migration))
         )
         .then(() => appliedMigrations.push(migration))
         .then(() => this.emit('migration-finished', migration))
@@ -237,8 +236,9 @@ class Postgrator extends EventEmitter {
    * @param {String} target - version to migrate as string or number (handled as  numbers internally)
    */
   migrate(target = '') {
+    const { commonClient } = this
     const data = {}
-    return this.commonClient
+    return commonClient
       .ensureTable()
       .then(() => this.getMigrations())
       .then(() => {
@@ -269,9 +269,7 @@ class Postgrator extends EventEmitter {
         this.getRunnableMigrations(data.databaseVersion, data.targetVersion)
       )
       .then(runnableMigrations => this.runMigrations(runnableMigrations))
-      .then(migrations =>
-        this.commonClient.endConnection().then(() => migrations)
-      )
+      .then(migrations => commonClient.endConnection().then(() => migrations))
   }
 }
 
