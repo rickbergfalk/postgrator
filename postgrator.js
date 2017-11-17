@@ -127,39 +127,36 @@ class Postgrator extends EventEmitter {
    *
    * @returns {Promise}
    * @param {Number} databaseVersion
-   * @param {Number} targetVersion
    */
-  validateMigrations(databaseVersion, targetVersion) {
+  validateMigrations(databaseVersion) {
     return this.getMigrations().then(migrations => {
-      if (targetVersion >= databaseVersion) {
-        const validateMigrations = migrations.filter(
-          migration =>
-            migration.action === 'do' &&
-            migration.version > 0 &&
-            migration.version <= databaseVersion
-        )
+      const validateMigrations = migrations.filter(
+        migration =>
+          migration.action === 'do' &&
+          migration.version > 0 &&
+          migration.version <= databaseVersion
+      )
 
-        let sequence = Promise.resolve()
-        validateMigrations.forEach(migration => {
-          sequence = sequence
-            .then(() => this.emit('validation-started', migration))
-            .then(() => {
-              const sql = this.commonClient.queries.getMd5(migration)
-              return this.commonClient.runQuery(sql)
-            })
-            .then(results => {
-              const md5 = results.rows && results.rows[0] && results.rows[0].md5
-              if (md5 !== migration.md5) {
-                const msg = `MD5 checksum failed for migration [${
-                  migration.version
-                }]`
-                throw new Error(msg)
-              }
-            })
-            .then(() => this.emit('validation-finished', migration))
-        })
-        return sequence.then(() => validateMigrations)
-      }
+      let sequence = Promise.resolve()
+      validateMigrations.forEach(migration => {
+        sequence = sequence
+          .then(() => this.emit('validation-started', migration))
+          .then(() => {
+            const sql = this.commonClient.queries.getMd5(migration)
+            return this.commonClient.runQuery(sql)
+          })
+          .then(results => {
+            const md5 = results.rows && results.rows[0] && results.rows[0].md5
+            if (md5 !== migration.md5) {
+              const msg = `MD5 checksum failed for migration [${
+                migration.version
+              }]`
+              throw new Error(msg)
+            }
+          })
+          .then(() => this.emit('validation-finished', migration))
+      })
+      return sequence.then(() => validateMigrations)
     })
   }
 
@@ -237,24 +234,20 @@ class Postgrator extends EventEmitter {
         const cleaned = target.toLowerCase().trim()
         if (cleaned === 'max' || cleaned === '') {
           return this.getMaxVersion()
-        } else {
-          return Number(target)
         }
+        return Number(target)
       })
       .then(targetVersion => {
-        if (targetVersion === undefined) {
+        data.targetVersion = targetVersion
+        if (target === undefined) {
           throw new Error('targetVersion undefined')
         }
-        data.targetVersion = targetVersion
         return this.getDatabaseVersion()
       })
-      .then(databaseVersion => (data.databaseVersion = databaseVersion))
-      .then(() => {
-        if (config.validateChecksums) {
-          return this.validateMigrations(
-            data.databaseVersion,
-            data.targetVersion
-          )
+      .then(databaseVersion => {
+        data.databaseVersion = databaseVersion
+        if (config.validateChecksums && data.targetVersion >= databaseVersion) {
+          return this.validateMigrations(databaseVersion)
         }
       })
       .then(() =>
