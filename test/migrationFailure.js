@@ -38,23 +38,14 @@ function testConfig(config) {
   describe(`Driver: ${config.driver}`, function() {
     const postgrator = new Postgrator(config)
 
-    let migrations = []
-    let error
-
     it('Handles failed migrations', function() {
-      return postgrator
-        .migrate()
-        .then(m => {
-          // postgrator.runQuery('SELECT name FROM person')
-          migrations = m
-        })
-        .catch(e => {
-          error = e
-        })
-        .then(() => {
-          assert.equal(migrations.length, 1, 'One migration expected')
-          assert(error, 'an error is expected from bad migration')
-        })
+      return postgrator.migrate().catch(error => {
+        assert(error, 'Error expected from bad migration')
+        assert(
+          error.appliedMigrations,
+          'appliedMigrations decorated on error object'
+        )
+      })
     })
 
     it('Does not implement partial migrations', function() {
