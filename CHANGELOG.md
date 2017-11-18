@@ -1,7 +1,7 @@
 # CHANGELOG
 
 ## 3.0.0
-### In development
+### Nov 18 2017
 
 #### Features / Improvements
 - `run_at` timestamp column added to schema table

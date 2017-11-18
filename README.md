@@ -5,7 +5,7 @@ Supports Postgres, MySQL, and SQL Server.
 
 Available as a cli tool: https://www.npmjs.com/package/postgrator-cli.
 
-**The docs below are for Postgrator 3, which is still in development. Version 2 docs available at [README.v2](README.v2.md).**
+**The docs below are for Postgrator 3. Version 2 docs available at [README.v2](README.v2.md).**
 
 
 ## Installation

@@ -2,7 +2,7 @@
   "name": "postgrator",
   "version": "2.10.3",
   "author": "Rick Bergfalk <rick.bergfalk@gmail.com>",
-  "description": "Postgrator is a SQL migration tool for SQL people",
+  "description": "A SQL migration tool for SQL people",
   "license": "MIT",
   "engines": {
     "node": ">=6.0.0"
