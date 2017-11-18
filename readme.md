@@ -21,7 +21,8 @@ npm install mssql
 
 ## Version 3.0 breaking changes
 
-See [CHANGELOG](CHANGELOG.md)
+The API has completely changed with Postgrator 3, but does not bring any changes to the migration format. 
+See [CHANGELOG](CHANGELOG.md) for details.
 
 
 ## Usage
@@ -62,7 +63,11 @@ module.exports.generateSql = function () {
 
 You might want to choose the JS file approach, in order to make use (secret) environment variables such as the above.
 
-To run your sql migrations with Postgrator, write a Node.js script or integrate postgrator with your application in some way:
+To run your sql migrations with Postgrator, write a Node.js script or integrate postgrator with your application.
+
+When first run against your database, Postgrator will create the table specified by config.schemaTable. Postgrator relies on this table to track what version the database is at.
+
+Postgrator automatically determines whether it needs to go "up" or "down", and will update the schemaTable accordingly. If the database is already at the version specified to migrate to, Postgrator does nothing. After running migrations, postgrator will close its connection created.
 
 ```js
 const Postgrator = require('postgrator');
@@ -85,7 +90,12 @@ const postgrator = new Postgrator({
 // Migrate to specific version
 postgrator.migrate('002')
   .then(appliedMigrations => console.log(appliedMigrations))
-  .catch(error => console.log(error));
+  .catch(error => {
+    console.log(error)
+    // Because migrations prior to the migration with error would have run
+    // error object is decorated with appliedMigrations
+    console.log(error.appliedMigrations) // array of migration objects
+  });
 
 // Migrate to max version (optionally can provide 'max')
 postgrator.migrate()
@@ -168,6 +178,24 @@ postgrator.on('migration-finished', migration => console.log(migration))
 ```
 
 
+### Migration errors
+
+If `postgrator.migrate()` fails running multiple migrations, Postgrator will stop running any further migrations. Migrations successfully run prior to the migration with the error will remain implemented however. 
+
+If you need to migration back down to the version the database was at prior to running migrate(), that is up to you to implement. Instead of doing this however, consider writing your application in a way that is compatible with any version of a future release.
+
+In the event of an error during migration, the error object will be decorated with an array of migrations that run successfully (`error.appliedMIgrations`).
+
+Keep in mind how you write your SQL - You may (or may not) want to write your SQL defensively (ie, check for pre-existing objects before you create new ones).
+
+
+### Preventing partial migrations
+
+Depending on your database and database configuration, consider wrapping each migration in a transaction or BEGIN/END block. By default Postgres and SQL Server consider multiple statements run in one execution part of one implicit transaction. MySQL however will implement up to the failure.
+
+If using SQL Server, do not write a migration containing multiple statements using the `GO` keyword. Instead break statements between the `GO` keyword into multiple migration files, ensuring that you do not end up with partial migrations implemented but no record of that happening.
+
+
 ### Utility methods
 
 Some of postgrator's methods may come in useful performing other migration tasks
@@ -200,29 +228,22 @@ postgrator.runQuery('SELECT * FROM sometable')
 ```
 
 
-## What Postgrator is doing
-
-When first run against your database, *Postgrator will create the table specified by config.schemaTable.* Postgrator relies on this table to track what version the database is at.
-
-Postgrator automatically determines whether it needs to go "up" or "down", and will update the schemaTable accordingly. If the database is already at the version specified to migrate to, Postgrator does nothing.
-
-If a migration fails, Postgrator will stop running any further migrations. It is up to you to migrate back down to the version you started at if you are running several migration scripts. Because of this, keep in mind how you write your SQL - You may (or may not) want to write your SQL defensively (ie, check for pre-existing objects before you create new ones).
-
-
 ## Tests
 
-A docker-compose file is provided with postgres and mysql (mariadb) containers configured for the tests.
-To run postgrator tests locally, you'll need Docker installed. To run the tests...
+A docker-compose file is provided with postgres and mysql (mariadb) containers configured for the tests. SQL Server tests also exist, but are commented out since the requirements are quite high to run them.
+
+To run postgrator tests locally, you'll need Docker installed.
 
 ```sh
 # In one terminal window
 docker-compose up
-# In another once databases are up
+# In another terminal once databases are up
 npm test
 # After tests, in docker session
 # control/command-c to quit docker-compose and remove containers
 docker-compose rm --force
 ```
+
 
 ## License
 
