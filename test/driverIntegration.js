@@ -24,15 +24,15 @@ testConfig({
   password: 'postgrator'
 })
 
-// SQL Server needs 3.25 GB of RAM and for some reason doesn't download...
-testConfig({
-  migrationDirectory: migrationDirectory,
-  driver: 'mssql',
-  host: 'localhost',
-  database: 'master',
-  username: 'sa',
-  password: 'Postgrator123!'
-})
+// SQL Server needs 3.25 GB of RAM
+// testConfig({
+//   migrationDirectory: migrationDirectory,
+//   driver: 'mssql',
+//   host: 'localhost',
+//   database: 'master',
+//   username: 'sa',
+//   password: 'Postgrator123!'
+// })
 
 function testConfig(config) {
   describe(`Driver: ${config.driver}`, function() {
