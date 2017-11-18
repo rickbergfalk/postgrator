@@ -5,41 +5,23 @@ Supports Postgres, MySQL, and SQL Server.
 
 Available as a cli tool: https://www.npmjs.com/package/postgrator-cli.
 
-**The docs below are for Postgrator 3, which is still in development. Version 2 docs available at [README.v2.md](README.v2.md).**
+**The docs below are for Postgrator 3, which is still in development. Version 2 docs available at [README.v2](README.v2.md).**
 
 
 ## Installation
 
 ```sh
 npm install postgrator
-# install necessary db engine(s) if they are not installed yet
+# install necessary db engine(s) if not installed yet
 npm install pg
 npm install mysql
 npm install mssql
 ```
 
 
-## Version 3.0 Features & breaking changes (unreleased, in development)
+## Version 3.0 breaking changes
 
-### Features & Improvements
-- `run_at` timestamp column added to schema table
-- `md5` and `name` columns added for all implementations
-- Checksum validation now implemented for all drivers
-- Checksum validation may be skipped using config `validateChecksums: false`
-- Callback API replaced with Promises
-- Connections opened/closed automatically (no more `.endConnection()`)
-- Lots of tests
-
-### Breaking changes
-- Node 6 or greater now required
-- DB drivers must be installed prior to use (`pg`, `mysql`, `mssql`)
-- Calling `.migrate()` without input migrates to latest/max
-- `pg.js` and `tedious` no longer valid driver config option
-- None of the API is the same
-- Logging to console removed (and so has config.logProgress)
-
-### TODO 
-- [ ] document utility functions
+See [CHANGELOG](CHANGELOG.md)
 
 
 ## Usage
@@ -112,22 +94,6 @@ postgrator.migrate()
 ```
 
 
-### Checksum validation
-
-By default Postgrator will generate an md5 checksum for each migration file, and save the value to the schema table after a successful migration.
-
-Prior to applying migrations to a database, for any existing migration in the migration directory already run Postgrator will validate the md5 checksum to ensure the contents of the script have not changed. If a change is detected, migration will stop reporting an error.
-
-Because line endings may differ between environments/editors, an option is available to force a specific line ending prior to generating the checksum.
-
-```js
-const postgrator = new Postgrator({
-  validateChecksums: true, // Set to false to skip validation
-  newline: 'CRLF' // Force using 'CRLF' (windows) or 'LF' (unix/mac)
-});
-```
-
-
 ### Postgres options:
 
 Postgres supports connection string url as well as simple ssl config:
@@ -155,6 +121,51 @@ const postgrator = new Postgrator({
 ```
 
 Reference options for mssql for more details: [https://www.npmjs.com/package/mssql](https://www.npmjs.com/package/mssql)
+
+
+### Checksum validation
+
+By default Postgrator will generate an md5 checksum for each migration file, and save the value to the schema table after a successful migration.
+
+Prior to applying migrations to a database, for any existing migration in the migration directory already run Postgrator will validate the md5 checksum to ensure the contents of the script have not changed. If a change is detected, migration will stop reporting an error.
+
+Because line endings may differ between environments/editors, an option is available to force a specific line ending prior to generating the checksum.
+
+```js
+const postgrator = new Postgrator({
+  validateChecksums: true, // Set to false to skip validation
+  newline: 'CRLF' // Force using 'CRLF' (windows) or 'LF' (unix/mac)
+});
+```
+
+
+### Migration object
+
+Postgrator will often return a migration object or array of migrations. The format of a migration object is
+
+```js
+{
+  version: versionNumber, 
+  action: 'do',
+  name: 'first-table',
+  filename: '0001.up.first-table.sql',
+  md5: 'checksumvalue',
+  getSql: () => {} // sync function to get sql from file
+}
+```
+
+
+### Logging
+
+As of v3 nothing is logged to the console, and the option to toggle that has been removed. Instead postgrator is an event emiter, allowing you to log however you want to log. There are no events for error or finish
+
+```js
+const postgrator = new Postgrator(options)
+postgrator.on('validation-started', migration => console.log(migration))
+postgrator.on('validation-finished', migration => console.log(migration))
+postgrator.on('migration-started', migration => console.log(migration))
+postgrator.on('migration-finished', migration => console.log(migration))
+```
 
 
 ### Utility methods
@@ -204,8 +215,13 @@ A docker-compose file is provided with postgres and mysql (mariadb) containers c
 To run postgrator tests locally, you'll need Docker installed. To run the tests...
 
 ```sh
+# In one terminal window
 docker-compose up
+# In another once databases are up
 npm test
+# After tests, in docker session
+# control/command-c to quit docker-compose and remove containers
+docker-compose rm --force
 ```
 
 ## License

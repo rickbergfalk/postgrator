@@ -25,8 +25,6 @@ class Postgrator extends EventEmitter {
 
   /**
    * Reads all migrations from directory
-   * Returns promise of array of objects in format:
-   * {version: n, action: 'do', filename: '0001.up.sql'}
    *
    * @returns {Promise} array of migration objects
    */
