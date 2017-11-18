@@ -179,7 +179,10 @@ class Postgrator extends EventEmitter {
         .then(() => appliedMigrations.push(migration))
         .then(() => this.emit('migration-finished', migration))
     })
-    return sequence.then(() => appliedMigrations)
+    return sequence.then(() => appliedMigrations).catch(error => {
+      error.appliedMigrations = appliedMigrations
+      throw error
+    })
   }
 
   /**
@@ -253,6 +256,14 @@ class Postgrator extends EventEmitter {
       )
       .then(runnableMigrations => this.runMigrations(runnableMigrations))
       .then(migrations => commonClient.endConnection().then(() => migrations))
+      .catch(error => {
+        // Decorate error with empty appliedMigrations if not yet exist
+        // Rethrow error to module user
+        if (!error.appliedMigrations) {
+          error.appliedMigrations = []
+        }
+        throw error
+      })
   }
 }
 
