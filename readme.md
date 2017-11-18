@@ -1,13 +1,33 @@
-# Postgrator
+# Postgrator 3
 
 A Node.js SQL migration library using a directory of plain SQL scripts.
 Supports Postgres, MySQL, and SQL Server.
 
 Available as a cli tool: https://www.npmjs.com/package/postgrator-cli.
 
+**The docs below are for Postgrator 3, which is still in development. Version 2 docs available at [README.v2](README.v2.md).**
+
+
+## Installation
+
+```sh
+npm install postgrator
+# install necessary db engine(s) if not installed yet
+npm install pg
+npm install mysql
+npm install mssql
+```
+
+
+## Version 3.0 breaking changes
+
+The API has completely changed with Postgrator 3, but does not bring any changes to the migration format. 
+See [CHANGELOG](CHANGELOG.md) for details.
+
+
 ## Usage
 
-Create a folder and stick some SQL scripts in there that change your database in some way. It might look like:
+Create a directory and stick some SQL scripts in there that change your database in some way. It might look like:
 
 ```
 migrations/
@@ -43,152 +63,187 @@ module.exports.generateSql = function () {
 
 You might want to choose the JS file approach, in order to make use (secret) environment variables such as the above.
 
-To run your sql migrations with Postgrator, write a Node.js script or integrate postgrator with your application in some way:
+To run your sql migrations with Postgrator, write a Node.js script or integrate postgrator with your application.
+
+When first run against your database, Postgrator will create the table specified by config.schemaTable. Postgrator relies on this table to track what version the database is at.
+
+Postgrator automatically determines whether it needs to go "up" or "down", and will update the schemaTable accordingly. If the database is already at the version specified to migrate to, Postgrator does nothing. After running migrations, postgrator will close its connection created.
 
 ```js
-const postgrator = require('postgrator');
+const Postgrator = require('postgrator');
 
-postgrator.setConfig({
+const postgrator = new Postgrator({
+  // Directory containing migration files
   migrationDirectory: __dirname + '/migrations',
-  schemaTable: 'schemaversion', // optional. default is 'schemaversion'
-  driver: 'pg', // or mysql, mssql
-  host: '127.0.0.1',
-  port: 5432, // optionally provide port
-  database: 'databasename',
-  username: 'username',
-  password: 'password'
-});
-
-// migrate to version specified, or supply 'max' to go all the way up
-postgrator.migrate('002', function (err, migrations) {
-  if (err) {
-    console.log(err)
-  } else {
-    console.log(migrations)
-  }
-  postgrator.endConnection(function () {
-    // connection is closed, or will close in the case of SQL Server
-  });
-});
-```
-
-
-### Postgres specific notes:
-
-Alternatively, for Postgres you may provide a connection string containing the database and authentication details:
-
-```js
-postgrator.setConfig({
-  migrationDirectory: __dirname + '/migrations',
+  // Driver: must be pg, mysql, or mssql
   driver: 'pg',
-  connectionString: 'tcp://username:password@hosturl/databasename'
-})
-```
-
-Postgres also supports simple ssl config
-```js
-postgrator.setConfig({
-  migrationDirectory: __dirname + '/migrations',
-  driver: 'pg',
-  ssl: true,
-  // rest of postgres config
-})
-```
-
-### SQL Server specific notes:
-
-For SQL Server, you may optionally provide an additional options configuration. This may be necessary if requiring a secure connection for Azure.
-
-```js
-postgrator.setConfig({
-  migrationDirectory: __dirname + '/migrations',
-  schemaTable: 'schemaversion', // optional. default is 'schemaversion'
-  driver: 'mssql',
+  // Database connection config
   host: '127.0.0.1',
+  port: 5432,
   database: 'databasename',
   username: 'username',
   password: 'password',
-  requestTimeout: 1000 * 60 * 60, // optional. default is one hour
+  // Schema table name. Optional. Default is schemaversion
+  schemaTable: 'schemaversion'
+});
+
+// Migrate to specific version
+postgrator.migrate('002')
+  .then(appliedMigrations => console.log(appliedMigrations))
+  .catch(error => {
+    console.log(error)
+    // Because migrations prior to the migration with error would have run
+    // error object is decorated with appliedMigrations
+    console.log(error.appliedMigrations) // array of migration objects
+  });
+
+// Migrate to max version (optionally can provide 'max')
+postgrator.migrate()
+  .then(appliedMigrations => console.log(appliedMigrations))
+  .catch(error => console.log(error));
+```
+
+
+### Postgres options:
+
+Postgres supports connection string url as well as simple ssl config:
+
+```js
+const postgrator = new Postgrator({
+  connectionString: 'tcp://username:password@hosturl/databasename',
+  ssl: true
+});
+```
+
+
+### SQL Server options:
+
+For SQL Server, you may optionally provide an additional options configuration. 
+This may be necessary if requiring a secure connection for Azure.
+
+```js
+const postgrator = new Postgrator({
+  requestTimeout: 1000 * 60 * 60, // Default 1 hour
   options: {
     encrypt: true
   }
 });
-
 ```
 
 Reference options for mssql for more details: [https://www.npmjs.com/package/mssql](https://www.npmjs.com/package/mssql)
 
 
-## Version 3.0 Breaking changes (unreleased/in dev)
+### Checksum validation
 
-- DB drivers must be installed prior to use (`pg`, `mysql`, `mssql`)
-- `pg.js` and `tedious` are no longer valid driver config option
-- callback is required (might be replaced with promise)
-- Node 6 or greater
-- config.logProgress removed
-- logging to console removed
+By default Postgrator will generate an md5 checksum for each migration file, and save the value to the schema table after a successful migration.
 
+Prior to applying migrations to a database, for any existing migration in the migration directory already run Postgrator will validate the md5 checksum to ensure the contents of the script have not changed. If a change is detected, migration will stop reporting an error.
 
-
-## Version 2.0 Notes
-
-Despite the major version bump, postgrator's API has not changed. Some of its behavior has however:
-
-- Migrating against a Postgres database now logs script checksums. Future migrations will confirm the checksum to ensure any previously run scripts have not been changed. This is a Postgres-only feature for now.
-- Postgrator can always migrate to the latest version available by running ```postgrator.migrate('max', callback);```
-
-
-
-## What Postgrator is doing
-
-When first run against your database, *Postgrator will create the table specified by config.schemaTable.* Postgrator relies on this table to track what version the database is at.
-
-Postgrator automatically determines whether it needs to go "up" or "down", and will update the schemaTable accordingly. If the database is already at the version specified to migrate to, Postgrator does nothing.
-
-If a migration fails, Postgrator will stop running any further migrations. It is up to you to migrate back down to the version you started at if you are running several migration scripts. Because of this, keep in mind how you write your SQL - You may (or may not) want to write your SQL defensively (ie, check for pre-existing objects before you create new ones).
-
-
-
-## Cross platform line feeds
-
-Line feeds: Unix/Mac uses LF, Windows uses 'CRLF', this causes problems for postgrator when calculating the md5 checksum of the migration files - particularly if some developers are on windows, some are on mac, etc. To negate this, you can use the `newline` config flag to tell postgrator to always use a particular line feed, e.g.
+Because line endings may differ between environments/editors, an option is available to force a specific line ending prior to generating the checksum.
 
 ```js
-postgrator.setConfig({
-  migrationDirectory: __dirname + '/migrations',
-  driver: 'pg', // or pg.js, mysql, mssql, tedious
-  host: '127.0.0.1',
-  database: 'databasename',
-  username: 'username',
-  password: 'password',
-  newline: 'CRLF'
+const postgrator = new Postgrator({
+  validateChecksums: true, // Set to false to skip validation
+  newline: 'CRLF' // Force using 'CRLF' (windows) or 'LF' (unix/mac)
 });
 ```
 
-Under the hood this uses the [newline](www.npmjs.com/package/newline) module for detecting and setting line feeds.
 
+### Migration object
 
-
-## Installation
+Postgrator will often return a migration object or array of migrations. The format of a migration object is
 
 ```js
-npm install postgrator
-# install necessary db engine(s) if they are not installed yet
-npm install pg
-npm install mysql
-npm install mssql
+{
+  version: versionNumber, 
+  action: 'do',
+  name: 'first-table',
+  filename: '0001.up.first-table.sql',
+  md5: 'checksumvalue',
+  getSql: () => {} // sync function to get sql from file
+}
+```
+
+
+### Logging
+
+As of v3 nothing is logged to the console, and the option to toggle that has been removed. Instead postgrator is an event emiter, allowing you to log however you want to log. There are no events for error or finish
+
+```js
+const postgrator = new Postgrator(options)
+postgrator.on('validation-started', migration => console.log(migration))
+postgrator.on('validation-finished', migration => console.log(migration))
+postgrator.on('migration-started', migration => console.log(migration))
+postgrator.on('migration-finished', migration => console.log(migration))
+```
+
+
+### Migration errors
+
+If `postgrator.migrate()` fails running multiple migrations, Postgrator will stop running any further migrations. Migrations successfully run prior to the migration with the error will remain implemented however. 
+
+If you need to migration back down to the version the database was at prior to running migrate(), that is up to you to implement. Instead of doing this however, consider writing your application in a way that is compatible with any version of a future release.
+
+In the event of an error during migration, the error object will be decorated with an array of migrations that run successfully (`error.appliedMIgrations`).
+
+Keep in mind how you write your SQL - You may (or may not) want to write your SQL defensively (ie, check for pre-existing objects before you create new ones).
+
+
+### Preventing partial migrations
+
+Depending on your database and database configuration, consider wrapping each migration in a transaction or BEGIN/END block. By default Postgres and SQL Server consider multiple statements run in one execution part of one implicit transaction. MySQL however will implement up to the failure.
+
+If using SQL Server, do not write a migration containing multiple statements using the `GO` keyword. Instead break statements between the `GO` keyword into multiple migration files, ensuring that you do not end up with partial migrations implemented but no record of that happening.
+
+
+### Utility methods
+
+Some of postgrator's methods may come in useful performing other migration tasks
+
+```js
+// To get max version available from filesystem
+// version returned as number, not string
+postgrator.getMaxVersion()
+  .then(version => console.log(version))
+  .catch(error => console.error(error))
+
+// "current" database schema version
+// version returned as number, not string
+postgrator.getDatabaseVersion()
+  .then(version => console.log(version))
+  .catch(error => console.error(error))
+
+// To get all migrations from directory and parse metadata
+postgrator.getMigrations()
+  .then(migrations => console.log(migrations))
+  .catch(error => console.error(error))
+
+// Run arbitrary SQL query against database
+// Connection is established, query is run, then connection is ended
+// `results.rows` will be an array of row objects, with column names as keys
+// `results` object may have other properties depending on db driver
+postgrator.runQuery('SELECT * FROM sometable')
+  .then(results => console.log(results))
+  .catch(error => console.error(error))
 ```
 
 
 ## Tests
 
-A docker-compose file is provided with postgres and mysql (mariadb) containers configured for the tests.
-To run postgrator tests locally, you'll need Docker installed. To run the tests...
+A docker-compose file is provided with postgres and mysql (mariadb) containers configured for the tests. SQL Server tests also exist, but are commented out since the requirements are quite high to run them.
+
+To run postgrator tests locally, you'll need Docker installed.
 
 ```sh
+# In one terminal window
 docker-compose up
+# In another terminal once databases are up
 npm test
+# After tests, in docker session
+# control/command-c to quit docker-compose and remove containers
+docker-compose rm --force
 ```
+
 
 ## License
 

@@ -1,60 +1,75 @@
-/* global it, describe */
+/* global after, it, describe */
 const assert = require('assert')
-const postgrator = require('../postgrator')
+const Postgrator = require('../postgrator')
 
 const path = require('path')
 const migrationDirectory = path.join(__dirname, 'migrations')
 const pgUrl = 'tcp://postgrator:postgrator@localhost:5432/postgrator'
 
 describe('API', function() {
-  postgrator.setConfig({
+  const postgrator = new Postgrator({
     driver: 'pg',
     migrationDirectory: migrationDirectory,
     connectionString: pgUrl
   })
 
-  it('Migrates up to 003', function(done) {
-    postgrator.migrate('003', function(err, migrations) {
-      assert.ifError(err)
+  const vStarted = []
+  const vFinished = []
+  const mStarted = []
+  const mFinished = []
+  postgrator.on('validation-started', migration => vStarted.push(migration))
+  postgrator.on('validation-finished', migration => vFinished.push(migration))
+  postgrator.on('migration-started', migration => mStarted.push(migration))
+  postgrator.on('migration-finished', migration => mFinished.push(migration))
+
+  it('Migrates up to 003', function() {
+    return postgrator.migrate('003').then(migrations => {
       assert.equal(migrations.length, 3, '3 migrations run')
-      postgrator.endConnection(done)
     })
   })
 
-  it('Implements getCurrentVersion', function(done) {
-    postgrator.getCurrentVersion(function(err, currentVersion) {
-      assert.ifError(err)
-      assert.equal(currentVersion, 3)
-      postgrator.endConnection(done)
+  it('Emits migration events', function() {
+    assert.equal(mStarted.length, 3)
+    assert.equal(mFinished.length, 3)
+  })
+
+  it('Emits validation events', function() {
+    return postgrator.migrate('004').then(migrations => {
+      assert.equal(vStarted.length, 3)
+      assert.equal(vFinished.length, 3)
     })
   })
 
-  // TODO replace this with getMigrations(), getMax()
-  it('Implements getVersions', function(done) {
-    postgrator.getVersions(function(err, versions) {
-      assert.ifError(err)
-      assert(versions)
-      assert.equal(versions.current, 3)
-      assert.equal(versions.max, 6)
-      // NOTE versions.migrations is array of version numbers
-      // (do and undo, so they are duplicated)
-      assert(Array.isArray(versions.migrations))
-      postgrator.endConnection(done)
+  it('Implements getDatabaseVersion', function() {
+    return postgrator.getDatabaseVersion().then(version => {
+      assert.equal(version, 4)
     })
   })
 
-  it('Migrates down to 000', function(done) {
-    postgrator.migrate('000', function(err, migrations) {
-      assert.ifError(err)
-      assert.equal(migrations.length, 3, '3 migrations run')
-      postgrator.endConnection(done)
+  it('Implements getMigrations', function() {
+    return postgrator.getMigrations().then(migrations => {
+      assert.equal(migrations.length, 12)
+      const m = migrations[0]
+      assert.equal(m.version, 1)
+      assert.equal(m.action, 'do')
+      assert.equal(m.filename, '001.do.sql')
+      assert(m.hasOwnProperty('name'))
     })
   })
 
-  it('Drops the schemaversion table', function(done) {
-    postgrator.runQuery('DROP TABLE schemaversion', function(err) {
-      assert.ifError(err)
-      postgrator.endConnection(done)
+  it('Implements getMaxVersion', function() {
+    return postgrator.getMaxVersion().then(max => {
+      assert.equal(max, 6)
     })
+  })
+
+  it('Migrates down to 000', function() {
+    return postgrator.migrate('000').then(migrations => {
+      assert.equal(migrations.length, 4, '4 migrations run')
+    })
+  })
+
+  after(function() {
+    return postgrator.runQuery('DROP TABLE schemaversion')
   })
 })
