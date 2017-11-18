@@ -4,7 +4,9 @@
   "author": "Rick Bergfalk <rick.bergfalk@gmail.com>",
   "description": "Postgrator is a SQL migration tool for SQL people",
   "license": "MIT",
-  "engines": { "node": ">=6.0.0" },
+  "engines": {
+    "node": ">=6.0.0"
+  },
   "keywords": [
     "migrator",
     "migration",
