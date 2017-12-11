@@ -1,5 +1,6 @@
 const fs = require('fs')
 const path = require('path')
+const glob = require('glob');
 const EventEmitter = require('events')
 
 const commonClient = require('./lib/commonClient.js')
@@ -29,15 +30,22 @@ class Postgrator extends EventEmitter {
    * @returns {Promise} array of migration objects
    */
   getMigrations() {
-    const { migrationDirectory, newline } = this.config
+    const { migrationDirectory, migrationPattern, newline } = this.config
     this.migrations = []
     return new Promise((resolve, reject) => {
-      fs.readdir(migrationDirectory, (err, files) => {
+      const loader = (err, files) => {
         if (err) {
           return reject(err)
         }
         resolve(files)
-      })
+      }
+      if (migrationPattern) {
+        glob(migrationPattern, loader)
+      } else if(migrationDirectory) {
+        fs.readdir(migrationDirectory, loader)
+      } else {
+        resolve([])
+      }
     }).then(migrationFiles => {
       migrationFiles.forEach(file => {
         const m = file.split('.')
