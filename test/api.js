@@ -57,7 +57,7 @@ describe('API', function() {
     })
   })
 
-  it('finds migrations by glob pattern', function() {
+  it('Finds migrations by glob pattern', function() {
     const patterngrator = new Postgrator({
       driver: 'pg',
       migrationPattern: `${__dirname}/fail*/*`,
@@ -66,7 +66,7 @@ describe('API', function() {
     patterngrator
       .getMigrations()
       .then(migrationsByPattern => {
-        assert.equal(migrationsByPattern.length, 4, '4 migrations run')
+        assert.equal(migrationsByPattern.length, 4)
       })
       .catch(err => console.log(err))
   })
