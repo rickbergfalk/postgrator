@@ -1,6 +1,6 @@
 const fs = require('fs')
 const path = require('path')
-const glob = require('glob');
+const glob = require('glob')
 const EventEmitter = require('events')
 
 const commonClient = require('./lib/commonClient.js')
@@ -41,16 +41,21 @@ class Postgrator extends EventEmitter {
       }
       if (migrationPattern) {
         glob(migrationPattern, loader)
-      } else if(migrationDirectory) {
+      } else if (migrationDirectory) {
         fs.readdir(migrationDirectory, loader)
       } else {
         resolve([])
       }
     }).then(migrationFiles => {
       migrationFiles.forEach(file => {
-        const m = file.split('.')
+        const m = file
+          .split('/')
+          .pop()
+          .split('.')
         const name = m.length >= 3 ? m.slice(2, m.length - 1).join('.') : file
-        const filename = path.join(migrationDirectory, file)
+        const filename = migrationPattern
+          ? file
+          : path.join(migrationDirectory, file)
         if (m[m.length - 1] === 'sql') {
           this.migrations.push({
             version: Number(m[0]),
