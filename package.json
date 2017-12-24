@@ -29,6 +29,7 @@
     "test": "mocha"
   },
   "dependencies": {
+    "glob": "^7.1.2",
     "newline": "0.0.3"
   },
   "repository": {
