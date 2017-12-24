@@ -57,6 +57,20 @@ describe('API', function() {
     })
   })
 
+  it('Finds migrations by glob pattern', function() {
+    const patterngrator = new Postgrator({
+      driver: 'pg',
+      migrationPattern: `${__dirname}/fail*/*`,
+      connectionString: pgUrl
+    })
+    patterngrator
+      .getMigrations()
+      .then(migrationsByPattern => {
+        assert.equal(migrationsByPattern.length, 4)
+      })
+      .catch(err => console.log(err))
+  })
+
   it('Implements getMaxVersion', function() {
     return postgrator.getMaxVersion().then(max => {
       assert.equal(max, 6)
