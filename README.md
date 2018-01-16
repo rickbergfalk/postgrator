@@ -13,10 +13,19 @@ Available as a cli tool: https://www.npmjs.com/package/postgrator-cli.
 ```sh
 npm install postgrator
 # install necessary db engine(s) if not installed yet
-npm install pg
-npm install mysql
-npm install mssql
+npm install pg@7      # pg@6 supported as of postgrator 3.2.0
+npm install mysql@2
+npm install mssql@4
 ```
+
+## Supported DB Drivers
+
+Using a package version other than the below may not work.
+
+* pg 6.x.x
+* pg 7.x.x
+* mysql 2.x.x
+* mssql 4.x.x
 
 ## Version 3.0 breaking changes
 
