@@ -1,5 +1,11 @@
 # CHANGELOG
 
+## 3.2.0
+
+### Jan 15 2018
+
+* Add support for pg@6
+
 ## 3.1.0
 
 ### Dec 24 2017
