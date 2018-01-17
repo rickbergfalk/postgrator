@@ -1,5 +1,11 @@
 # CHANGELOG
 
+## 3.3.0
+
+### Jan 16 2018
+
+* Adds incompatible version warnings for installed db drivers
+
 ## 3.2.0
 
 ### Jan 15 2018
