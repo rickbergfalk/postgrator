@@ -29,7 +29,7 @@
   "scripts": {
     "precommit": "lint-staged",
     "lint": "eslint '**/*.js'",
-    "test": "mocha"
+    "test": "mocha --recursive"
   },
   "dependencies": {
     "glob": "^7.1.2",
