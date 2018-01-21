@@ -1,40 +1,8 @@
 /* global after, it, describe */
 const assert = require('assert')
-const Postgrator = require('../postgrator')
+const Postgrator = require('../../postgrator')
 
-const path = require('path')
-const migrationDirectory = path.join(__dirname, 'migrations')
-
-testConfig({
-  migrationDirectory: migrationDirectory,
-  driver: 'pg',
-  host: 'localhost',
-  port: 5432,
-  database: 'postgrator',
-  username: 'postgrator',
-  password: 'postgrator'
-})
-
-testConfig({
-  migrationDirectory: migrationDirectory,
-  driver: 'mysql',
-  host: 'localhost',
-  database: 'postgrator',
-  username: 'postgrator',
-  password: 'postgrator'
-})
-
-// SQL Server needs 3.25 GB of RAM
-// testConfig({
-//   migrationDirectory: migrationDirectory,
-//   driver: 'mssql',
-//   host: 'localhost',
-//   database: 'master',
-//   username: 'sa',
-//   password: 'Postgrator123!'
-// })
-
-function testConfig(config) {
+module.exports = function testConfig(config) {
   describe(`Driver: ${config.driver}`, function() {
     const postgrator = new Postgrator(config)
 

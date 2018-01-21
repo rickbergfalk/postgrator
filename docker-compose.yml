@@ -16,12 +16,12 @@ services:
       MYSQL_PASSWORD: postgrator
     ports:
       - "3306:3306"
-  # SQL Server needs 3.25 GB of RAM
-  # sqlserver:
-  #   image: microsoft/mssql-server-linux:latest
-  #   environment:
-  #     ACCEPT_EULA: Y 
-  #     SA_PASSWORD: Postgrator123!
-  #     MSSQL_PID: Express
-  #   ports:
-  #     - "1433:1433"
+  # SQL Server needs 2.00 GB of RAM
+  sqlserver:
+    image: microsoft/mssql-server-linux:latest
+    environment:
+      ACCEPT_EULA: Y 
+      SA_PASSWORD: Postgrator123!
+      MSSQL_PID: Express
+    ports:
+      - "1433:1433"
