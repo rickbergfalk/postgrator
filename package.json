@@ -21,7 +21,10 @@
     "singleQuote": true
   },
   "lint-staged": {
-    "*.{js,json,css}": ["prettier --write", "git add"]
+    "*.{js,json,css}": [
+      "prettier --write",
+      "git add"
+    ]
   },
   "scripts": {
     "precommit": "lint-staged",
