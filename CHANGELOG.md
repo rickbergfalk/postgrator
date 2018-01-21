@@ -1,5 +1,12 @@
 # CHANGELOG
 
+## 3.4.0
+
+### Jan 21 2018
+
+* Adds support for managing multiple databases/schemas on single
+  cluster/database
+
 ## 3.3.0
 
 ### Jan 16 2018
