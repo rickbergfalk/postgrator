@@ -40,6 +40,7 @@
     "url": "git://github.com/rickbergfalk/postgrator.git"
   },
   "main": "postgrator",
+  "types": "postgrator.d.ts",
   "devDependencies": {
     "eslint": "^4.10.0",
     "eslint-config-prettier": "^2.7.0",
