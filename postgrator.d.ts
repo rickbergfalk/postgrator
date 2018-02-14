@@ -73,6 +73,12 @@ declare namespace Postgrator {
 
   type Options = PostgreSQLOptions | MySQLOptions | MsSQLOptions
 
+  /**
+   * A migration event handler
+   *
+   * @param migration the migration object representing this event
+   */
+  export type MigrationEventCallback = (migration: Postgrator.Migration) => void
 }
 
 declare class Postgrator {
@@ -145,7 +151,39 @@ declare class Postgrator {
    * @returns
    * @param target version to migrate as string or number (handled as  numbers internally)
    */
-  migrate(target?: string): Promise<Postgrator.QueryResult>
+  migrate(target?: string): Promise<any>
+
+  /**
+   * Registers an event lister for the `validation-started` event
+   *
+   * @param event the event name
+   * @param cb the callback to handle the event
+   */
+  on(event: 'validation-started', cb: Postgrator.MigrationEventCallback): void
+
+  /**
+   * Registers an event lister for the `validation-finished` event
+   *
+   * @param event the event name
+   * @param cb the callback to handle the event
+   */
+  on(event: 'validation-finished', cb: Postgrator.MigrationEventCallback): void
+
+  /**
+   * Registers an event lister for the `migration-started` event
+   *
+   * @param event the event name
+   * @param cb the callback to handle the event
+   */
+  on(event: 'migration-started', cb: Postgrator.MigrationEventCallback): void
+
+  /**
+   * Registers an event lister for the `migration-finished` event
+   *
+   * @param event the event name
+   * @param cb the callback to handle the event
+   */
+  on(event: 'migration-finished', cb: Postgrator.MigrationEventCallback): void
 }
 
 export = Postgrator
