@@ -1,5 +1,11 @@
 # CHANGELOG
 
+## 3.5.0
+
+### Feb 17 2018
+
+* Add connectionTimeout config for mssql
+
 ## 3.4.0
 
 ### Jan 21 2018
