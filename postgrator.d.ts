@@ -69,6 +69,7 @@ declare namespace Postgrator {
     database: string
     options?: any
     requestTimeout?: number
+    connectionTimeout?: number
   }
 
   type Options = PostgreSQLOptions | MySQLOptions | MsSQLOptions
