@@ -1,7 +1,7 @@
 declare namespace Postgrator {
 
   /**
-   * A common query object
+   * A common query result
    */
   export interface QueryResult {
     rows: any[]
@@ -151,7 +151,7 @@ declare class Postgrator {
    * @returns
    * @param target version to migrate as string or number (handled as  numbers internally)
    */
-  migrate(target?: string): Promise<any>
+  migrate(target?: string): Promise<Postgrator.Migration[]>
 
   /**
    * Registers an event lister for the `validation-started` event
