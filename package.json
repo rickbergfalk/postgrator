@@ -29,7 +29,7 @@
   "scripts": {
     "precommit": "lint-staged",
     "lint": "eslint '**/*.js'",
-    "test": "mocha --recursive"
+    "test": "mocha --require ts-node/register --recursive \"test/**/*.{js,ts}\""
   },
   "dependencies": {
     "glob": "^7.1.2",
@@ -40,7 +40,10 @@
     "url": "git://github.com/rickbergfalk/postgrator.git"
   },
   "main": "postgrator",
+  "types": "postgrator.d.ts",
   "devDependencies": {
+    "@types/mocha": "^2.2.48",
+    "@types/node": "^9.4.6",
     "eslint": "^4.10.0",
     "eslint-config-prettier": "^2.7.0",
     "eslint-config-standard": "^10.2.1",
@@ -54,6 +57,8 @@
     "mssql": "^4.1.0",
     "mysql": "^2.15.0",
     "pg": "^7.4.1",
-    "prettier": "^1.7.4"
+    "prettier": "^1.7.4",
+    "ts-node": "^4.1.0",
+    "typescript": "^2.7.1"
   }
 }
