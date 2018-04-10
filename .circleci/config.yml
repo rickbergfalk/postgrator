@@ -1,0 +1,47 @@
+# Javascript Node CircleCI 2.0 configuration file
+#
+# Check https://circleci.com/docs/2.0/language-javascript/ for more details
+#
+version: 2
+jobs:
+  build:
+    docker:
+      # specify the version you desire here
+      - image: circleci/node:7.10
+      - image: circleci/postgres:9.6-alpine-ram
+        environment:
+          POSTGRES_USER: postgrator
+          POSTGRES_DB: postgrator
+      - image: circleci/mariadb:10.3-ram
+        environment:
+          MYSQL_ROOT_PASSWORD: postgrator
+          MYSQL_DATABASE: postgrator
+          MYSQL_USER: postgrator
+          MYSQL_PASSWORD: postgrator
+      - image: microsoft/mssql-server-linux:latest
+        environment:
+          ACCEPT_EULA: Y
+          SA_PASSWORD: Postgrator123!
+          MSSQL_PID: Express
+
+    working_directory: ~/repo
+
+    steps:
+      - checkout
+
+      # Download and cache dependencies
+      - restore_cache:
+          keys:
+          - v1-dependencies-{{ checksum "package.json" }}
+          # fallback to using the latest cache if no exact match is found
+          - v1-dependencies-
+
+      - run: npm install
+
+      - save_cache:
+          paths:
+            - node_modules
+          key: v1-dependencies-{{ checksum "package.json" }}
+
+      # run tests!
+      - run: sleep 30 && npm test
