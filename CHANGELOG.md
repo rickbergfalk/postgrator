@@ -1,5 +1,12 @@
 # CHANGELOG
 
+## 3.6.0
+
+### April 26 2018
+
+* Allow schema to be specified for schemaTable (Postgres only) If schema does
+  not exist it will be created.
+
 ## 3.5.0
 
 ### Feb 17 2018

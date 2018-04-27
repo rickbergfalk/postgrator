@@ -111,6 +111,8 @@ const postgrator = new Postgrator({
   username: 'username',
   password: 'password',
   // Schema table name. Optional. Default is schemaversion
+  // If using Postgres, schema may be specified using . separator
+  // For example, { schemaTable: 'schema_name.table_name' }
   schemaTable: 'schemaversion'
 })
 
