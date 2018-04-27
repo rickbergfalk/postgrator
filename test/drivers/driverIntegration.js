@@ -2,8 +2,8 @@
 const assert = require('assert')
 const Postgrator = require('../../postgrator')
 
-module.exports = function testConfig(config) {
-  describe(`Driver: ${config.driver}`, function() {
+module.exports = function testConfig(config, label) {
+  describe(label || `Driver: ${config.driver}`, function() {
     const postgrator = new Postgrator(config)
 
     it('Migrates multiple versions up (000 -> 002)', function() {
@@ -22,10 +22,11 @@ module.exports = function testConfig(config) {
     })
 
     it('Has migration details in schema table', function() {
+      const schemaTable = config.schemaTable || 'schemaversion'
       return postgrator
         .runQuery(
           `SELECT version, name, md5, run_at 
-          FROM schemaversion 
+          FROM ${schemaTable}
           WHERE version = 2`
         )
         .then(results => {
