@@ -24,7 +24,7 @@ services:
       MYSQL_USER: postgrator
       MYSQL_PASSWORD: postgrator
     ports:
-      - '3001:3306'
+      - '3008:3306'
   # SQL Server needs 2.00 GB of RAM
   sqlserver:
     image: microsoft/mssql-server-linux:latest
