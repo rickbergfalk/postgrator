@@ -23,32 +23,32 @@ describe('TypeScript:API', function() {
 
   it('Migrates up to 003', async () => {
     const migrations: Postgrator.Migration[] = await postgrator.migrate('003')
-    assert.equal(migrations.length, 3, '3 migrations run')
+    assert.strictEqual(migrations.length, 3, '3 migrations run')
   })
 
   it('Emits migration events', () => {
-    assert.equal(mStarted.length, 3)
-    assert.equal(mFinished.length, 3)
+    assert.strictEqual(mStarted.length, 3)
+    assert.strictEqual(mFinished.length, 3)
   })
 
   it('Emits validation events', async () => {
     const migrations: Postgrator.Migration[] = await postgrator.migrate('004')
-    assert.equal(vStarted.length, 3)
-    assert.equal(vFinished.length, 3)
+    assert.strictEqual(vStarted.length, 3)
+    assert.strictEqual(vFinished.length, 3)
   })
 
   it('Implements getDatabaseVersion', async () => {
     const version: number = await postgrator.getDatabaseVersion()
-    assert.equal(version, 4)
+    assert.strictEqual(version, 4)
   })
 
   it('Implements getMigrations', async () => {
     const migrations: Postgrator.Migration[] = await postgrator.getMigrations()
-    assert.equal(migrations.length, 12)
+    assert.strictEqual(migrations.length, 12)
     const m = migrations[0]
-    assert.equal(m.version, 1)
-    assert.equal(m.action, 'do')
-    assert.equal(m.filename, '001.do.sql')
+    assert.strictEqual(m.version, 1)
+    assert.strictEqual(m.action, 'do')
+    assert.strictEqual(m.filename, '001.do.sql')
     assert(m.hasOwnProperty('name'))
   })
 
@@ -59,17 +59,17 @@ describe('TypeScript:API', function() {
       connectionString: pgUrl
     })
     const migrationsByPattern: Postgrator.Migration[] = await patterngrator.getMigrations()
-    assert.equal(migrationsByPattern.length, 4)
+    assert.strictEqual(migrationsByPattern.length, 4)
   })
 
   it('Implements getMaxVersion', async () => {
     const max: number = await postgrator.getMaxVersion()
-    assert.equal(max, 6)
+    assert.strictEqual(max, 6)
   })
 
   it('Migrates down to 000', async () => {
     const migrations: Postgrator.Migration[] = await postgrator.migrate('000')
-    assert.equal(migrations.length, 4, '4 migrations run')
+    assert.strictEqual(migrations.length, 4, '4 migrations run')
   })
 
   after((): Promise<Postgrator.QueryResult> => {
