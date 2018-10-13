@@ -11,13 +11,13 @@ module.exports = function testConfig(config, label) {
         .migrate('002')
         .then(migrations => postgrator.runQuery('SELECT name FROM person'))
         .then(results => {
-          assert.equal(results.rows.length, 1)
+          assert.strictEqual(results.rows.length, 1)
         })
     })
 
     it('Handles current version', function() {
       return postgrator.migrate('002').then(migrations => {
-        assert.equal(migrations.length, 0)
+        assert.strictEqual(migrations.length, 0)
       })
     })
 
@@ -30,7 +30,7 @@ module.exports = function testConfig(config, label) {
           WHERE version = 2`
         )
         .then(results => {
-          assert.equal(results.rows[0].name, 'some-description')
+          assert.strictEqual(results.rows[0].name, 'some-description')
           assert(results.rows[0].run_at)
           assert(results.rows[0].md5)
         })
@@ -41,7 +41,7 @@ module.exports = function testConfig(config, label) {
         .migrate('003')
         .then(migrations => postgrator.runQuery('SELECT name FROM person'))
         .then(results => {
-          assert.equal(results.rows.length, 3)
+          assert.strictEqual(results.rows.length, 3)
         })
     })
 
@@ -52,8 +52,8 @@ module.exports = function testConfig(config, label) {
         .migrate('005')
         .then(migrations => postgrator.runQuery('SELECT name, age FROM person'))
         .then(result => {
-          assert.equal(result.rows.length, 5)
-          assert.equal(result.rows[4].name, process.env.TEST_NAME)
+          assert.strictEqual(result.rows.length, 5)
+          assert.strictEqual(result.rows[4].name, process.env.TEST_NAME)
         })
     })
 
@@ -63,9 +63,9 @@ module.exports = function testConfig(config, label) {
         .migrate('006')
         .then(migrations => postgrator.runQuery('SELECT name, age FROM person'))
         .then(result => {
-          assert.equal(result.rows.length, 6)
-          assert.equal(result.rows[4].name, process.env.TEST_NAME)
-          assert.equal(result.rows[5].name, process.env.TEST_ANOTHER_NAME)
+          assert.strictEqual(result.rows.length, 6)
+          assert.strictEqual(result.rows[4].name, process.env.TEST_NAME)
+          assert.strictEqual(result.rows[5].name, process.env.TEST_ANOTHER_NAME)
         })
     })
 
@@ -74,7 +74,7 @@ module.exports = function testConfig(config, label) {
         .migrate('max')
         .then(migrations => postgrator.runQuery('SELECT name, age FROM person'))
         .then(result => {
-          assert.equal(result.rows.length, 6)
+          assert.strictEqual(result.rows.length, 6)
         })
     })
 
@@ -87,7 +87,7 @@ module.exports = function testConfig(config, label) {
         .migrate()
         .then(migrations => postgrator.runQuery('SELECT name, age FROM person'))
         .then(result => {
-          assert.equal(result.rows.length, 6)
+          assert.strictEqual(result.rows.length, 6)
         })
     })
 
@@ -108,7 +108,7 @@ module.exports = function testConfig(config, label) {
           assert(error)
           return postgrator.getDatabaseVersion()
         })
-        .then(version => assert.equal(version, 3))
+        .then(version => assert.strictEqual(version, 3))
     })
 
     it('Migrates down to 000 again', function() {
@@ -127,7 +127,7 @@ module.exports = function testConfig(config, label) {
         .then(() => postgrator.migrate('006'))
         .catch(error => assert.ifError(error))
         .then(() => postgrator.getDatabaseVersion())
-        .then(version => assert.equal(version, 6))
+        .then(version => assert.strictEqual(version, 6))
     })
 
     it('Migrates down to 000 again', function() {

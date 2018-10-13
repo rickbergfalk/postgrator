@@ -108,7 +108,7 @@ class Postgrator extends EventEmitter {
     const { runQuery, endConnection, queries } = this.commonClient
     return runQuery(queries.getDatabaseVersion).then(result => {
       const version = result.rows.length > 0 ? result.rows[0].version : 0
-      return endConnection().then(() => version)
+      return endConnection().then(() => parseInt(version))
     })
   }
 
