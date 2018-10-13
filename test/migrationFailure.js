@@ -51,7 +51,7 @@ function testConfig(config) {
     it('Does not implement partial migrations', function() {
       return postgrator.runQuery('SELECT name FROM widgets').then(results => {
         assert(results.rows)
-        assert.equal(results.rows.length, 0, 'Table should be empty')
+        assert.strictEqual(results.rows.length, 0, 'Table should be empty')
       })
     })
 
