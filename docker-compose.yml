@@ -16,15 +16,16 @@ services:
       MYSQL_PASSWORD: postgrator
     ports:
       - '3306:3306'
-  mysql:
-    image: mysql:8
-    environment:
-      MYSQL_ROOT_PASSWORD: postgrator
-      MYSQL_DATABASE: postgrator
-      MYSQL_USER: postgrator
-      MYSQL_PASSWORD: postgrator
-    ports:
-      - '3008:3306'
+  # TODO: once mysql 8 works with node drivers should add test to cover changes for https://github.com/rickbergfalk/postgrator/issues/63
+  # mysql:
+  #   image: mysql:8
+  #   environment:
+  #     MYSQL_ROOT_PASSWORD: postgrator
+  #     MYSQL_DATABASE: postgrator
+  #     MYSQL_USER: postgrator
+  #     MYSQL_PASSWORD: postgrator
+  #   ports:
+  #     - '3008:3306'
   # SQL Server needs 2.00 GB of RAM
   sqlserver:
     image: microsoft/mssql-server-linux:latest
