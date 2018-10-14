@@ -52,8 +52,14 @@ describe('API', function() {
       const m = migrations[0]
       assert.strictEqual(m.version, 1)
       assert.strictEqual(m.action, 'do')
+      // TODO make filename consistent
+      // With glob filename is full path. This is likely what we want instead of basename
       assert.strictEqual(m.filename, '001.do.sql')
+      assert.strictEqual(m.name, '')
       assert(m.hasOwnProperty('name'))
+
+      const m2 = migrations.find(m => m.version === 2 && m.action === 'do')
+      assert.strictEqual(m2.name, 'some-description')
     })
   })
 
@@ -63,12 +69,15 @@ describe('API', function() {
       migrationPattern: `${__dirname}/fail*/*`,
       connectionString: pgUrl
     })
-    patterngrator
-      .getMigrations()
-      .then(migrationsByPattern => {
-        assert.strictEqual(migrationsByPattern.length, 4)
-      })
-      .catch(err => console.log(err))
+    return patterngrator.getMigrations().then(migrationsByPattern => {
+      assert.strictEqual(migrationsByPattern.length, 4)
+      // TODO make filename consistent
+      // With glob filename is full path. This is likely what we want
+      // assert.strictEqual(
+      //   migrationsByPattern[3].filename,
+      //   '002.do.fail-test.sql'
+      // )
+    })
   })
 
   it('Implements getMaxVersion', function() {
