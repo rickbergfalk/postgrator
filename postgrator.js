@@ -275,7 +275,14 @@ class Postgrator extends EventEmitter {
         if (!error.appliedMigrations) {
           error.appliedMigrations = []
         }
-        throw error
+
+        // Attempt to close connection then throw original error
+        return commonClient
+          .endConnection()
+          .catch(() => {})
+          .then(() => {
+            throw error
+          })
       })
   }
 }
