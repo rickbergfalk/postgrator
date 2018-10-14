@@ -14,6 +14,7 @@ npm install postgrator
 # install necessary db engine(s) if not installed yet
 npm install pg@7      # pg@6 supported as of postgrator 3.2.0
 npm install mysql@2
+npm install mysql2@1
 npm install mssql@4
 ```
 
@@ -21,15 +22,11 @@ npm install mssql@4
 
 Using a package version other than the below may not work.
 
-* pg 6.x.x
-* pg 7.x.x
-* mysql 2.x.x
-* mssql 4.x.x
-
-## Version 3.0 breaking changes
-
-The API has completely changed with Postgrator 3, but does not bring any changes
-to the migration format. See [CHANGELOG](CHANGELOG.md) for details.
+- pg 6.x.x
+- pg 7.x.x
+- mysql 2.x.x
+- mysql2 1.x.x
+- mssql 4.x.x
 
 ## Usage
 
@@ -142,6 +139,18 @@ Postgres supports connection string url as well as simple ssl config:
 const postgrator = new Postgrator({
   connectionString: 'tcp://username:password@hosturl/databasename',
   ssl: true
+})
+```
+
+### MySQL options:
+
+MySQL also supports ssl config option
+
+```js
+const postgrator = new Postgrator({
+  // common options plus
+  // ssl should be object as mysql expects (https://www.npmjs.com/package/mysql#ssl-options)
+  ssl
 })
 ```
 
