@@ -71,12 +71,6 @@ describe('API', function() {
     })
     return patterngrator.getMigrations().then(migrationsByPattern => {
       assert.strictEqual(migrationsByPattern.length, 4)
-      // TODO make filename consistent
-      // With glob filename is full path. This is likely what we want
-      // assert.strictEqual(
-      //   migrationsByPattern[3].filename,
-      //   '002.do.fail-test.sql'
-      // )
     })
   })
 

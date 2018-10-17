@@ -61,8 +61,8 @@ class Postgrator extends EventEmitter {
 
           // TODO normalize filename on returned migration object
           // Today it is full path if glob is used, otherwise basename with extension
-          // This is not persisted.
-          // Some people may be using this, so it technically will be a breaking fix
+          // This is not persisted in the database, but this field might be a part of someone's workflow
+          // Making this change will be a breaking fix
 
           if (ext === '.sql') {
             return {
