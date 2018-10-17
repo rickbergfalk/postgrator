@@ -31,7 +31,6 @@ class Postgrator extends EventEmitter {
    */
   getMigrations() {
     const { migrationDirectory, migrationPattern, newline } = this.config
-    this.migrations = []
     return new Promise((resolve, reject) => {
       const loader = (err, files) => {
         if (err) {
@@ -46,43 +45,58 @@ class Postgrator extends EventEmitter {
       } else {
         resolve([])
       }
-    }).then(migrationFiles => {
-      migrationFiles.forEach(file => {
-        const m = file
-          .split('/')
-          .pop()
-          .split('.')
-        const name = m.length >= 3 ? m.slice(2, m.length - 1).join('.') : file
-        const filename = migrationPattern
-          ? file
-          : path.join(migrationDirectory, file)
-        if (m[m.length - 1] === 'sql') {
-          this.migrations.push({
-            version: Number(m[0]),
-            action: m[1],
-            filename: file,
-            name: name,
-            md5: fileChecksum(filename, newline),
-            getSql: () => fs.readFileSync(filename, 'utf8')
-          })
-        } else if (m[m.length - 1] === 'js') {
-          const jsModule = require(filename)
-          const sql = jsModule.generateSql()
-          this.migrations.push({
-            version: Number(m[0]),
-            action: m[1],
-            filename: file,
-            name: name,
-            md5: checksum(sql, newline),
-            getSql: () => sql
-          })
-        }
-      })
-      this.migrations = this.migrations.filter(
-        migration => !isNaN(migration.version)
-      )
-      return this.migrations
     })
+      .then(migrationFiles => {
+        return migrationFiles.map(file => {
+          const basename = path.basename(file)
+          const ext = path.extname(basename)
+
+          const basenameNoExt = path.basename(file, ext)
+          let [version, action, name = ''] = basenameNoExt.split('.')
+          version = Number(version)
+
+          const filename = migrationPattern
+            ? file
+            : path.join(migrationDirectory, file)
+
+          // TODO normalize filename on returned migration object
+          // Today it is full path if glob is used, otherwise basename with extension
+          // This is not persisted in the database, but this field might be a part of someone's workflow
+          // Making this change will be a breaking fix
+
+          if (ext === '.sql') {
+            return {
+              version,
+              action,
+              filename: file,
+              name,
+              md5: fileChecksum(filename, newline),
+              getSql: () => fs.readFileSync(filename, 'utf8')
+            }
+          }
+
+          if (ext === '.js') {
+            const jsModule = require(filename)
+            const sql = jsModule.generateSql()
+
+            return {
+              version,
+              action,
+              filename: file,
+              name,
+              md5: checksum(sql, newline),
+              getSql: () => sql
+            }
+          }
+        })
+      })
+      .then(migrations =>
+        migrations.filter(migration => !isNaN(migration.version))
+      )
+      .then(migrations => {
+        this.migrations = migrations
+        return migrations
+      })
   }
 
   /**
