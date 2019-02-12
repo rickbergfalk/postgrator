@@ -138,7 +138,8 @@ Postgres supports connection string url as well as simple ssl config:
 ```js
 const postgrator = new Postgrator({
   connectionString: 'tcp://username:password@hosturl/databasename',
-  ssl: true
+  ssl: true,
+  currentSchema: 'my-schema-name'  // migrations will only run against this schema
 })
 ```
 
