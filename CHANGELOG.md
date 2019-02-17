@@ -1,5 +1,11 @@
 # CHANGELOG
 
+## 3.8.0
+
+### Feb 17 2019
+
+- Add currentSchema option for Postgres
+
 ## 3.7.0
 
 ### October 14 2018
