@@ -1,5 +1,12 @@
 # CHANGELOG
 
+## 3.9.0
+
+## March 14, 2019
+
+- Add mssql domain option
+- Filter out non-migration files to avoid filename parsing errors
+
 ## 3.8.0
 
 ### Feb 17 2019
