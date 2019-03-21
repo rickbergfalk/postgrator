@@ -1,5 +1,11 @@
 # CHANGELOG
 
+## 3.10.0
+
+### March 20, 2019
+
+- Add support for mssql 5.x
+
 ## 3.9.0
 
 ### March 14, 2019
