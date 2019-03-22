@@ -53,6 +53,7 @@ declare namespace Postgrator {
     username?: string
     password?: string
     database?: string
+    currentSchema?: string
   }
 
   /**
