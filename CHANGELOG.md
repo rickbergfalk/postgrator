@@ -1,5 +1,11 @@
 # CHANGELOG
 
+## 3.10.1
+
+### March 21, 2019
+
+- Fix TypeScript type for currentSchema postgres option
+
 ## 3.10.0
 
 ### March 20, 2019
