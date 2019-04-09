@@ -99,7 +99,7 @@ const postgrator = new Postgrator({
   migrationDirectory: __dirname + '/migrations',
   // or a glob pattern to files
   migrationPattern: __dirname + '/some/pattern/*',
-  // Driver: must be pg, mysql, or mssql
+  // Driver: must be pg, mysql, mysql2 or mssql
   driver: 'pg',
   // Database connection config
   host: '127.0.0.1',
