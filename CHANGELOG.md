@@ -1,5 +1,11 @@
 # CHANGELOG
 
+## 3.10.2
+
+### June 4, 2019
+
+- Fix MySQL option typings for mysql2
+
 ## 3.10.1
 
 ### March 21, 2019
