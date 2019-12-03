@@ -1,5 +1,13 @@
 # CHANGELOG
 
+## 3.11.0
+
+### December 2, 2019
+
+- Add support for driver mysql2@2
+- Add support for driver mssql@6
+- Fix non-default schema use for mssql (#94)
+
 ## 3.10.2
 
 ### June 4, 2019
