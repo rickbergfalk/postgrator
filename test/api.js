@@ -56,6 +56,7 @@ describe('API', function() {
       // With glob filename is full path. This is likely what we want instead of basename
       assert.strictEqual(m.filename, '001.do.sql')
       assert.strictEqual(m.name, '')
+      // eslint-disable-next-line no-prototype-builtins
       assert(m.hasOwnProperty('name'))
 
       const m2 = migrations.find(m => m.version === 2 && m.action === 'do')
