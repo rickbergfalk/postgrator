@@ -53,7 +53,7 @@
     "eslint-plugin-standard": "^4.0.1",
     "husky": "^3.1.0",
     "lint-staged": "^9.5.0",
-    "mocha": "^5.2.0",
+    "mocha": "^6.2.2",
     "mssql": "^6.0.1",
     "mysql": "^2.17.1",
     "mysql2": "^1.7.0",
