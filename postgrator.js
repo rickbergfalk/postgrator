@@ -3,7 +3,7 @@ const path = require('path')
 const glob = require('glob')
 const EventEmitter = require('events')
 
-const commonClient = require('./lib/commonClient.js')
+const createCommonClient = require('./lib/createCommonClient.js')
 const {
   fileChecksum,
   checksum,
@@ -21,7 +21,7 @@ class Postgrator extends EventEmitter {
     super()
     this.config = Object.assign({}, DEFAULT_CONFIG, config)
     this.migrations = []
-    this.commonClient = commonClient(this.config)
+    this.commonClient = createCommonClient(this.config)
   }
 
   /**
@@ -121,10 +121,10 @@ class Postgrator extends EventEmitter {
    * @returns {Promise} database schema version
    */
   getDatabaseVersion() {
-    const { runQuery, endConnection, queries } = this.commonClient
-    return runQuery(queries.getDatabaseVersion).then(result => {
+    const versionSql = this.commonClient.getDatabaseVersionSql()
+    return this.commonClient.runQuery(versionSql).then(result => {
       const version = result.rows.length > 0 ? result.rows[0].version : 0
-      return endConnection().then(() => parseInt(version))
+      return this.commonClient.endConnection().then(() => parseInt(version))
     })
   }
 
@@ -169,15 +169,13 @@ class Postgrator extends EventEmitter {
         sequence = sequence
           .then(() => this.emit('validation-started', migration))
           .then(() => {
-            const sql = this.commonClient.queries.getMd5(migration)
+            const sql = this.commonClient.getMd5Sql(migration)
             return this.commonClient.runQuery(sql)
           })
           .then(results => {
             const md5 = results.rows && results.rows[0] && results.rows[0].md5
             if (md5 !== migration.md5) {
-              const msg = `MD5 checksum failed for migration [${
-                migration.version
-              }]`
+              const msg = `MD5 checksum failed for migration [${migration.version}]`
               throw new Error(msg)
             }
           })
@@ -208,10 +206,12 @@ class Postgrator extends EventEmitter {
         .then(() => appliedMigrations.push(migration))
         .then(() => this.emit('migration-finished', migration))
     })
-    return sequence.then(() => appliedMigrations).catch(error => {
-      error.appliedMigrations = appliedMigrations
-      throw error
-    })
+    return sequence
+      .then(() => appliedMigrations)
+      .catch(error => {
+        error.appliedMigrations = appliedMigrations
+        throw error
+      })
   }
 
   /**
