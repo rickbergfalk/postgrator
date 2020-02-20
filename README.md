@@ -166,7 +166,7 @@ This may be necessary if requiring a secure connection for Azure.
 ```js
 const postgrator = new Postgrator({
   requestTimeout: 1000 * 60 * 60, // Default 1 hour
-  connectionTimeout: 30000 // override mssql 15 second default
+  connectionTimeout: 30000, // override mssql 15 second default
   options: {
     encrypt: true
   }
