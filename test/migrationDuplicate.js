@@ -37,8 +37,8 @@ function testConfig(config) {
   describe(`Driver: ${config.driver}`, function() {
     const postgrator = new Postgrator(config)
 
-    it('Refuses to run if there are duplicate migrations', function() {
-      assert.rejects(
+    it('Refuses to run if there are duplicate migrations', async function() {
+      await assert.rejects(
         () => postgrator.migrate(),
         'Error expected from duplicated migrations'
       )
