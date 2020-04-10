@@ -3,6 +3,7 @@ services:
   postgres:
     image: postgres:9.6-alpine
     environment:
+      POSTGRES_PASSWORD: postgrator
       POSTGRES_USER: postgrator
       POSTGRES_DB: postgrator
     ports: 
