@@ -5,7 +5,7 @@
   "description": "A SQL migration tool for SQL people",
   "license": "MIT",
   "engines": {
-    "node": ">=6.0.0"
+    "node": ">=10.0.0"
   },
   "keywords": [
     "migrator",

@@ -1,4 +1,4 @@
-# Postgrator 3
+# Postgrator
 
 [![CircleCI](https://circleci.com/gh/rickbergfalk/postgrator.svg?style=svg)](https://circleci.com/gh/rickbergfalk/postgrator)
 
@@ -8,6 +8,8 @@ Postgres, MySQL, and SQL Server.
 Available as a cli tool: https://www.npmjs.com/package/postgrator-cli.
 
 ## Installation
+
+_As of postgrator 4 Node.js version 10 or greater is required_
 
 ```sh
 npm install postgrator
