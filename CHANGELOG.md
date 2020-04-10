@@ -1,5 +1,13 @@
 # CHANGELOG
 
+## 3.11.1
+
+### April 10, 2020
+
+- Fix to avoid running migrations with same number
+- Update dependencies
+- Fix Windows compat
+
 ## 3.11.0
 
 ### December 2, 2019
