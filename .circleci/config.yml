@@ -7,7 +7,7 @@ jobs:
   build:
     docker:
       # specify the version you desire here
-      - image: circleci/node:8.12
+      - image: circleci/node:10.20
       - image: circleci/postgres:9.6-alpine-ram
         environment:
           POSTGRES_USER: postgrator
