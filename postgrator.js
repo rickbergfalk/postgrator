@@ -8,12 +8,12 @@ const {
   fileChecksum,
   checksum,
   sortMigrationsAsc,
-  sortMigrationsDesc
+  sortMigrationsDesc,
 } = require('./lib/utils.js')
 
 const DEFAULT_CONFIG = {
   schemaTable: 'schemaversion',
-  validateChecksums: true
+  validateChecksums: true,
 }
 
 class Postgrator extends EventEmitter {
@@ -46,10 +46,10 @@ class Postgrator extends EventEmitter {
         resolve([])
       }
     })
-      .then(migrationFiles => {
+      .then((migrationFiles) => {
         return migrationFiles
-          .filter(file => ['.sql', '.js'].indexOf(path.extname(file)) >= 0)
-          .map(file => {
+          .filter((file) => ['.sql', '.js'].indexOf(path.extname(file)) >= 0)
+          .map((file) => {
             const basename = path.basename(file)
             const ext = path.extname(basename)
 
@@ -73,7 +73,7 @@ class Postgrator extends EventEmitter {
                 filename: file,
                 name,
                 md5: fileChecksum(filename, newline),
-                getSql: () => fs.readFileSync(filename, 'utf8')
+                getSql: () => fs.readFileSync(filename, 'utf8'),
               }
             }
 
@@ -87,19 +87,19 @@ class Postgrator extends EventEmitter {
                 filename: file,
                 name,
                 md5: checksum(sql, newline),
-                getSql: () => sql
+                getSql: () => sql,
               }
             }
           })
       })
-      .then(migrations =>
-        migrations.filter(migration => !isNaN(migration.version))
+      .then((migrations) =>
+        migrations.filter((migration) => !isNaN(migration.version))
       )
-      .then(migrations => {
-        const getMigrationKey = migration =>
+      .then((migrations) => {
+        const getMigrationKey = (migration) =>
           `${migration.version}:${migration.action}`
         const migrationKeys = new Set()
-        migrations.forEach(migration => {
+        migrations.forEach((migration) => {
           const newKey = getMigrationKey(migration)
           if (migrationKeys.has(newKey)) {
             throw new Error(
@@ -110,7 +110,7 @@ class Postgrator extends EventEmitter {
         })
         return migrations
       })
-      .then(migrations => {
+      .then((migrations) => {
         this.migrations = migrations
         return migrations
       })
@@ -124,7 +124,7 @@ class Postgrator extends EventEmitter {
    */
   runQuery(query) {
     const { commonClient } = this
-    return commonClient.runQuery(query).then(results => {
+    return commonClient.runQuery(query).then((results) => {
       return commonClient.endConnection().then(() => results)
     })
   }
@@ -137,7 +137,7 @@ class Postgrator extends EventEmitter {
    */
   getDatabaseVersion() {
     const versionSql = this.commonClient.getDatabaseVersionSql()
-    return this.commonClient.runQuery(versionSql).then(result => {
+    return this.commonClient.runQuery(versionSql).then((result) => {
       const version = result.rows.length > 0 ? result.rows[0].version : 0
       return this.commonClient.endConnection().then(() => parseInt(version))
     })
@@ -158,8 +158,8 @@ class Postgrator extends EventEmitter {
           return this.getMigrations()
         }
       })
-      .then(migrations => {
-        const versions = migrations.map(migration => migration.version)
+      .then((migrations) => {
+        const versions = migrations.map((migration) => migration.version)
         return Math.max.apply(null, versions)
       })
   }
@@ -171,23 +171,23 @@ class Postgrator extends EventEmitter {
    * @param {Number} databaseVersion
    */
   validateMigrations(databaseVersion) {
-    return this.getMigrations().then(migrations => {
+    return this.getMigrations().then((migrations) => {
       const validateMigrations = migrations.filter(
-        migration =>
+        (migration) =>
           migration.action === 'do' &&
           migration.version > 0 &&
           migration.version <= databaseVersion
       )
 
       let sequence = Promise.resolve()
-      validateMigrations.forEach(migration => {
+      validateMigrations.forEach((migration) => {
         sequence = sequence
           .then(() => this.emit('validation-started', migration))
           .then(() => {
             const sql = this.commonClient.getMd5Sql(migration)
             return this.commonClient.runQuery(sql)
           })
-          .then(results => {
+          .then((results) => {
             const md5 = results.rows && results.rows[0] && results.rows[0].md5
             if (md5 !== migration.md5) {
               const msg = `MD5 checksum failed for migration [${migration.version}]`
@@ -210,11 +210,11 @@ class Postgrator extends EventEmitter {
     const { commonClient } = this
     let sequence = Promise.resolve()
     const appliedMigrations = []
-    migrations.forEach(migration => {
+    migrations.forEach((migration) => {
       sequence = sequence
         .then(() => this.emit('migration-started', migration))
         .then(() => migration.getSql())
-        .then(sql => commonClient.runQuery(sql))
+        .then((sql) => commonClient.runQuery(sql))
         .then(() =>
           commonClient.runQuery(commonClient.persistActionSql(migration))
         )
@@ -223,7 +223,7 @@ class Postgrator extends EventEmitter {
     })
     return sequence
       .then(() => appliedMigrations)
-      .catch(error => {
+      .catch((error) => {
         error.appliedMigrations = appliedMigrations
         throw error
       })
@@ -242,7 +242,7 @@ class Postgrator extends EventEmitter {
     if (targetVersion >= databaseVersion) {
       return migrations
         .filter(
-          migration =>
+          (migration) =>
             migration.action === 'do' &&
             migration.version > databaseVersion &&
             migration.version <= targetVersion
@@ -252,7 +252,7 @@ class Postgrator extends EventEmitter {
     if (targetVersion < databaseVersion) {
       return migrations
         .filter(
-          migration =>
+          (migration) =>
             migration.action === 'undo' &&
             migration.version <= databaseVersion &&
             migration.version > targetVersion
@@ -282,14 +282,14 @@ class Postgrator extends EventEmitter {
         }
         return Number(target)
       })
-      .then(targetVersion => {
+      .then((targetVersion) => {
         data.targetVersion = targetVersion
         if (target === undefined) {
           throw new Error('targetVersion undefined')
         }
         return this.getDatabaseVersion()
       })
-      .then(databaseVersion => {
+      .then((databaseVersion) => {
         data.databaseVersion = databaseVersion
         if (config.validateChecksums && data.targetVersion >= databaseVersion) {
           return this.validateMigrations(databaseVersion)
@@ -298,9 +298,9 @@ class Postgrator extends EventEmitter {
       .then(() =>
         this.getRunnableMigrations(data.databaseVersion, data.targetVersion)
       )
-      .then(runnableMigrations => this.runMigrations(runnableMigrations))
-      .then(migrations => commonClient.endConnection().then(() => migrations))
-      .catch(error => {
+      .then((runnableMigrations) => this.runMigrations(runnableMigrations))
+      .then((migrations) => commonClient.endConnection().then(() => migrations))
+      .catch((error) => {
         // Decorate error with empty appliedMigrations if not yet exist
         // Rethrow error to module user
         if (!error.appliedMigrations) {

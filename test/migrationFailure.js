@@ -12,7 +12,7 @@ testConfig({
   port: 5432,
   database: 'postgrator',
   username: 'postgrator',
-  password: 'postgrator'
+  password: 'postgrator',
 })
 
 testConfig({
@@ -21,7 +21,7 @@ testConfig({
   host: 'localhost',
   database: 'postgrator',
   username: 'postgrator',
-  password: 'postgrator'
+  password: 'postgrator',
 })
 
 testConfig({
@@ -30,15 +30,15 @@ testConfig({
   host: 'localhost',
   database: 'master',
   username: 'sa',
-  password: 'Postgrator123!'
+  password: 'Postgrator123!',
 })
 
 function testConfig(config) {
-  describe(`Driver: ${config.driver}`, function() {
+  describe(`Driver: ${config.driver}`, function () {
     const postgrator = new Postgrator(config)
 
-    it('Handles failed migrations', function() {
-      return postgrator.migrate().catch(error => {
+    it('Handles failed migrations', function () {
+      return postgrator.migrate().catch((error) => {
         assert(error, 'Error expected from bad migration')
         assert(
           error.appliedMigrations,
@@ -52,18 +52,18 @@ function testConfig(config) {
       })
     })
 
-    it('Does not implement partial migrations', function() {
-      return postgrator.runQuery('SELECT name FROM widgets').then(results => {
+    it('Does not implement partial migrations', function () {
+      return postgrator.runQuery('SELECT name FROM widgets').then((results) => {
         assert(results.rows)
         assert.strictEqual(results.rows.length, 0, 'Table should be empty')
       })
     })
 
-    it('Migrates down to 000', function() {
+    it('Migrates down to 000', function () {
       return postgrator.migrate('00')
     })
 
-    after(function() {
+    after(function () {
       return postgrator.runQuery('DROP TABLE schemaversion')
     })
   })
