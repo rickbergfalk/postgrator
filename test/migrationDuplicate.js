@@ -1,4 +1,4 @@
-/* global after, it, describe */
+/* global it, describe */
 const assert = require('assert')
 const Postgrator = require('../postgrator')
 
@@ -12,7 +12,7 @@ testConfig({
   port: 5432,
   database: 'postgrator',
   username: 'postgrator',
-  password: 'postgrator'
+  password: 'postgrator',
 })
 
 testConfig({
@@ -21,7 +21,7 @@ testConfig({
   host: 'localhost',
   database: 'postgrator',
   username: 'postgrator',
-  password: 'postgrator'
+  password: 'postgrator',
 })
 
 testConfig({
@@ -30,14 +30,14 @@ testConfig({
   host: 'localhost',
   database: 'master',
   username: 'sa',
-  password: 'Postgrator123!'
+  password: 'Postgrator123!',
 })
 
 function testConfig(config) {
-  describe(`Driver: ${config.driver}`, function() {
+  describe(`Driver: ${config.driver}`, function () {
     const postgrator = new Postgrator(config)
 
-    it('Refuses to run if there are duplicate migrations', async function() {
+    it('Refuses to run if there are duplicate migrations', async function () {
       await assert.rejects(
         () => postgrator.migrate(),
         'Error expected from duplicated migrations'

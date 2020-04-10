@@ -8,7 +8,7 @@ testConfig({
   port: 5432,
   database: 'postgrator',
   username: 'postgrator',
-  password: 'postgrator'
+  password: 'postgrator',
 })
 
 testConfig(
@@ -20,7 +20,7 @@ testConfig(
     database: 'postgrator',
     username: 'postgrator',
     password: 'postgrator',
-    schemaTable: 'postgrator.schemaversion'
+    schemaTable: 'postgrator.schemaversion',
   },
   'Driver: pg (with schemaTable)'
 )
@@ -34,7 +34,7 @@ testConfig(
     database: 'postgrator',
     username: 'postgrator',
     password: 'postgrator',
-    currentSchema: 'postgrator'
+    currentSchema: 'postgrator',
   },
   'Driver: pg (with currentSchema)'
 )

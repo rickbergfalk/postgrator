@@ -8,5 +8,5 @@ testConfig({
   host: 'localhost',
   database: 'master',
   username: 'sa',
-  password: 'Postgrator123!'
+  password: 'Postgrator123!',
 })
