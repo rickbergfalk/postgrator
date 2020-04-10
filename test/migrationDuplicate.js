@@ -1,0 +1,47 @@
+/* global after, it, describe */
+const assert = require('assert')
+const Postgrator = require('../postgrator')
+
+const path = require('path')
+const migrationDirectory = path.join(__dirname, 'duplicateMigrations')
+
+testConfig({
+  migrationDirectory: migrationDirectory,
+  driver: 'pg',
+  host: 'localhost',
+  port: 5432,
+  database: 'postgrator',
+  username: 'postgrator',
+  password: 'postgrator'
+})
+
+testConfig({
+  migrationDirectory: migrationDirectory,
+  driver: 'mysql',
+  host: 'localhost',
+  database: 'postgrator',
+  username: 'postgrator',
+  password: 'postgrator'
+})
+
+testConfig({
+  migrationDirectory: migrationDirectory,
+  driver: 'mssql',
+  host: 'localhost',
+  database: 'master',
+  username: 'sa',
+  password: 'Postgrator123!'
+})
+
+function testConfig(config) {
+  describe(`Driver: ${config.driver}`, function() {
+    const postgrator = new Postgrator(config)
+
+    it('Refuses to run if there are duplicate migrations', function() {
+      assert.rejects(
+        () => postgrator.migrate(),
+        'Error expected from duplicated migrations'
+      )
+    })
+  })
+}
