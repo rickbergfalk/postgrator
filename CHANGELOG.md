@@ -1,5 +1,12 @@
 # CHANGELOG
 
+## 4.0.0
+
+### April 10, 2020
+
+- BREAKING: Node.js 10 or later required
+- Add support for `pg` 8.x.x
+
 ## 3.11.1
 
 ### April 10, 2020
