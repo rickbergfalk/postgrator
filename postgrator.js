@@ -96,6 +96,21 @@ class Postgrator extends EventEmitter {
         migrations.filter(migration => !isNaN(migration.version))
       )
       .then(migrations => {
+        const getMigrationKey = migration =>
+          `${migration.version}:${migration.action}`
+        const migrationKeys = new Set()
+        migrations.forEach(migration => {
+          const newKey = getMigrationKey(migration)
+          if (migrationKeys.has(newKey)) {
+            throw new Error(
+              `Two migrations found with version ${migration.version} and action ${migration.action}`
+            )
+          }
+          migrationKeys.add(newKey)
+        })
+        return migrations
+      })
+      .then(migrations => {
         this.migrations = migrations
         return migrations
       })
