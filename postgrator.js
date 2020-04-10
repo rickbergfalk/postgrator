@@ -100,7 +100,7 @@ class Postgrator extends EventEmitter {
           `${migration.version}:${migration.action}`
         const migrationKeys = new Set()
         migrations.forEach(migration => {
-          const newKey = getMigrationKey(migrationKey)
+          const newKey = getMigrationKey(migration)
           if (migrationKeys.has(newKey)) {
             throw new Error(
               `Two migrations found with version ${migration.version} and action ${migration.action}`
