@@ -12,7 +12,7 @@ Available as a cli tool: https://www.npmjs.com/package/postgrator-cli.
 ```sh
 npm install postgrator
 # install necessary db engine(s) if not installed yet
-npm install pg@7      # pg@6 supported as of postgrator 3.2.0
+npm install pg@8
 npm install mysql@2
 npm install mysql2@2
 npm install mssql@6
@@ -24,6 +24,7 @@ Using a package version other than the below may not work.
 
 - pg 6.x.x
 - pg 7.x.x
+- pg 8.x.x
 - mysql 2.x.x
 - mysql2 1.x.x
 - mysql2 2.x.x
@@ -70,7 +71,7 @@ function called generateSql() that returns back a string representing the SQL.
 For example:
 
 ```js
-module.exports.generateSql = function() {
+module.exports.generateSql = function () {
   return (
     "CREATE USER transaction_user WITH PASSWORD '" +
     process.env.TRANSACTION_USER_PASSWORD +
@@ -113,14 +114,14 @@ const postgrator = new Postgrator({
   // Schema table name. Optional. Default is schemaversion
   // If using Postgres, schema may be specified using . separator
   // For example, { schemaTable: 'schema_name.table_name' }
-  schemaTable: 'schemaversion'
+  schemaTable: 'schemaversion',
 })
 
 // Migrate to specific version
 postgrator
   .migrate('002')
-  .then(appliedMigrations => console.log(appliedMigrations))
-  .catch(error => {
+  .then((appliedMigrations) => console.log(appliedMigrations))
+  .catch((error) => {
     console.log(error)
     // Because migrations prior to the migration with error would have run
     // error object is decorated with appliedMigrations
@@ -130,8 +131,8 @@ postgrator
 // Migrate to max version (optionally can provide 'max')
 postgrator
   .migrate()
-  .then(appliedMigrations => console.log(appliedMigrations))
-  .catch(error => console.log(error))
+  .then((appliedMigrations) => console.log(appliedMigrations))
+  .catch((error) => console.log(error))
 ```
 
 ### Postgres options:
@@ -142,7 +143,7 @@ Postgres supports connection string url as well as simple ssl config:
 const postgrator = new Postgrator({
   connectionString: 'tcp://username:password@hosturl/databasename',
   ssl: true,
-  currentSchema: 'my-schema-name' // migrations will only run against this schema
+  currentSchema: 'my-schema-name', // migrations will only run against this schema
 })
 ```
 
@@ -154,7 +155,7 @@ MySQL also supports ssl config option
 const postgrator = new Postgrator({
   // common options plus
   // ssl should be object as mysql expects (https://www.npmjs.com/package/mysql#ssl-options)
-  ssl
+  ssl,
 })
 ```
 
@@ -168,8 +169,8 @@ const postgrator = new Postgrator({
   requestTimeout: 1000 * 60 * 60, // Default 1 hour
   connectionTimeout: 30000, // override mssql 15 second default
   options: {
-    encrypt: true
-  }
+    encrypt: true,
+  },
 })
 ```
 
@@ -192,7 +193,7 @@ available to force a specific line ending prior to generating the checksum.
 ```js
 const postgrator = new Postgrator({
   validateChecksums: true, // Set to false to skip validation
-  newline: 'CRLF' // Force using 'CRLF' (windows) or 'LF' (unix/mac)
+  newline: 'CRLF', // Force using 'CRLF' (windows) or 'LF' (unix/mac)
 })
 ```
 
@@ -220,10 +221,10 @@ you want to log. There are no events for error or finish
 
 ```js
 const postgrator = new Postgrator(options)
-postgrator.on('validation-started', migration => console.log(migration))
-postgrator.on('validation-finished', migration => console.log(migration))
-postgrator.on('migration-started', migration => console.log(migration))
-postgrator.on('migration-finished', migration => console.log(migration))
+postgrator.on('validation-started', (migration) => console.log(migration))
+postgrator.on('validation-finished', (migration) => console.log(migration))
+postgrator.on('migration-started', (migration) => console.log(migration))
+postgrator.on('migration-finished', (migration) => console.log(migration))
 ```
 
 ### Migration errors
@@ -264,21 +265,21 @@ Some of postgrator's methods may come in useful performing other migration tasks
 // version returned as number, not string
 postgrator
   .getMaxVersion()
-  .then(version => console.log(version))
-  .catch(error => console.error(error))
+  .then((version) => console.log(version))
+  .catch((error) => console.error(error))
 
 // "current" database schema version
 // version returned as number, not string
 postgrator
   .getDatabaseVersion()
-  .then(version => console.log(version))
-  .catch(error => console.error(error))
+  .then((version) => console.log(version))
+  .catch((error) => console.error(error))
 
 // To get all migrations from directory and parse metadata
 postgrator
   .getMigrations()
-  .then(migrations => console.log(migrations))
-  .catch(error => console.error(error))
+  .then((migrations) => console.log(migrations))
+  .catch((error) => console.error(error))
 
 // Run arbitrary SQL query against database
 // Connection is established, query is run, then connection is ended
@@ -286,8 +287,8 @@ postgrator
 // `results` object may have other properties depending on db driver
 postgrator
   .runQuery('SELECT * FROM sometable')
-  .then(results => console.log(results))
-  .catch(error => console.error(error))
+  .then((results) => console.log(results))
+  .catch((error) => console.error(error))
 ```
 
 ## Tests
