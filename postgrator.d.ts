@@ -1,3 +1,5 @@
+import { ConnectionOptions } from 'tls'
+
 declare namespace Postgrator {
 
   /**
@@ -45,7 +47,7 @@ declare namespace Postgrator {
    */
   export interface PostgreSQLOptions extends BaseOptions {
     driver: 'pg'
-    ssl?: boolean
+    ssl?: boolean | ConnectionOptions
     connectionString?: string
     host?: string
     port?: string | number
