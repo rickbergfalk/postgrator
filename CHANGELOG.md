@@ -1,5 +1,11 @@
 # CHANGELOG
 
+## 4.0.1
+
+### June 15, 2020
+
+- Fix Postgres SSL typings
+
 ## 4.0.0
 
 ### April 10, 2020
