@@ -48,7 +48,15 @@ class Postgrator extends EventEmitter {
     })
       .then((migrationFiles) => {
         return migrationFiles
-          .filter((file) => ['.sql', '.js'].indexOf(path.extname(file)) >= 0)
+          .filter((file) => {
+            let fileTypeMatch = ['.sql', '.js'].indexOf(path.extname(file)) >= 0;
+
+            const basenameNoExt = path.basename(file, path.extname(file))
+            let [version, action, name = ''] = basenameNoExt.split('.')
+            let actionTypeMatch = ['do','undo'].indexOf(action) >= 0;
+            
+            return fileTypeMatch && actionTypeMatch;
+          })
           .map((file) => {
             const basename = path.basename(file)
             const ext = path.extname(basename)
