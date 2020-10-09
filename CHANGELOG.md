@@ -1,5 +1,12 @@
 # CHANGELOG
 
+## 4.1.0
+
+### October 9, 2020
+
+- Add async function migration support
+- Update dependencies
+
 ## 4.0.1
 
 ### June 15, 2020
