@@ -47,9 +47,9 @@ class Postgrator extends EventEmitter {
       }
     })
       .then((migrationFiles) => {
-        return migrationFiles
+        return Promise.all(migrationFiles
           .filter((file) => ['.sql', '.js'].indexOf(path.extname(file)) >= 0)
-          .map((file) => {
+          .map(async (file) => {
             const basename = path.basename(file)
             const ext = path.extname(basename)
 
@@ -79,7 +79,7 @@ class Postgrator extends EventEmitter {
 
             if (ext === '.js') {
               const jsModule = require(filename)
-              const sql = jsModule.generateSql()
+              const sql = await jsModule.generateSql()
 
               return {
                 version,
@@ -91,7 +91,7 @@ class Postgrator extends EventEmitter {
               }
             }
           })
-      })
+      )})
       .then((migrations) =>
         migrations.filter((migration) => !isNaN(migration.version))
       )

@@ -81,9 +81,26 @@ module.exports.generateSql = function () {
   )
 }
 ```
-
 You might want to choose the JS file approach, in order to make use (secret)
 environment variables such as the above.
+
+Support for asynchronous functions is provided, in the event you need to retrieve data from a external source, for example:
+
+```js
+const axios = require("axios")
+
+module.exports.generateSql = async () => {
+    const response = await axios(
+        {
+            'method': 'get',
+            'url': 'https://api.example.org/person/1'
+        }
+    )
+    return (
+        `INSERT INTO person (name, age) VALUES ('${response.data.name}', ${response.data.age});`
+    )
+}
+```
 
 To run your sql migrations with Postgrator, write a Node.js script or integrate
 postgrator with your application.
