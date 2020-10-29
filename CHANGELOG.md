@@ -1,5 +1,11 @@
 # CHANGELOG
 
+## 4.1.1
+
+### October 29, 2020
+
+- Fix pg SSL config when using connectionString
+
 ## 4.1.0
 
 ### October 9, 2020
