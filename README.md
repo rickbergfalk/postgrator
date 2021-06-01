@@ -201,7 +201,7 @@ save the value to the schema table after a successful migration.
 Prior to applying migrations to a database, for any existing migration in the
 migration directory already run Postgrator will validate the md5 checksum to
 ensure the contents of the script have not changed. If a change is detected,
-migration will stop reporting an error.
+migration will stop, reporting an error.
 
 Because line endings may differ between environments/editors, an option is
 available to force a specific line ending prior to generating the checksum.
