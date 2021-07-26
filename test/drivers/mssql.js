@@ -9,4 +9,7 @@ testConfig({
   database: 'master',
   username: 'sa',
   password: 'Postgrator123!',
+  options: {
+    trustServerCertificate: true, // change to true for local dev / self-signed certs. defaults to false
+  },
 })
