@@ -18,7 +18,7 @@ jobs:
           MYSQL_DATABASE: postgrator
           MYSQL_USER: postgrator
           MYSQL_PASSWORD: postgrator
-      - image: microsoft/mssql-server-linux:latest
+      - image: mcr.microsoft.com/mssql/server:2019-CU11-ubuntu-20.04
         environment:
           ACCEPT_EULA: Y
           SA_PASSWORD: Postgrator123!
@@ -32,9 +32,9 @@ jobs:
       # Download and cache dependencies
       - restore_cache:
           keys:
-          - v1-dependencies-{{ checksum "package.json" }}
-          # fallback to using the latest cache if no exact match is found
-          - v1-dependencies-
+            - v1-dependencies-{{ checksum "package.json" }}
+            # fallback to using the latest cache if no exact match is found
+            - v1-dependencies-
 
       - run: npm ci
 
