@@ -1,5 +1,11 @@
 # CHANGELOG
 
+## 4.2.0
+
+### July 25, 2021
+
+- Add support for `mssql` 7
+
 ## 4.1.1
 
 ### October 29, 2020
