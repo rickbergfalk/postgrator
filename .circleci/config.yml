@@ -18,7 +18,7 @@ jobs:
           MYSQL_DATABASE: postgrator
           MYSQL_USER: postgrator
           MYSQL_PASSWORD: postgrator
-      - image: mcr.microsoft.com/mssql/server:2019-CU11-ubuntu-20.04
+      - image: mcr.microsoft.com/mssql/2017-latest
         environment:
           ACCEPT_EULA: Y
           SA_PASSWORD: Postgrator123!
