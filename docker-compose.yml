@@ -6,8 +6,8 @@ services:
       POSTGRES_PASSWORD: postgrator
       POSTGRES_USER: postgrator
       POSTGRES_DB: postgrator
-    ports: 
-      - "5432:5432"
+    ports:
+      - '5432:5432'
   mariadb:
     image: mariadb:10.3
     environment:
@@ -16,13 +16,13 @@ services:
       MYSQL_USER: postgrator
       MYSQL_PASSWORD: postgrator
     ports:
-      - "3306:3306"
+      - '3306:3306'
   # SQL Server needs 2.00 GB of RAM
   sqlserver:
-    image: microsoft/mssql-server-linux:latest
+    image: 'mcr.microsoft.com/mssql/server:2019-CU8-ubuntu-16.04'
     environment:
-      ACCEPT_EULA: Y 
+      ACCEPT_EULA: Y
       SA_PASSWORD: Postgrator123!
       MSSQL_PID: Express
     ports:
-      - "1433:1433"
+      - '1433:1433'
