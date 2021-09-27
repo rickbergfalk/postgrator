@@ -67,7 +67,7 @@ describe('API', function () {
   it('Finds migrations by glob pattern', function () {
     const patterngrator = new Postgrator({
       driver: 'pg',
-      migrationPattern: `${__dirname}/fail*/*`,
+      migrationPattern: path.join(__dirname, '/fail*/*'),
       connectionString: pgUrl,
     })
     return patterngrator.getMigrations().then((migrationsByPattern) => {
