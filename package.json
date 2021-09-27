@@ -29,7 +29,8 @@
   "scripts": {
     "precommit": "lint-staged",
     "lint": "eslint \"**/*.js\"",
-    "test": "mocha --require ts-node/register --recursive \"test/**/*.{js,ts}\""
+    "test": "mocha --require ts-node/register --recursive \"test/**/*.{js,ts}\"",
+    "prepare": "husky install"
   },
   "dependencies": {
     "glob": "^7.2.0",
@@ -50,7 +51,7 @@
     "eslint-plugin-import": "^2.24.2",
     "eslint-plugin-node": "^11.1.0",
     "eslint-plugin-promise": "^5.1.0",
-    "husky": "^4.3.0",
+    "husky": "^7.0.0",
     "lint-staged": "^10.5.0",
     "mocha": "^8.4.0",
     "mssql": "^7.2.1",
