@@ -251,8 +251,6 @@ class Postgrator extends EventEmitter {
     return []
   }
 
-  // TESTING LINT
-
   /**
    * Main method to move a schema to a particular version.
    * A target must be specified, otherwise nothing is run.
