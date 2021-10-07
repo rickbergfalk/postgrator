@@ -1,7 +1,6 @@
 import { ConnectionOptions } from 'tls'
 
 declare namespace Postgrator {
-
   /**
    * A common query result
    */
@@ -28,6 +27,7 @@ declare namespace Postgrator {
     migrationDirectory?: string
     migrationPattern?: string
     newline?: string
+    execQuery?: (query: string) => { rows: any[] }
   }
 
   /**
@@ -136,7 +136,9 @@ declare class Postgrator {
    * @returns Array of migration objects to appled to database
    * @param migrations Array of migration objects to apply to database
    */
-  runMigrations(migrations?: Postgrator.Migration[]): Promise<Postgrator.Migration[]>
+  runMigrations(
+    migrations?: Postgrator.Migration[]
+  ): Promise<Postgrator.Migration[]>
 
   /**
    * returns an array of relevant migrations based on the target and database version passed.
@@ -146,7 +148,10 @@ declare class Postgrator {
    * @param databaseVersion
    * @param targetVersion
    */
-  getRunnableMigrations(databaseVersion: number, targetVersion: number): Postgrator.Migration[]
+  getRunnableMigrations(
+    databaseVersion: number,
+    targetVersion: number
+  ): Postgrator.Migration[]
 
   /**
    * Main method to move a schema to a particular version.
