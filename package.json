@@ -45,6 +45,7 @@
   "devDependencies": {
     "@types/mocha": "^8.2.3",
     "@types/node": "^13.13.30",
+    "@types/pg": "^8.6.1",
     "eslint": "^7.32.0",
     "eslint-config-prettier": "^8.3.0",
     "eslint-config-standard": "^16.0.3",

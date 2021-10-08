@@ -151,6 +151,66 @@ postgrator
   .catch((error) => console.log(error))
 ```
 
+#### New in 4.3: execQuery option
+
+Postgrator now accepts an `execQuery` function option, which is in charge of executing a query for either migration or creating the versions table.
+When providing this function, it is your responsibility to manage connections: You must connect to the database prior to migrating, and disconnect from the database when finished.
+
+The benefit of this option is that you have full control over the database connection management. You are no longer tied to the config mapping that Postgrator implements.
+
+(_This approach will be the standard approach in next major version of Postgrator._)
+
+```js
+const Postgrator = require('postgrator')
+
+const postgrator = new Postgrator({
+  // migrationDirectory or migrationpattern
+  migrationDirectory: __dirname + '/migrations',
+  // Driver: must be pg, mysql, mysql2 or mssql
+  driver: 'pg',
+  // database isstill required so postgrator knows where to find version
+  database: 'database_name',
+  // schemaTable is optional, but recommended for same reason as database
+  schemaTable: 'schemaversion',
+  // execQuery function executes SQL. 
+  // It MUST return a promise containing an object with rows property, containing an array of row objects.
+  // For example, a query `SELECT version from some_table` might return:
+  //   {
+  //     rows: [
+  //       { version: '001' },
+  //       { version: '002' },
+  //     ]
+  //   }
+  execQuery: (query) => {
+    // run the passed with a connected database client, then return an object with rows array as a promise
+    return new Promise((resolve) => {
+      return {
+        rows: [
+          { column_name: 'column value' }
+        ]
+      }
+    })
+  },
+})
+
+// Migrate to specific version
+postgrator
+  .migrate('002')
+  .then((appliedMigrations) => console.log(appliedMigrations))
+  .catch((error) => {
+    console.log(error)
+    // Because migrations prior to the migration with error would have run
+    // error object is decorated with appliedMigrations
+    console.log(error.appliedMigrations) // array of migration objects
+  })
+
+// Migrate to max version (optionally can provide 'max')
+postgrator
+  .migrate()
+  .then((appliedMigrations) => console.log(appliedMigrations))
+  .catch((error) => console.log(error))
+```
+
 ### Postgres options:
 
 Postgres supports connection string url as well as simple ssl config:

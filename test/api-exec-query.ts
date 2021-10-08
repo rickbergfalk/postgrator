@@ -1,15 +1,24 @@
 import * as assert from 'assert'
-import * as Postgrator from '../'
-
+import * as Postgrator from '../postgrator'
+import * as pg from 'pg'
 import * as path from 'path'
-const migrationDirectory = path.join(__dirname, 'migrations')
-const pgUrl = 'tcp://postgrator:postgrator@localhost:5432/postgrator'
 
-describe('TypeScript:API', function () {
+const migrationDirectory = path.join(__dirname, 'migrations')
+
+describe('TypeScript:API:execQuery', function () {
+  const client = new pg.Client({
+    host: 'localhost',
+    port: 5432,
+    database: 'postgrator',
+    user: 'postgrator',
+    password: 'postgrator',
+  })
+
   const postgrator = new Postgrator({
     driver: 'pg',
     migrationDirectory: migrationDirectory,
-    connectionString: pgUrl,
+    database: 'postgrator',
+    execQuery: (query) => client.query(query),
   })
 
   const vStarted: Postgrator.Migration[] = []
@@ -20,6 +29,10 @@ describe('TypeScript:API', function () {
   postgrator.on('validation-finished', (migration) => vFinished.push(migration))
   postgrator.on('migration-started', (migration) => mStarted.push(migration))
   postgrator.on('migration-finished', (migration) => mFinished.push(migration))
+
+  before(async () => {
+    await client.connect()
+  })
 
   it('Migrates up to 003', async () => {
     const migrations: Postgrator.Migration[] = await postgrator.migrate('003')
@@ -56,7 +69,6 @@ describe('TypeScript:API', function () {
     const patterngrator = new Postgrator({
       driver: 'pg',
       migrationPattern: `${__dirname}/fail*/*`,
-      connectionString: pgUrl,
     })
     const migrationsByPattern: Postgrator.Migration[] =
       await patterngrator.getMigrations()
@@ -73,7 +85,8 @@ describe('TypeScript:API', function () {
     assert.strictEqual(migrations.length, 4, '4 migrations run')
   })
 
-  after((): Promise<Postgrator.QueryResult> => {
-    return postgrator.runQuery('DROP TABLE schemaversion')
+  after(async () => {
+    await postgrator.runQuery('DROP TABLE schemaversion')
+    await client.end()
   })
 })
