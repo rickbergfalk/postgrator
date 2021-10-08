@@ -55,7 +55,7 @@ driverExecQuery(async () => {
           if (err) {
             return reject(err)
           }
-          setTimeout(resolve, 100)
+          resolve()
         })
       }),
   }
