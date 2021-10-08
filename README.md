@@ -171,14 +171,11 @@ main();
 
 | option  | required  | description  | default |
 |---|---|---|---|
-|`migrationDirectory` | * | Path to directory containing migration files. |   |
-| `migrationPattern` | * | Glob pattern to migration files. |   |
+| `migrationPattern` | Required | Glob pattern to migration files. e.g. `path.join(__dirname, '/migrations/*')` |   |
 |`driver` | Required | Must be `pg`, `mysql`, `mysql2` or `mssql` |   |
 |`database`| Required | Target database name. |  |
 |`execQuery`| Required | Function to execute SQL. MUST return a promise containing an object with a rows array of objects. For example `{ rows: [{ column_name: 'column_value' }]}` |  |
 |`schemaTable`| Optional | Table created to track schema version. When using Postgres, you may specify schema as well, e.g. `schema_name.table_name`| `schemaversion` |
-
-\* Either `migrationDirectory` or `migrationPattern` required.
 
 
 ### Migrating to `execQuery` approach

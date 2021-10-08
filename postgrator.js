@@ -74,6 +74,11 @@ class Postgrator extends EventEmitter {
         `Config option "currentSchema". Implement execQuery function instead, running "SET search_path" statement prior to executing your SQL.`
       )
     }
+    if (this.config.migrationDirectory) {
+      deprecate(
+        `Config option "migrationDirectory". use "migrationPattern" instead using glob match. e.g. path.join(__dirname, '/migrations/*')`
+      )
+    }
   }
 
   /**
