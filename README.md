@@ -151,8 +151,14 @@ postgrator
   .catch((error) => console.log(error))
 ```
 
+#### New in 4.3: execQuery option
+
 Postgrator now accepts an `execQuery` function option, which is in charge of executing a query for either migration or creating the versions table.
 When providing this function, it is your responsibility to manage connections: You must connect to the database prior to migrating, and disconnect from the database when finished.
+
+The benefit of this option is that you have full control over the database connection management. You are no longer tied to the config mapping that Postgrator implements.
+
+(_This approach will be the standard approach in next major version of Postgrator._)
 
 ```js
 const Postgrator = require('postgrator')
@@ -162,21 +168,29 @@ const postgrator = new Postgrator({
   migrationDirectory: __dirname + '/migrations',
   // Driver: must be pg, mysql, mysql2 or mssql
   driver: 'pg',
-  // function that executes SQL. MUST return an object with rows property, containing an array of row objects.
-  // For example, the following query
-  //   `SELECT version from some_table`
-  // might return:
-  // {
-  //   rows: [
-  //     { version: '001' },
-  //     { version: '002' },
-  //   ]
-  // }
-  execQuery: (query) => {},
-  // Schema table name. Optional. Default is schemaversion
-  // If using Postgres, schema may be specified using . separator
-  // For example, { schemaTable: 'schema_name.table_name' }
+  // database isstill required so postgrator knows where to find version
+  database: 'database_name',
+  // schemaTable is optional, but recommended for same reason as database
   schemaTable: 'schemaversion',
+  // execQuery function executes SQL. 
+  // It MUST return a promise containing an object with rows property, containing an array of row objects.
+  // For example, a query `SELECT version from some_table` might return:
+  //   {
+  //     rows: [
+  //       { version: '001' },
+  //       { version: '002' },
+  //     ]
+  //   }
+  execQuery: (query) => {
+    // run the passed with a connected database client, then return an object with rows array as a promise
+    return new Promise((resolve) => {
+      return {
+        rows: [
+          { column_name: 'column value' }
+        ]
+      }
+    })
+  },
 })
 
 // Migrate to specific version
