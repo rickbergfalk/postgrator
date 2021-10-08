@@ -27,7 +27,7 @@ declare namespace Postgrator {
     migrationDirectory?: string
     migrationPattern?: string
     newline?: string
-    execQuery?: (query: string) => { rows: any[] }
+    execQuery?: (query: string) => Promise<{ rows: any[] }>
   }
 
   /**
