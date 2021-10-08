@@ -9,30 +9,9 @@ Available as a cli tool: https://www.npmjs.com/package/postgrator-cli.
 
 ## Installation
 
-_As of postgrator 4 Node.js version 10 or greater is required_
-
 ```sh
 npm install postgrator
-# install necessary db engine(s) if not installed yet
-npm install pg@8
-npm install mysql@2
-npm install mysql2@2
-npm install mssql@6
 ```
-
-## Supported DB Drivers
-
-Using a package version other than the below may not work.
-
-- pg 6.x.x
-- pg 7.x.x
-- pg 8.x.x
-- mysql 2.x.x
-- mysql2 1.x.x
-- mysql2 2.x.x
-- mssql 4.x.x
-- mssql 5.x.x
-- mssql 6.x.x
 
 ## Usage
 
@@ -128,23 +107,16 @@ async function main() {
     // Establish a database connection
     await client.connect()
 
-    // Create a postgrator instance, with necessary info
-    // * Where are migrations scripts located
-    // * Which database are we targeting (pg, mysql, or mssql)
-    // * What is the name of the database
-    // * Optionally, name of table to track versions
-    // * A function to execute SQL. Must return Promise<{ rows: [{ column_name: 'column_value' }] }>
+    // If using postgres, you may want to consider setting search_path.
+    // `currentSchema` previously was an option honored by Postgrator, but is no longer with switch to `execQuery`
+    await client.query(`SET search_path = ${currentSchema}`)
+
+    // Create postgrator instance
     const postgrator = new Postgrator({
-      // glob pattern to files.
       migrationPattern: __dirname + '/some/pattern/*',
-      // Driver: must be pg, mysql, mysql2 or mssql
       driver: 'pg',
       database: 'databasename',
-      // Schema table name. Optional. Default is schemaversion
       schemaTable: 'schemaversion',
-      // Function to execute SQL.
-      // MUST return Promise<{ rows: [{ column_name: 'column_value' }] }>
-      // If using pg client, the library's query method has a compatible return value.
       execQuery: (query) => client.query(query),
     })
 
@@ -166,21 +138,28 @@ async function main() {
 main()
 ```
 
+Want more examples for MySQL and MS SQL Server? Check out `driverExecQuery` functions in the following test files for examples:
+
+- `test/drivers/pg.js`
+- `test/drivers/mysql.js`
+- `test/drivers/mysql2.js`
+- `test/drivers/mssql.js`
+
 ### Options
 
-| option             | required | description                                                                                                                                                | default         |
-| ------------------ | -------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------- |
-| `migrationPattern` | Required | Glob pattern to migration files. e.g. `path.join(__dirname, '/migrations/*')`                                                                              |                 |
-| `driver`           | Required | Must be `pg`, `mysql`, `mysql2` or `mssql`                                                                                                                 |                 |
-| `database`         | Required | Target database name.                                                                                                                                      |                 |
-| `execQuery`        | Required | Function to execute SQL. MUST return a promise containing an object with a rows array of objects. For example `{ rows: [{ column_name: 'column_value' }]}` |                 |
-| `schemaTable`      | Optional | Table created to track schema version. When using Postgres, you may specify schema as well, e.g. `schema_name.table_name`                                  | `schemaversion` |
+```js
+const postgrator = new Postgrator(options)
+```
 
-### Migrating to `execQuery` approach
-
-TODO: link to recipes
-
-If you used the `currentSchema` option with the now deprecated Postgrator-managed connections, you'll need to manage this yourself when switching to using `execQuery`. This can be accomplished by running `SET search_path = ${currentSchema}` prior to executing your SQL.
+| Option             | Required | Description                                                                                                                                                 | default         |
+| ------------------ | -------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------- |
+| `migrationPattern` | Required | Glob pattern to migration files. e.g. `path.join(__dirname, '/migrations/*')`                                                                               |                 |
+| `driver`           | Required | Must be `pg`, `mysql`, `mysql2` or `mssql`                                                                                                                  |                 |
+| `database`         | Required | Target database name.                                                                                                                                       |                 |
+| `execQuery`        | Required | Function to execute SQL. MUST return a promise containing an object with a rows array of objects. For example `{ rows: [{ column_name: 'column_value' }] }` |                 |
+| `schemaTable`      | Optional | Table created to track schema version. When using Postgres, you may specify schema as well, e.g. `schema_name.table_name`                                   | `schemaversion` |
+| `validateChecksum` | Optional | Validates checksum of existing migration files already run prior to executing migrations. Set to `false` to disable.                                        | `true`          |
+| `newline`          | Optional | Force line ending on file when generating checksum. Value should be either `CRLF` (windows) or `LF` (unix/mac).                                             |                 |
 
 ### Checksum validation
 
@@ -194,13 +173,6 @@ migration will stop, reporting an error.
 
 Because line endings may differ between environments/editors, an option is
 available to force a specific line ending prior to generating the checksum.
-
-```js
-const postgrator = new Postgrator({
-  validateChecksums: true, // Set to false to skip validation
-  newline: 'CRLF', // Force using 'CRLF' (windows) or 'LF' (unix/mac)
-})
-```
 
 ### Migration object
 
