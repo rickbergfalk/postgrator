@@ -60,4 +60,4 @@ driverExecQuery(async () => {
         })
       }),
   }
-}, 'exec query mysql')
+}, 'mysql: ExecQuery')
