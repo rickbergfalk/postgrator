@@ -69,6 +69,11 @@ class Postgrator extends EventEmitter {
         `Config option "options". Implement execQuery function instead.`
       )
     }
+    if (this.config.currentSchema) {
+      deprecate(
+        `Config option "currentSchema". Implement execQuery function instead, running "SET search_path" statement prior to executing your SQL.`
+      )
+    }
   }
 
   /**
@@ -157,6 +162,7 @@ class Postgrator extends EventEmitter {
    * @param {String} query sql query to execute
    */
   async runQuery(query) {
+    deprecate('runQuery. Use your db driver directly instead.')
     const { commonClient } = this
     const results = await commonClient.runQuery(query)
     await commonClient.endConnection()
