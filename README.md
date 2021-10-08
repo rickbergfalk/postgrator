@@ -252,11 +252,10 @@ console.log(migrations)
 
 ## Tests
 
-A docker-compose file is provided with postgres and mysql (mariadb) containers
-configured for the tests. SQL Server tests also exist, but are commented out
-since the requirements are quite high to run them.
+A docker-compose file is provided with containers
+configured for tests.
 
-To run postgrator tests locally, you'll need Docker installed.
+To run postgrator tests locally, you'll need Docker and Docker Compose installed.
 
 ```sh
 # In one terminal window
