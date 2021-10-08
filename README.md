@@ -108,7 +108,7 @@ database is at.
 
 Postgrator automatically determines whether it needs to go "up" or "down", and
 will update the schemaTable accordingly. If the database is already at the
-version specified to migrate to, Postgrator does nothing. 
+version specified to migrate to, Postgrator does nothing.
 
 ```js
 const Postgrator = require('postgrator')
@@ -126,7 +126,7 @@ async function main() {
 
   try {
     // Establish a database connection
-    await client.connect();
+    await client.connect()
 
     // Create a postgrator instance, with necessary info
     // * Where are migrations scripts located
@@ -142,47 +142,45 @@ async function main() {
       database: 'databasename',
       // Schema table name. Optional. Default is schemaversion
       schemaTable: 'schemaversion',
-      // Function to execute SQL. 
+      // Function to execute SQL.
       // MUST return Promise<{ rows: [{ column_name: 'column_value' }] }>
       // If using pg client, the library's query method has a compatible return value.
-      execQuery: (query) => client.query(query)
+      execQuery: (query) => client.query(query),
     })
 
     // Migrate to specific version
-    const appliedMigrations = await postgrator.migrate('002');
-    console.log(appliedMigrations);
+    const appliedMigrations = await postgrator.migrate('002')
+    console.log(appliedMigrations)
 
     // Or migrate to max version (optionally can provide 'max')
-    await postgrator.migrate();
+    await postgrator.migrate()
   } catch (error) {
     // If error happened partially through migrations,
     // error object is decorated with appliedMigrations
     console.error(error.appliedMigrations) // array of migration objects
   }
-  
+
   // Once done migrating, close your connection.
-  await client.end();
+  await client.end()
 }
-main();
+main()
 ```
 
 ### Options
 
-
-| option  | required  | description  | default |
-|---|---|---|---|
-| `migrationPattern` | Required | Glob pattern to migration files. e.g. `path.join(__dirname, '/migrations/*')` |   |
-|`driver` | Required | Must be `pg`, `mysql`, `mysql2` or `mssql` |   |
-|`database`| Required | Target database name. |  |
-|`execQuery`| Required | Function to execute SQL. MUST return a promise containing an object with a rows array of objects. For example `{ rows: [{ column_name: 'column_value' }]}` |  |
-|`schemaTable`| Optional | Table created to track schema version. When using Postgres, you may specify schema as well, e.g. `schema_name.table_name`| `schemaversion` |
-
+| option             | required | description                                                                                                                                                | default         |
+| ------------------ | -------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------- |
+| `migrationPattern` | Required | Glob pattern to migration files. e.g. `path.join(__dirname, '/migrations/*')`                                                                              |                 |
+| `driver`           | Required | Must be `pg`, `mysql`, `mysql2` or `mssql`                                                                                                                 |                 |
+| `database`         | Required | Target database name.                                                                                                                                      |                 |
+| `execQuery`        | Required | Function to execute SQL. MUST return a promise containing an object with a rows array of objects. For example `{ rows: [{ column_name: 'column_value' }]}` |                 |
+| `schemaTable`      | Optional | Table created to track schema version. When using Postgres, you may specify schema as well, e.g. `schema_name.table_name`                                  | `schemaversion` |
 
 ### Migrating to `execQuery` approach
 
 TODO: link to recipes
 
-If you used the `currentSchema` option with the now deprecated Postgrator-managed connections, you'll need to manage this yourself when switching to using `execQuery`. This can be accomplished by running `SET search_path = ${currentSchema}` prior to executing your SQL. 
+If you used the `currentSchema` option with the now deprecated Postgrator-managed connections, you'll need to manage this yourself when switching to using `execQuery`. This can be accomplished by running `SET search_path = ${currentSchema}` prior to executing your SQL.
 
 ### Checksum validation
 
@@ -268,16 +266,16 @@ Some of postgrator's methods may come in useful performing other migration tasks
 
 ```js
 // Get max version available from filesystem, as number, not string
-const maxVersionAvailable = await postgrator.getMaxVersion();
-console.log(maxVersionAvailable);
+const maxVersionAvailable = await postgrator.getMaxVersion()
+console.log(maxVersionAvailable)
 
 // "current" database schema version as number, not string
-const version = await postgrator.getDatabaseVersion();
-console.log(version);
+const version = await postgrator.getDatabaseVersion()
+console.log(version)
 
 // To get all migrations from directory and parse metadata
-const migrations = await postgrator.getMigrations();
-console.log(migrations);
+const migrations = await postgrator.getMigrations()
+console.log(migrations)
 ```
 
 ## Tests

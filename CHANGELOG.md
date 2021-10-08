@@ -6,6 +6,7 @@
 - Deprecate `host`, `port`, `username`, `password`, `ssl`, `options`, `currentSchema` config.
 - Deprecate `runQuery` utility function (use your db driver directly).
 - Deprecate `migrationDirectory` in favor of `migrationPattern` glob.
+
 ## 4.2.0
 
 ### July 25, 2021
