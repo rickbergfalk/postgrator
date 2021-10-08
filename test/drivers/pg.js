@@ -71,4 +71,4 @@ driverExecQuery(async () => {
     postgrator,
     end: () => client.end(),
   }
-}, 'pg: ExecQuery')
+}, 'pg: execQuery')
