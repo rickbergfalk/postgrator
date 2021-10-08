@@ -33,6 +33,7 @@
     "prepare": "husky install"
   },
   "dependencies": {
+    "depd": "^2.0.0",
     "glob": "^7.2.0",
     "newline": "0.0.3"
   },

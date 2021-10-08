@@ -9,30 +9,9 @@ Available as a cli tool: https://www.npmjs.com/package/postgrator-cli.
 
 ## Installation
 
-_As of postgrator 4 Node.js version 10 or greater is required_
-
 ```sh
 npm install postgrator
-# install necessary db engine(s) if not installed yet
-npm install pg@8
-npm install mysql@2
-npm install mysql2@2
-npm install mssql@6
 ```
-
-## Supported DB Drivers
-
-Using a package version other than the below may not work.
-
-- pg 6.x.x
-- pg 7.x.x
-- pg 8.x.x
-- mysql 2.x.x
-- mysql2 1.x.x
-- mysql2 2.x.x
-- mssql 4.x.x
-- mssql 5.x.x
-- mssql 6.x.x
 
 ## Usage
 
@@ -108,151 +87,79 @@ database is at.
 
 Postgrator automatically determines whether it needs to go "up" or "down", and
 will update the schemaTable accordingly. If the database is already at the
-version specified to migrate to, Postgrator does nothing. After running
-migrations, postgrator will close its connection created.
+version specified to migrate to, Postgrator does nothing.
 
 ```js
 const Postgrator = require('postgrator')
+const pg = require('pg')
 
-const postgrator = new Postgrator({
-  // Directory containing migration files
-  migrationDirectory: __dirname + '/migrations',
-  // or a glob pattern to files
-  migrationPattern: __dirname + '/some/pattern/*',
-  // Driver: must be pg, mysql, mysql2 or mssql
-  driver: 'pg',
-  // Database connection config
-  host: '127.0.0.1',
-  port: 5432,
-  database: 'databasename',
-  username: 'username',
-  password: 'password',
-  // Schema table name. Optional. Default is schemaversion
-  // If using Postgres, schema may be specified using . separator
-  // For example, { schemaTable: 'schema_name.table_name' }
-  schemaTable: 'schemaversion',
-})
-
-// Migrate to specific version
-postgrator
-  .migrate('002')
-  .then((appliedMigrations) => console.log(appliedMigrations))
-  .catch((error) => {
-    console.log(error)
-    // Because migrations prior to the migration with error would have run
-    // error object is decorated with appliedMigrations
-    console.log(error.appliedMigrations) // array of migration objects
+async function main() {
+  // Create a client of your choice
+  const client = new pg.Client({
+    host: 'localhost',
+    port: 5432,
+    database: 'postgrator',
+    user: 'postgrator',
+    password: 'postgrator',
   })
 
-// Migrate to max version (optionally can provide 'max')
-postgrator
-  .migrate()
-  .then((appliedMigrations) => console.log(appliedMigrations))
-  .catch((error) => console.log(error))
-```
+  try {
+    // Establish a database connection
+    await client.connect()
 
-#### New in 4.3: execQuery option
+    // If using postgres, you may want to consider setting search_path.
+    // `currentSchema` previously was an option honored by Postgrator, but is no longer with switch to `execQuery`
+    await client.query(`SET search_path = ${currentSchema}`)
 
-Postgrator now accepts an `execQuery` function option, which is in charge of executing a query for either migration or creating the versions table.
-When providing this function, it is your responsibility to manage connections: You must connect to the database prior to migrating, and disconnect from the database when finished.
-
-The benefit of this option is that you have full control over the database connection management. You are no longer tied to the config mapping that Postgrator implements.
-
-(_This approach will be the standard approach in next major version of Postgrator._)
-
-```js
-const Postgrator = require('postgrator')
-
-const postgrator = new Postgrator({
-  // migrationDirectory or migrationpattern
-  migrationDirectory: __dirname + '/migrations',
-  // Driver: must be pg, mysql, mysql2 or mssql
-  driver: 'pg',
-  // database isstill required so postgrator knows where to find version
-  database: 'database_name',
-  // schemaTable is optional, but recommended for same reason as database
-  schemaTable: 'schemaversion',
-  // execQuery function executes SQL. 
-  // It MUST return a promise containing an object with rows property, containing an array of row objects.
-  // For example, a query `SELECT version from some_table` might return:
-  //   {
-  //     rows: [
-  //       { version: '001' },
-  //       { version: '002' },
-  //     ]
-  //   }
-  execQuery: (query) => {
-    // run the passed with a connected database client, then return an object with rows array as a promise
-    return new Promise((resolve) => {
-      return {
-        rows: [
-          { column_name: 'column value' }
-        ]
-      }
+    // Create postgrator instance
+    const postgrator = new Postgrator({
+      migrationPattern: __dirname + '/some/pattern/*',
+      driver: 'pg',
+      database: 'databasename',
+      schemaTable: 'schemaversion',
+      execQuery: (query) => client.query(query),
     })
-  },
-})
 
-// Migrate to specific version
-postgrator
-  .migrate('002')
-  .then((appliedMigrations) => console.log(appliedMigrations))
-  .catch((error) => {
-    console.log(error)
-    // Because migrations prior to the migration with error would have run
+    // Migrate to specific version
+    const appliedMigrations = await postgrator.migrate('002')
+    console.log(appliedMigrations)
+
+    // Or migrate to max version (optionally can provide 'max')
+    await postgrator.migrate()
+  } catch (error) {
+    // If error happened partially through migrations,
     // error object is decorated with appliedMigrations
-    console.log(error.appliedMigrations) // array of migration objects
-  })
+    console.error(error.appliedMigrations) // array of migration objects
+  }
 
-// Migrate to max version (optionally can provide 'max')
-postgrator
-  .migrate()
-  .then((appliedMigrations) => console.log(appliedMigrations))
-  .catch((error) => console.log(error))
+  // Once done migrating, close your connection.
+  await client.end()
+}
+main()
 ```
 
-### Postgres options:
+Want more examples for MySQL and MS SQL Server? Check out `driverExecQuery` functions in the following test files for examples:
 
-Postgres supports connection string url as well as simple ssl config:
+- `test/drivers/pg.js`
+- `test/drivers/mysql.js`
+- `test/drivers/mysql2.js`
+- `test/drivers/mssql.js`
+
+### Options
 
 ```js
-const postgrator = new Postgrator({
-  connectionString: 'tcp://username:password@hosturl/databasename',
-  ssl: true, // passed directly to node.TLSSocket, supports all tls.connect options
-  currentSchema: 'my-schema-name', // migrations will only run against this schema
-})
+const postgrator = new Postgrator(options)
 ```
 
-### MySQL options:
-
-MySQL also supports ssl config option
-
-```js
-const postgrator = new Postgrator({
-  // common options plus
-  // ssl should be object as mysql expects (https://www.npmjs.com/package/mysql#ssl-options)
-  ssl,
-})
-```
-
-### SQL Server options:
-
-For SQL Server, you may optionally provide an additional options configuration.
-This may be necessary if requiring a secure connection for Azure.
-
-```js
-const postgrator = new Postgrator({
-  requestTimeout: 1000 * 60 * 60, // Default 1 hour
-  connectionTimeout: 30000, // override mssql 15 second default
-  options: {
-    encrypt: true, // for azure
-    trustServerCertificate: false, // change to true for local dev / self-signed certs
-  },
-})
-```
-
-Reference options for mssql for more details:
-[https://www.npmjs.com/package/mssql](https://www.npmjs.com/package/mssql)
+| Option             | Required | Description                                                                                                                                                 | default         |
+| ------------------ | -------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------- |
+| `migrationPattern` | Required | Glob pattern to migration files. e.g. `path.join(__dirname, '/migrations/*')`                                                                               |                 |
+| `driver`           | Required | Must be `pg`, `mysql`, `mysql2` or `mssql`                                                                                                                  |                 |
+| `database`         | Required | Target database name.                                                                                                                                       |                 |
+| `execQuery`        | Required | Function to execute SQL. MUST return a promise containing an object with a rows array of objects. For example `{ rows: [{ column_name: 'column_value' }] }` |                 |
+| `schemaTable`      | Optional | Table created to track schema version. When using Postgres, you may specify schema as well, e.g. `schema_name.table_name`                                   | `schemaversion` |
+| `validateChecksum` | Optional | Validates checksum of existing migration files already run prior to executing migrations. Set to `false` to disable.                                        | `true`          |
+| `newline`          | Optional | Force line ending on file when generating checksum. Value should be either `CRLF` (windows) or `LF` (unix/mac).                                             |                 |
 
 ### Checksum validation
 
@@ -266,13 +173,6 @@ migration will stop, reporting an error.
 
 Because line endings may differ between environments/editors, an option is
 available to force a specific line ending prior to generating the checksum.
-
-```js
-const postgrator = new Postgrator({
-  validateChecksums: true, // Set to false to skip validation
-  newline: 'CRLF', // Force using 'CRLF' (windows) or 'LF' (unix/mac)
-})
-```
 
 ### Migration object
 
@@ -292,9 +192,8 @@ format of a migration object is
 
 ### Logging
 
-As of v3 nothing is logged to the console, and the option to toggle that has
-been removed. Instead postgrator is an event emiter, allowing you to log however
-you want to log. There are no events for error or finish
+Postgrator is an event emiter, allowing you to log however
+you want to log. There are no events for error or finish.
 
 ```js
 const postgrator = new Postgrator(options)
@@ -338,43 +237,25 @@ migrations implemented but no record of that happening.
 Some of postgrator's methods may come in useful performing other migration tasks
 
 ```js
-// To get max version available from filesystem
-// version returned as number, not string
-postgrator
-  .getMaxVersion()
-  .then((version) => console.log(version))
-  .catch((error) => console.error(error))
+// Get max version available from filesystem, as number, not string
+const maxVersionAvailable = await postgrator.getMaxVersion()
+console.log(maxVersionAvailable)
 
-// "current" database schema version
-// version returned as number, not string
-postgrator
-  .getDatabaseVersion()
-  .then((version) => console.log(version))
-  .catch((error) => console.error(error))
+// "current" database schema version as number, not string
+const version = await postgrator.getDatabaseVersion()
+console.log(version)
 
 // To get all migrations from directory and parse metadata
-postgrator
-  .getMigrations()
-  .then((migrations) => console.log(migrations))
-  .catch((error) => console.error(error))
-
-// Run arbitrary SQL query against database
-// Connection is established, query is run, then connection is ended
-// `results.rows` will be an array of row objects, with column names as keys
-// `results` object may have other properties depending on db driver
-postgrator
-  .runQuery('SELECT * FROM sometable')
-  .then((results) => console.log(results))
-  .catch((error) => console.error(error))
+const migrations = await postgrator.getMigrations()
+console.log(migrations)
 ```
 
 ## Tests
 
-A docker-compose file is provided with postgres and mysql (mariadb) containers
-configured for the tests. SQL Server tests also exist, but are commented out
-since the requirements are quite high to run them.
+A docker-compose file is provided with containers
+configured for tests.
 
-To run postgrator tests locally, you'll need Docker installed.
+To run postgrator tests locally, you'll need Docker and Docker Compose installed.
 
 ```sh
 # In one terminal window

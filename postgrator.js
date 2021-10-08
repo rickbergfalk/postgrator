@@ -2,6 +2,7 @@ const fs = require('fs')
 const path = require('path')
 const glob = require('glob')
 const EventEmitter = require('events')
+const deprecate = require('depd')('postgrator')
 
 const createCommonClient = require('./lib/createCommonClient.js')
 const {
@@ -40,6 +41,44 @@ class Postgrator extends EventEmitter {
     this.config = Object.assign({}, DEFAULT_CONFIG, config)
     this.migrations = []
     this.commonClient = createCommonClient(this.config)
+
+    // Instantiation with database credentials is deprecated
+    // Next major version of postgrator will require user manage the connection
+    // and provide the `execQuery` function
+    if (this.config.port) {
+      deprecate(`Config option "port". Implement execQuery function instead.`)
+    }
+    if (this.config.host) {
+      deprecate(`Config option "host". Implement execQuery function instead.`)
+    }
+    if (this.config.username) {
+      deprecate(
+        `Config option "username". Implement execQuery function instead.`
+      )
+    }
+    if (this.config.password) {
+      deprecate(
+        `Config option "password". Implement execQuery function instead.`
+      )
+    }
+    if (this.config.ssl) {
+      deprecate(`Config option "ssl". Implement execQuery function instead.`)
+    }
+    if (this.config.options) {
+      deprecate(
+        `Config option "options". Implement execQuery function instead.`
+      )
+    }
+    if (this.config.currentSchema) {
+      deprecate(
+        `Config option "currentSchema". Implement execQuery function instead, running "SET search_path" statement prior to executing your SQL.`
+      )
+    }
+    if (this.config.migrationDirectory) {
+      deprecate(
+        `Config option "migrationDirectory". use "migrationPattern" instead using glob match. e.g. path.join(__dirname, '/migrations/*')`
+      )
+    }
   }
 
   /**
@@ -128,6 +167,7 @@ class Postgrator extends EventEmitter {
    * @param {String} query sql query to execute
    */
   async runQuery(query) {
+    deprecate('runQuery. Use your db driver directly instead.')
     const { commonClient } = this
     const results = await commonClient.runQuery(query)
     await commonClient.endConnection()

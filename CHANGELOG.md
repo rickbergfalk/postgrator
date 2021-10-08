@@ -1,5 +1,12 @@
 # CHANGELOG
 
+## 4.3.0 (Unreleased)
+
+- Add `execQuery` function option to allow maximum flexibility in database connection management. Postgrator-owned database connections (the connections established using host, username, password, etc.) are deprecated, and will be removed in Postgrator 5.
+- Deprecate `host`, `port`, `username`, `password`, `ssl`, `options`, `currentSchema` config.
+- Deprecate `runQuery` utility function (use your db driver directly).
+- Deprecate `migrationDirectory` in favor of `migrationPattern` glob.
+
 ## 4.2.0
 
 ### July 25, 2021
