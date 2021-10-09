@@ -1,5 +1,11 @@
 # CHANGELOG
 
+## 4.3.1
+
+### October 9, 2021
+
+- Undeprecate `currentSchema` config. It'll stay for v5.
+
 ## 4.3.0
 
 ### October 8, 2021

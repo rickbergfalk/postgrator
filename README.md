@@ -107,10 +107,6 @@ async function main() {
     // Establish a database connection
     await client.connect();
 
-    // If using postgres, you may want to consider setting search_path.
-    // `currentSchema` previously was an option honored by Postgrator, but is no longer with switch to `execQuery`
-    await client.query(`SET search_path = ${currentSchema}`);
-
     // Create postgrator instance
     const postgrator = new Postgrator({
       migrationPattern: __dirname + "/some/pattern/*",
@@ -151,15 +147,16 @@ Want more examples for MySQL and MS SQL Server? Check out `driverExecQuery` func
 const postgrator = new Postgrator(options);
 ```
 
-| Option             | Required | Description                                                                                                                                                 | default         |
-| ------------------ | -------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------- |
-| `migrationPattern` | Required | Glob pattern to migration files. e.g. `path.join(__dirname, '/migrations/*')`                                                                               |                 |
-| `driver`           | Required | Must be `pg`, `mysql`, `mysql2` or `mssql`                                                                                                                  |                 |
-| `database`         | Required | Target database name.                                                                                                                                       |                 |
-| `execQuery`        | Required | Function to execute SQL. MUST return a promise containing an object with a rows array of objects. For example `{ rows: [{ column_name: 'column_value' }] }` |                 |
-| `schemaTable`      | Optional | Table created to track schema version. When using Postgres, you may specify schema as well, e.g. `schema_name.table_name`                                   | `schemaversion` |
-| `validateChecksum` | Optional | Validates checksum of existing migration files already run prior to executing migrations. Set to `false` to disable.                                        | `true`          |
-| `newline`          | Optional | Force line ending on file when generating checksum. Value should be either `CRLF` (windows) or `LF` (unix/mac).                                             |                 |
+| Option             | Required | Description                                                                                                                                                                                        | default         |
+| ------------------ | -------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------- |
+| `migrationPattern` | Required | Glob pattern to migration files. e.g. `path.join(__dirname, '/migrations/*')`                                                                                                                      |                 |
+| `driver`           | Required | Must be `pg`, `mysql`, `mysql2` or `mssql`                                                                                                                                                         |                 |
+| `database`         | Required | Target database name.                                                                                                                                                                              |                 |
+| `execQuery`        | Required | Function to execute SQL. MUST return a promise containing an object with a rows array of objects. For example `{ rows: [{ column_name: 'column_value' }] }`                                        |                 |
+| `schemaTable`      | Optional | Table created to track schema version. When using Postgres, you may specify schema as well, e.g. `schema_name.table_name`                                                                          | `schemaversion` |
+| `validateChecksum` | Optional | Validates checksum of existing migration files already run prior to executing migrations. Set to `false` to disable.                                                                               | `true`          |
+| `newline`          | Optional | Force line ending on file when generating checksum. Value should be either `CRLF` (windows) or `LF` (unix/mac).                                                                                    |                 |
+| `currentSchema`    | Optional | For Postgres and MS SQL Server. Specifies schema to look to when validating schemaversion table columns. For Postgres, run's `SET search_path = currentSchema` prior to running queries against db |
 
 ### Checksum validation
 
