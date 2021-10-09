@@ -57,8 +57,8 @@ module.exports.generateSql = function () {
     "CREATE USER transaction_user WITH PASSWORD '" +
     process.env.TRANSACTION_USER_PASSWORD +
     "'"
-  )
-}
+  );
+};
 ```
 
 You might want to choose the JS file approach, in order to make use (secret)
@@ -67,15 +67,15 @@ environment variables such as the above.
 Support for asynchronous functions is provided, in the event you need to retrieve data from a external source, for example:
 
 ```js
-const axios = require('axios')
+const axios = require("axios");
 
 module.exports.generateSql = async () => {
   const response = await axios({
-    method: 'get',
-    url: 'https://api.example.org/person/1',
-  })
-  return `INSERT INTO person (name, age) VALUES ('${response.data.name}', ${response.data.age});`
-}
+    method: "get",
+    url: "https://api.example.org/person/1",
+  });
+  return `INSERT INTO person (name, age) VALUES ('${response.data.name}', ${response.data.age});`;
+};
 ```
 
 To run your sql migrations with Postgrator, write a Node.js script or integrate
@@ -90,52 +90,52 @@ will update the schemaTable accordingly. If the database is already at the
 version specified to migrate to, Postgrator does nothing.
 
 ```js
-const Postgrator = require('postgrator')
-const pg = require('pg')
+const Postgrator = require("postgrator");
+const pg = require("pg");
 
 async function main() {
   // Create a client of your choice
   const client = new pg.Client({
-    host: 'localhost',
+    host: "localhost",
     port: 5432,
-    database: 'postgrator',
-    user: 'postgrator',
-    password: 'postgrator',
-  })
+    database: "postgrator",
+    user: "postgrator",
+    password: "postgrator",
+  });
 
   try {
     // Establish a database connection
-    await client.connect()
+    await client.connect();
 
     // If using postgres, you may want to consider setting search_path.
     // `currentSchema` previously was an option honored by Postgrator, but is no longer with switch to `execQuery`
-    await client.query(`SET search_path = ${currentSchema}`)
+    await client.query(`SET search_path = ${currentSchema}`);
 
     // Create postgrator instance
     const postgrator = new Postgrator({
-      migrationPattern: __dirname + '/some/pattern/*',
-      driver: 'pg',
-      database: 'databasename',
-      schemaTable: 'schemaversion',
+      migrationPattern: __dirname + "/some/pattern/*",
+      driver: "pg",
+      database: "databasename",
+      schemaTable: "schemaversion",
       execQuery: (query) => client.query(query),
-    })
+    });
 
     // Migrate to specific version
-    const appliedMigrations = await postgrator.migrate('002')
-    console.log(appliedMigrations)
+    const appliedMigrations = await postgrator.migrate("002");
+    console.log(appliedMigrations);
 
     // Or migrate to max version (optionally can provide 'max')
-    await postgrator.migrate()
+    await postgrator.migrate();
   } catch (error) {
     // If error happened partially through migrations,
     // error object is decorated with appliedMigrations
-    console.error(error.appliedMigrations) // array of migration objects
+    console.error(error.appliedMigrations); // array of migration objects
   }
 
   // Once done migrating, close your connection.
-  await client.end()
+  await client.end();
 }
-main()
+main();
 ```
 
 Want more examples for MySQL and MS SQL Server? Check out `driverExecQuery` functions in the following test files for examples:
@@ -148,7 +148,7 @@ Want more examples for MySQL and MS SQL Server? Check out `driverExecQuery` func
 ### Options
 
 ```js
-const postgrator = new Postgrator(options)
+const postgrator = new Postgrator(options);
 ```
 
 | Option             | Required | Description                                                                                                                                                 | default         |
@@ -196,11 +196,11 @@ Postgrator is an event emiter, allowing you to log however
 you want to log. There are no events for error or finish.
 
 ```js
-const postgrator = new Postgrator(options)
-postgrator.on('validation-started', (migration) => console.log(migration))
-postgrator.on('validation-finished', (migration) => console.log(migration))
-postgrator.on('migration-started', (migration) => console.log(migration))
-postgrator.on('migration-finished', (migration) => console.log(migration))
+const postgrator = new Postgrator(options);
+postgrator.on("validation-started", (migration) => console.log(migration));
+postgrator.on("validation-finished", (migration) => console.log(migration));
+postgrator.on("migration-started", (migration) => console.log(migration));
+postgrator.on("migration-finished", (migration) => console.log(migration));
 ```
 
 ### Migration errors
@@ -238,16 +238,16 @@ Some of postgrator's methods may come in useful performing other migration tasks
 
 ```js
 // Get max version available from filesystem, as number, not string
-const maxVersionAvailable = await postgrator.getMaxVersion()
-console.log(maxVersionAvailable)
+const maxVersionAvailable = await postgrator.getMaxVersion();
+console.log(maxVersionAvailable);
 
 // "current" database schema version as number, not string
-const version = await postgrator.getDatabaseVersion()
-console.log(version)
+const version = await postgrator.getDatabaseVersion();
+console.log(version);
 
 // To get all migrations from directory and parse metadata
-const migrations = await postgrator.getMigrations()
-console.log(migrations)
+const migrations = await postgrator.getMigrations();
+console.log(migrations);
 ```
 
 ## Tests

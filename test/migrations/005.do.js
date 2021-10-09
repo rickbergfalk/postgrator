@@ -3,5 +3,5 @@ module.exports.generateSql = function () {
     "INSERT INTO person (name, age) VALUES ('" +
     process.env.TEST_NAME +
     "', 21);"
-  )
-}
+  );
+};

@@ -16,10 +16,6 @@
     "sql server",
     "sql"
   ],
-  "prettier": {
-    "semi": false,
-    "singleQuote": true
-  },
   "lint-staged": {
     "*.{js,json,css}": [
       "prettier --write",
@@ -28,7 +24,8 @@
   },
   "scripts": {
     "precommit": "lint-staged",
-    "lint": "eslint \"**/*.js\"",
+    "lint": "eslint \"**/*.js\" && prettier --check .",
+    "prettier-write": "prettier --write .",
     "test": "mocha --require ts-node/register --recursive \"test/**/*.{js,ts}\"",
     "prepare": "husky install"
   },
@@ -49,10 +46,6 @@
     "@types/pg": "^8.6.1",
     "eslint": "^7.32.0",
     "eslint-config-prettier": "^8.3.0",
-    "eslint-config-standard": "^16.0.3",
-    "eslint-plugin-import": "^2.24.2",
-    "eslint-plugin-node": "^11.1.0",
-    "eslint-plugin-promise": "^5.1.0",
     "husky": "^7.0.0",
     "lint-staged": "^10.5.0",
     "mocha": "^8.4.0",
