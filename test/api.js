@@ -1,4 +1,3 @@
-/* global after, it, describe */
 const assert = require('assert')
 const Postgrator = require('../postgrator')
 
@@ -34,7 +33,7 @@ describe('API', function () {
   })
 
   it('Emits validation events', function () {
-    return postgrator.migrate('004').then((migrations) => {
+    return postgrator.migrate('004').then(() => {
       assert.strictEqual(vStarted.length, 3)
       assert.strictEqual(vFinished.length, 3)
     })

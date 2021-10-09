@@ -1,4 +1,3 @@
-/* global after, it, describe */
 const assert = require('assert')
 const Postgrator = require('../../postgrator')
 
@@ -9,7 +8,7 @@ module.exports = function testConfig(config, label) {
     it('Migrates multiple versions up (000 -> 002)', function () {
       return postgrator
         .migrate('002')
-        .then((migrations) => postgrator.runQuery('SELECT name FROM person'))
+        .then(() => postgrator.runQuery('SELECT name FROM person'))
         .then((results) => {
           assert.strictEqual(results.rows.length, 1)
         })
@@ -39,7 +38,7 @@ module.exports = function testConfig(config, label) {
     it('Migrates one version up (002 -> 003', function () {
       return postgrator
         .migrate('003')
-        .then((migrations) => postgrator.runQuery('SELECT name FROM person'))
+        .then(() => postgrator.runQuery('SELECT name FROM person'))
         .then((results) => {
           assert.strictEqual(results.rows.length, 3)
         })
@@ -50,9 +49,7 @@ module.exports = function testConfig(config, label) {
       process.env.TEST_NAME = 'aesthete'
       return postgrator
         .migrate('005')
-        .then((migrations) =>
-          postgrator.runQuery('SELECT name, age FROM person')
-        )
+        .then(() => postgrator.runQuery('SELECT name, age FROM person'))
         .then((result) => {
           assert.strictEqual(result.rows.length, 5)
           assert.strictEqual(result.rows[4].name, process.env.TEST_NAME)
@@ -63,9 +60,7 @@ module.exports = function testConfig(config, label) {
       process.env.TEST_ANOTHER_NAME = 'sop'
       return postgrator
         .migrate('006')
-        .then((migrations) =>
-          postgrator.runQuery('SELECT name, age FROM person')
-        )
+        .then(() => postgrator.runQuery('SELECT name, age FROM person'))
         .then((result) => {
           assert.strictEqual(result.rows.length, 6)
           assert.strictEqual(result.rows[4].name, process.env.TEST_NAME)
@@ -76,9 +71,7 @@ module.exports = function testConfig(config, label) {
     it('Migrates to "max"', function () {
       return postgrator
         .migrate('max')
-        .then((migrations) =>
-          postgrator.runQuery('SELECT name, age FROM person')
-        )
+        .then(() => postgrator.runQuery('SELECT name, age FROM person'))
         .then((result) => {
           assert.strictEqual(result.rows.length, 6)
         })
@@ -91,9 +84,7 @@ module.exports = function testConfig(config, label) {
     it('Migrates to latest without input', function () {
       return postgrator
         .migrate()
-        .then((migrations) =>
-          postgrator.runQuery('SELECT name, age FROM person')
-        )
+        .then(() => postgrator.runQuery('SELECT name, age FROM person'))
         .then((result) => {
           assert.strictEqual(result.rows.length, 6)
         })
@@ -106,7 +97,7 @@ module.exports = function testConfig(config, label) {
     it('Errors on invalid md5 check', function () {
       return postgrator
         .migrate('003')
-        .then((migrations) =>
+        .then(() =>
           postgrator.runQuery(
             `UPDATE schemaversion SET md5 = 'baddata' WHERE version = 2`
           )
@@ -127,7 +118,7 @@ module.exports = function testConfig(config, label) {
       postgrator.config.validateChecksums = false
       return postgrator
         .migrate('003')
-        .then((migrations) =>
+        .then(() =>
           postgrator.runQuery(
             `UPDATE schemaversion SET md5 = 'baddata' WHERE version = 2`
           )

@@ -1,4 +1,3 @@
-/* global after, it, describe */
 const assert = require('assert')
 const Postgrator = require('../postgrator')
 
