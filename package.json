@@ -24,8 +24,7 @@
   },
   "scripts": {
     "precommit": "lint-staged",
-    "lint": "eslint \"**/*.js\"",
-    "prettier-check": "prettier --check .",
+    "lint": "eslint \"**/*.js\" && prettier --check .",
     "prettier-write": "prettier --write .",
     "test": "mocha --require ts-node/register --recursive \"test/**/*.{js,ts}\"",
     "prepare": "husky install"
