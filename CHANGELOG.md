@@ -1,5 +1,11 @@
 # CHANGELOG
 
+## 5.0.0 (UNRELEASED)
+
+BREAKING
+
+- driver `mysql2` value unsupported.
+
 ## 4.3.1
 
 ### October 9, 2021
