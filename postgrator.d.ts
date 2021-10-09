@@ -34,7 +34,7 @@ declare namespace Postgrator {
    * Configuration options for MySQL connections
    */
   export interface MySQLOptions extends BaseOptions {
-    driver: "mysql" | "mysql2";
+    driver: "mysql";
     host?: string;
     port?: string | number;
     username: string;

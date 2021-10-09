@@ -33,7 +33,7 @@ driverExecQuery(async () => {
 
   const postgrator = new Postgrator({
     migrationDirectory: path.join(__dirname, "../migrations"),
-    driver: "mysql2",
+    driver: "mysql",
     database: "postgrator",
     execQuery: (query) => {
       return new Promise((resolve, reject) => {
