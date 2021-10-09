@@ -16,10 +16,6 @@
     "sql server",
     "sql"
   ],
-  "prettier": {
-    "semi": false,
-    "singleQuote": true
-  },
   "lint-staged": {
     "*.{js,json,css}": [
       "prettier --write",
@@ -29,6 +25,8 @@
   "scripts": {
     "precommit": "lint-staged",
     "lint": "eslint \"**/*.js\"",
+    "prettier-check": "prettier --check .",
+    "prettier-write": "prettier --write .",
     "test": "mocha --require ts-node/register --recursive \"test/**/*.{js,ts}\"",
     "prepare": "husky install"
   },
