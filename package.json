@@ -5,7 +5,7 @@
   "description": "A SQL migration tool for SQL people",
   "license": "MIT",
   "engines": {
-    "node": ">=10.0.0"
+    "node": ">=12.0.0"
   },
   "keywords": [
     "migrator",
@@ -40,14 +40,14 @@
   "main": "postgrator",
   "types": "postgrator.d.ts",
   "devDependencies": {
-    "@types/mocha": "^8.2.3",
+    "@types/mocha": "^9.0.0",
     "@types/node": "^13.13.30",
     "@types/pg": "^8.6.1",
     "eslint": "^7.32.0",
     "eslint-config-prettier": "^8.3.0",
     "husky": "^7.0.0",
     "lint-staged": "^10.5.0",
-    "mocha": "^8.4.0",
+    "mocha": "^9.1.2",
     "mssql": "^7.2.1",
     "mysql": "^2.18.1",
     "pg": "^8.7.1",

@@ -4,6 +4,7 @@
 
 BREAKING
 
+- Nodejs 12 or later required. (Node.js 10 no longer supported)
 - driver `mysql2` value unsupported.
 - filename in migration result is full file path
 - Removed `host`, `port`, `username`, `password`, `ssl`, `options`. Manage connections with `execQuery` instead.
