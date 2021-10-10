@@ -13,6 +13,10 @@ BREAKING
 - Removed md5 checksum validation for JS migrations. JS migrations are dynamic, and JS style trends could vary over time if a tool like Prettier is applied.
 - JS migrations do not generate SQL until immediately prior to being applied. Previously, JS migrations generated SQL prior to any migrations running. This was problematic for cases where JS migrations no longer successfullly generated SQL.
 
+Features
+
+- Need to skip md5 validation? md5 is no longer processed for JS, and if you delete the md5 value from your DB's schemaversion table, the check will be skipped.
+
 ## 4.3.1
 
 ### October 9, 2021
