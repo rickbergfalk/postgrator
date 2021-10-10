@@ -6,6 +6,8 @@ BREAKING
 
 - driver `mysql2` value unsupported.
 - filename in migration result is full file path
+- Removed `host`, `port`, `username`, `password`, `ssl`, `options`. Manage connections with `execQuery` instead.
+- Removed`migrationDirectory` option. Use `migrationPattern` instead. In most cases it will be `path/to/migrations/*`. Any [glob](https://www.npmjs.com/package/glob) syntax supported.
 
 ## 4.3.1
 
