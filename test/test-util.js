@@ -54,26 +54,15 @@ async function getPostgratorEnd(config) {
       execQuery: (query) => {
         return new Promise((resolve, reject) => {
           const request = new mssql.Request(client);
-          // supporting GO is a BAD IDEA.
-          // A failure with GO statements will leave DB in half-migrated state.
-          // TODO remove this in next major version
-          const batches = query.split(/^\s*GO\s*$/im);
 
-          function runBatch(batchIndex) {
-            request.batch(batches[batchIndex], (err, result) => {
-              if (err) {
-                return reject(err);
-              }
-              if (batchIndex === batches.length - 1) {
-                return resolve({
-                  rows: result && result.recordset ? result.recordset : result,
-                });
-              }
-              return runBatch(batchIndex + 1);
+          request.batch(query, (err, result) => {
+            if (err) {
+              return reject(err);
+            }
+            return resolve({
+              rows: result && result.recordset ? result.recordset : result,
             });
-          }
-
-          runBatch(0);
+          });
         });
       },
     });
