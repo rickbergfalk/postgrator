@@ -41,7 +41,7 @@
   "types": "postgrator.d.ts",
   "devDependencies": {
     "@types/mocha": "^9.0.0",
-    "@types/node": "^13.13.30",
+    "@types/node": "^12.20.28",
     "@types/pg": "^8.6.1",
     "eslint": "^7.32.0",
     "eslint-config-prettier": "^8.3.0",
