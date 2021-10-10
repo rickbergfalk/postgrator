@@ -66,7 +66,6 @@ class Postgrator extends EventEmitter {
 
           if (ext === ".js") {
             const jsModule = require(filename);
-            const sql = await jsModule.generateSql();
 
             return {
               version,
@@ -77,7 +76,7 @@ class Postgrator extends EventEmitter {
               // Prettier and JS trends mean that formatting could also change over time
               // Considering these things, md5 hashing for JS will be skipped.
               md5: undefined,
-              getSql: () => sql,
+              getSql: () => jsModule.generateSql(),
             };
           }
         })
