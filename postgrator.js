@@ -6,7 +6,6 @@ const EventEmitter = require("events");
 const createCommonClient = require("./lib/createCommonClient.js");
 const {
   fileChecksum,
-  checksum,
   sortMigrationsAsc,
   sortMigrationsDesc,
 } = require("./lib/utils.js");
@@ -74,7 +73,10 @@ class Postgrator extends EventEmitter {
               action,
               filename,
               name,
-              md5: checksum(sql, newline),
+              // JS files are dynamic, so resulting content could change
+              // Prettier and JS trends mean that formatting could also change over time
+              // Considering these things, md5 hashing for JS will be skipped.
+              md5: undefined,
               getSql: () => sql,
             };
           }
@@ -160,7 +162,10 @@ class Postgrator extends EventEmitter {
       const sql = this.commonClient.getMd5Sql(migration);
       const results = await this.commonClient.runQuery(sql);
       const md5 = results.rows && results.rows[0] && results.rows[0].md5;
-      if (md5 !== migration.md5) {
+      // IF md5 exists in DB and on migration, it means we should validate the md5
+      // (JS migrations no longer generate an md5 because they can be so dynamic.
+      // Deleting an md5 from database could be useful for skipping a problematic check)
+      if (md5 && migration.md5 && md5 !== migration.md5) {
         const msg = `MD5 checksum failed for migration [${migration.version}]`;
         throw new Error(msg);
       }
