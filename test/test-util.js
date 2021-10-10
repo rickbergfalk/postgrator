@@ -1,5 +1,5 @@
 const pg = require("pg");
-const Postgrator = require("../../postgrator");
+const Postgrator = require("../postgrator");
 const mssql = require("mssql");
 const mysql = require("mysql");
 

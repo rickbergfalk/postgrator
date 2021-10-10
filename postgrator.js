@@ -16,21 +16,14 @@ const DEFAULT_CONFIG = {
   validateChecksums: true,
 };
 
-function loadMigrationDirOrPath(migrationDirectory, migrationPattern) {
+function loadMigrationDirOrPath(migrationPattern) {
   return new Promise((resolve, reject) => {
-    const loader = (err, files) => {
+    glob(migrationPattern, (err, files) => {
       if (err) {
         return reject(err);
       }
       resolve(files);
-    };
-    if (migrationPattern) {
-      glob(migrationPattern, loader);
-    } else if (migrationDirectory) {
-      fs.readdir(migrationDirectory, loader);
-    } else {
-      resolve([]);
-    }
+    });
   });
 }
 
@@ -48,36 +41,24 @@ class Postgrator extends EventEmitter {
    * @returns {Promise} array of migration objects
    */
   async getMigrations() {
-    const { migrationDirectory, migrationPattern, newline } = this.config;
-    const migrationFiles = await loadMigrationDirOrPath(
-      migrationDirectory,
-      migrationPattern
-    );
+    const { migrationPattern, newline } = this.config;
+    const migrationFiles = await loadMigrationDirOrPath(migrationPattern);
     let migrations = await Promise.all(
       migrationFiles
         .filter((file) => [".sql", ".js"].indexOf(path.extname(file)) >= 0)
-        .map(async (file) => {
-          const basename = path.basename(file);
+        .map(async (filename) => {
+          const basename = path.basename(filename);
           const ext = path.extname(basename);
 
-          const basenameNoExt = path.basename(file, ext);
+          const basenameNoExt = path.basename(filename, ext);
           let [version, action, name = ""] = basenameNoExt.split(".");
           version = Number(version);
-
-          const filename = migrationPattern
-            ? file
-            : path.join(migrationDirectory, file);
-
-          // TODO normalize filename on returned migration object
-          // Today it is full path if glob is used, otherwise basename with extension
-          // This is not persisted in the database, but this field might be a part of someone's workflow
-          // Making this change will be a breaking fix
 
           if (ext === ".sql") {
             return {
               version,
               action,
-              filename: file,
+              filename,
               name,
               md5: fileChecksum(filename, newline),
               getSql: () => fs.readFileSync(filename, "utf8"),
@@ -91,7 +72,7 @@ class Postgrator extends EventEmitter {
             return {
               version,
               action,
-              filename: file,
+              filename,
               name,
               md5: checksum(sql, newline),
               getSql: () => sql,
