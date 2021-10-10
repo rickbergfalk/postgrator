@@ -1,44 +1,42 @@
 const assert = require("assert");
-const Postgrator = require("../postgrator");
-
 const path = require("path");
+const { getPostgratorEnd } = require("./test-util");
 const migrationDirectory = path.join(__dirname, "failMigrations");
 
-testConfig({
-  migrationDirectory: migrationDirectory,
-  driver: "pg",
-  host: "localhost",
-  port: 5432,
-  database: "postgrator",
-  username: "postgrator",
-  password: "postgrator",
-});
+testConfig(() => {
+  return getPostgratorEnd({
+    migrationDirectory: migrationDirectory,
+    driver: "pg",
+    database: "postgrator",
+  });
+}, "pg");
 
-testConfig({
-  migrationDirectory: migrationDirectory,
-  driver: "mysql",
-  host: "localhost",
-  database: "postgrator",
-  username: "postgrator",
-  password: "postgrator",
-});
+testConfig(() => {
+  return getPostgratorEnd({
+    migrationDirectory: migrationDirectory,
+    driver: "mysql",
+    database: "postgrator",
+  });
+}, "mysql");
 
-testConfig({
-  migrationDirectory: migrationDirectory,
-  driver: "mssql",
-  host: "localhost",
-  database: "master",
-  username: "sa",
-  password: "Postgrator123!",
-  options: {
-    encrypt: false, // for azure
-    trustServerCertificate: true, // change to true for local dev / self-signed certs. defaults to false
-  },
-});
+testConfig(() => {
+  return getPostgratorEnd({
+    migrationDirectory: migrationDirectory,
+    driver: "mssql",
+    database: "master",
+  });
+}, "mssql");
 
-function testConfig(config) {
-  describe(`migrationFailure: ${config.driver}`, function () {
-    const postgrator = new Postgrator(config);
+function testConfig(factoryFunction, driver) {
+  describe(`migrationFailure: ${driver}`, function () {
+    let postgrator;
+    let end = () => {};
+
+    before(async () => {
+      const result = await factoryFunction();
+      postgrator = result.postgrator;
+      end = result.end;
+    });
 
     it("Handles failed migrations", function () {
       return postgrator.migrate().catch((error) => {
@@ -46,11 +44,6 @@ function testConfig(config) {
         assert(
           error.appliedMigrations,
           "appliedMigrations decorated on error object"
-        );
-        assert.strictEqual(
-          postgrator.commonClient.connected,
-          false,
-          "client disconnected on error"
         );
       });
     });
@@ -66,8 +59,9 @@ function testConfig(config) {
       return postgrator.migrate("00");
     });
 
-    after(function () {
-      return postgrator.runQuery("DROP TABLE schemaversion");
+    after(async function () {
+      await postgrator.runQuery("DROP TABLE schemaversion");
+      await end();
     });
   });
 }

@@ -1,31 +1,29 @@
 const path = require("path");
-const testUtil = require("../test-util.js");
+const { getPostgratorEnd } = require("../test-util.js");
+const driverExecQuery = require("./driverExecQuery");
 
-testUtil.testPgConfig(
-  {
+driverExecQuery(() => {
+  return getPostgratorEnd({
     migrationPattern: path.join(__dirname, "../migrations/*"),
     driver: "pg",
     database: "postgrator",
-  },
-  "Driver: pg"
-);
+  });
+}, "Driver: pg");
 
-testUtil.testPgConfig(
-  {
+driverExecQuery(() => {
+  return getPostgratorEnd({
     migrationPattern: path.join(__dirname, "../migrations/*"),
     driver: "pg",
     database: "postgrator",
     schemaTable: "postgrator.schemaversion",
-  },
-  "Driver: pg (with schemaTable)"
-);
+  });
+}, "Driver: pg (with schemaTable)");
 
-testUtil.testPgConfig(
-  {
+driverExecQuery(() => {
+  return getPostgratorEnd({
     migrationPattern: path.join(__dirname, "../migrations/*"),
     driver: "pg",
     database: "postgrator",
     currentSchema: "postgrator",
-  },
-  "Driver: pg (with currentSchema)"
-);
+  });
+}, "Driver: pg (with currentSchema)");
