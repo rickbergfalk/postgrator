@@ -1,11 +1,11 @@
 const assert = require("assert");
 const path = require("path");
 const { getPostgratorEnd } = require("./test-util");
-const migrationDirectory = path.join(__dirname, "failMigrations");
+const migrationPattern = path.join(__dirname, "failMigrations/*");
 
 testConfig(() => {
   return getPostgratorEnd({
-    migrationDirectory: migrationDirectory,
+    migrationPattern,
     driver: "pg",
     database: "postgrator",
   });
@@ -13,7 +13,7 @@ testConfig(() => {
 
 testConfig(() => {
   return getPostgratorEnd({
-    migrationDirectory: migrationDirectory,
+    migrationPattern,
     driver: "mysql",
     database: "postgrator",
   });
@@ -21,7 +21,7 @@ testConfig(() => {
 
 testConfig(() => {
   return getPostgratorEnd({
-    migrationDirectory: migrationDirectory,
+    migrationPattern,
     driver: "mssql",
     database: "master",
   });
