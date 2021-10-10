@@ -163,10 +163,7 @@ class Postgrator extends EventEmitter {
    */
   async runQuery(query) {
     deprecate("runQuery. Use your db driver directly instead.");
-    const { commonClient } = this;
-    const results = await commonClient.runQuery(query);
-    await commonClient.endConnection();
-    return results;
+    return this.commonClient.runQuery(query);
   }
 
   /**
@@ -179,7 +176,6 @@ class Postgrator extends EventEmitter {
     const versionSql = this.commonClient.getDatabaseVersionSql();
     const result = await this.commonClient.runQuery(versionSql);
     const version = result.rows.length > 0 ? result.rows[0].version : 0;
-    await this.commonClient.endConnection();
     return parseInt(version);
   }
 
@@ -320,19 +316,12 @@ class Postgrator extends EventEmitter {
         data.targetVersion
       );
       const migrations = await this.runMigrations(runnableMigrations);
-      await commonClient.endConnection();
       return migrations;
     } catch (error) {
       // Decorate error with empty appliedMigrations if not yet exist
       // Rethrow error to module user
       if (!error.appliedMigrations) {
         error.appliedMigrations = [];
-      }
-      // Attempt to close connection then throw original error
-      try {
-        await commonClient.endConnection();
-      } catch (error) {
-        // no op
       }
       throw error;
     }
