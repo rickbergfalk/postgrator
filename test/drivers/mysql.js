@@ -1,20 +1,8 @@
 const path = require("path");
-const testConfig = require("./driverIntegration");
 const mysql = require("mysql");
 const driverExecQuery = require("./driverExecQuery");
 const Postgrator = require("../../postgrator");
 
-// Test the old-style config
-testConfig({
-  migrationDirectory: path.join(__dirname, "../migrations"),
-  driver: "mysql",
-  host: "localhost",
-  database: "postgrator",
-  username: "postgrator",
-  password: "postgrator",
-});
-
-// Test via the execQuery config
 driverExecQuery(async () => {
   const connection = mysql.createConnection({
     multipleStatements: true,

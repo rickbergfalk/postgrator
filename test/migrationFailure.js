@@ -37,7 +37,7 @@ testConfig({
 });
 
 function testConfig(config) {
-  describe(`Driver: ${config.driver}`, function () {
+  describe(`migrationFailure: ${config.driver}`, function () {
     const postgrator = new Postgrator(config);
 
     it("Handles failed migrations", function () {

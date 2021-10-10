@@ -1,15 +1,24 @@
 const assert = require("assert");
+const pg = require("pg");
 const Postgrator = require("../postgrator");
 
 const path = require("path");
-const migrationDirectory = path.join(__dirname, "migrations");
-const pgUrl = "tcp://postgrator:postgrator@localhost:5432/postgrator";
+const migrationPattern = path.join(__dirname, "migrations/*");
 
 describe("API", function () {
+  const client = new pg.Client({
+    host: "localhost",
+    port: 5432,
+    database: "postgrator",
+    user: "postgrator",
+    password: "postgrator",
+  });
+
   const postgrator = new Postgrator({
     driver: "pg",
-    migrationDirectory: migrationDirectory,
-    connectionString: pgUrl,
+    migrationPattern,
+    // database: "postgrator",
+    execQuery: (query) => client.query(query),
   });
 
   const vStarted = [];
@@ -22,6 +31,10 @@ describe("API", function () {
   );
   postgrator.on("migration-started", (migration) => mStarted.push(migration));
   postgrator.on("migration-finished", (migration) => mFinished.push(migration));
+
+  before(async () => {
+    await client.connect();
+  });
 
   it("Migrates up to 003", function () {
     return postgrator.migrate("003").then((migrations) => {
@@ -53,9 +66,7 @@ describe("API", function () {
       const m = migrations[0];
       assert.strictEqual(m.version, 1);
       assert.strictEqual(m.action, "do");
-      // TODO make filename consistent
-      // With glob filename is full path. This is likely what we want instead of basename
-      assert.strictEqual(m.filename, "001.do.sql");
+      assert(m.filename.endsWith("001.do.sql"));
       assert.strictEqual(m.name, "");
       // eslint-disable-next-line no-prototype-builtins
       assert(m.hasOwnProperty("name"));
@@ -69,7 +80,6 @@ describe("API", function () {
     const patterngrator = new Postgrator({
       driver: "pg",
       migrationPattern: path.join(__dirname, "/fail*/*"),
-      connectionString: pgUrl,
     });
     return patterngrator.getMigrations().then((migrationsByPattern) => {
       assert.strictEqual(migrationsByPattern.length, 4);
@@ -88,7 +98,8 @@ describe("API", function () {
     });
   });
 
-  after(function () {
-    return postgrator.runQuery("DROP TABLE schemaversion");
+  after(async () => {
+    await postgrator.runQuery("DROP TABLE schemaversion");
+    await client.end();
   });
 });

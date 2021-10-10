@@ -5,6 +5,7 @@
 BREAKING
 
 - driver `mysql2` value unsupported.
+- filename in migration result is full file path
 
 ## 4.3.1
 

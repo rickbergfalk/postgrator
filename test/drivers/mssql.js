@@ -1,24 +1,8 @@
 const path = require("path");
-const testConfig = require("./driverIntegration");
 const mssql = require("mssql");
 const driverExecQuery = require("./driverExecQuery");
 const Postgrator = require("../../postgrator");
 
-// SQL Server needs 2 GB of RAM
-testConfig({
-  migrationDirectory: path.join(__dirname, "../migrations"),
-  driver: "mssql",
-  host: "localhost",
-  database: "master",
-  username: "sa",
-  password: "Postgrator123!",
-  options: {
-    encrypt: false, // for azure
-    trustServerCertificate: true, // change to true for local dev / self-signed certs. defaults to false
-  },
-});
-
-// Test via the execQuery config
 driverExecQuery(async () => {
   const client = new mssql.ConnectionPool({
     server: "localhost",
