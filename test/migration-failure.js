@@ -3,7 +3,7 @@ const path = require("path");
 const { getPostgratorEnd } = require("./test-util");
 const migrationPattern = path.join(__dirname, "failMigrations/*");
 
-testConfig(() => {
+testMigrationFailure(() => {
   return getPostgratorEnd({
     migrationPattern,
     driver: "pg",
@@ -11,7 +11,7 @@ testConfig(() => {
   });
 }, "pg");
 
-testConfig(() => {
+testMigrationFailure(() => {
   return getPostgratorEnd({
     migrationPattern,
     driver: "mysql",
@@ -19,7 +19,7 @@ testConfig(() => {
   });
 }, "mysql");
 
-testConfig(() => {
+testMigrationFailure(() => {
   return getPostgratorEnd({
     migrationPattern,
     driver: "mssql",
@@ -27,7 +27,7 @@ testConfig(() => {
   });
 }, "mssql");
 
-function testConfig(factoryFunction, driver) {
+function testMigrationFailure(factoryFunction, driver) {
   describe(`migrationFailure: ${driver}`, function () {
     let postgrator;
     let end = () => {};

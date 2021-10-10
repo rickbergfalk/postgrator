@@ -4,7 +4,7 @@ const Postgrator = require("../postgrator");
 const path = require("path");
 const migrationDirectory = path.join(__dirname, "duplicateMigrations");
 
-testConfig({
+testDuplicateMigrations({
   migrationDirectory: migrationDirectory,
   driver: "pg",
   host: "localhost",
@@ -14,7 +14,7 @@ testConfig({
   password: "postgrator",
 });
 
-testConfig({
+testDuplicateMigrations({
   migrationDirectory: migrationDirectory,
   driver: "mysql",
   host: "localhost",
@@ -23,7 +23,7 @@ testConfig({
   password: "postgrator",
 });
 
-testConfig({
+testDuplicateMigrations({
   migrationDirectory: migrationDirectory,
   driver: "mssql",
   host: "localhost",
@@ -36,7 +36,7 @@ testConfig({
   },
 });
 
-function testConfig(config) {
+function testDuplicateMigrations(config) {
   describe(`Driver: ${config.driver}`, function () {
     const postgrator = new Postgrator(config);
 
