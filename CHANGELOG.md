@@ -10,6 +10,7 @@ BREAKING
 - Removed `host`, `port`, `username`, `password`, `ssl`, `options`. Manage connections with `execQuery` instead.
 - Removed`migrationDirectory` option. Use `migrationPattern` instead. In most cases it will be `path/to/migrations/*`. Any [glob](https://www.npmjs.com/package/glob) syntax supported.
 - Removed `GO` keyword splitting for `mssql`. Using `GO` could leave your system in a partially migrated state on failure and is not recommended.
+- TODO: js checksum mismatch
 
 ## 4.3.1
 
