@@ -156,13 +156,12 @@ class Postgrator extends EventEmitter {
   }
 
   /**
-   * Executes sql query using the common client and ends connection afterwards
+   * Executes sql query using the commonClient runQuery function
    *
    * @returns {Promise} result of query
    * @param {String} query sql query to execute
    */
   async runQuery(query) {
-    deprecate("runQuery. Use your db driver directly instead.");
     return this.commonClient.runQuery(query);
   }
 
