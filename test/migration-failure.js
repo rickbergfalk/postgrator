@@ -28,7 +28,7 @@ testMigrationFailure(() => {
 }, "mssql");
 
 function testMigrationFailure(factoryFunction, driver) {
-  describe(`migrationFailure: ${driver}`, function () {
+  describe(`Migration failure: ${driver}`, function () {
     let postgrator;
     let end = () => {};
 

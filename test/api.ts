@@ -5,7 +5,7 @@ import * as path from "path";
 
 const migrationPattern = path.join(__dirname, "migrations/*");
 
-describe("TypeScript:API:execQuery", function () {
+describe("TypeScript API", function () {
   const client = new pg.Client({
     host: "localhost",
     port: 5432,
