@@ -51,13 +51,14 @@ function driverExecQuery(factoryFunction, label) {
     let postgrator;
     let end = () => {};
 
-    beforeEach(async () => {
+    before(async () => {
       const result = await factoryFunction();
       postgrator = result.postgrator;
       end = result.end;
     });
 
-    afterEach(async () => {
+    after(async () => {
+      await postgrator.runQuery("DROP TABLE schemaversion");
       await end();
     });
 
@@ -190,10 +191,6 @@ function driverExecQuery(factoryFunction, label) {
 
     it("Migrates down to 000 again", function () {
       return postgrator.migrate("00");
-    });
-
-    it("Cleans up schemaversion table", function () {
-      return postgrator.runQuery("DROP TABLE schemaversion");
     });
   });
 }
