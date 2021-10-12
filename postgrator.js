@@ -3,7 +3,7 @@ const path = require("path");
 const glob = require("glob");
 const EventEmitter = require("events");
 
-const createCommonClient = require("./lib/createCommonClient.js");
+const createClient = require("./lib/createClient.js");
 const {
   fileChecksum,
   sortMigrationsAsc,
@@ -31,7 +31,7 @@ class Postgrator extends EventEmitter {
     super();
     this.config = Object.assign({}, DEFAULT_CONFIG, config);
     this.migrations = [];
-    this.commonClient = createCommonClient(this.config);
+    this.commonClient = createClient(this.config);
   }
 
   /**
