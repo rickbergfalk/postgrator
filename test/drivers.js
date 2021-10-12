@@ -4,6 +4,16 @@ const { getPostgratorEnd } = require("./test-util.js");
 
 const migrationPattern = path.join(__dirname, "./migrations/*");
 
+function getQuotedSchemaTable(postgrator) {
+  if (postgrator.config.driver === "pg") {
+    return postgrator.config.schemaTable
+      .split(".")
+      .map((value) => `"${value}"`)
+      .join(".");
+  }
+  return postgrator.config.schemaTable;
+}
+
 driverExecQuery(() => {
   return getPostgratorEnd({
     migrationPattern,
@@ -20,6 +30,15 @@ driverExecQuery(() => {
     schemaTable: "postgrator.schemaversion",
   });
 }, "Driver: pg (with schemaTable)");
+
+driverExecQuery(() => {
+  return getPostgratorEnd({
+    migrationPattern,
+    driver: "pg",
+    database: "postgrator",
+    schemaTable: "postgrator.SchemaVersion",
+  });
+}, "Driver: pg (with capital schemaTable)");
 
 driverExecQuery(() => {
   return getPostgratorEnd({
@@ -58,7 +77,9 @@ function driverExecQuery(factoryFunction, label) {
     });
 
     after(async () => {
-      await postgrator.runQuery("DROP TABLE schemaversion");
+      await postgrator.runQuery(
+        `DROP TABLE ${getQuotedSchemaTable(postgrator)}`
+      );
       await end();
     });
 
@@ -78,11 +99,10 @@ function driverExecQuery(factoryFunction, label) {
     });
 
     it("Has migration details in schema table", function () {
-      const schemaTable = postgrator.config.schemaTable || "schemaversion";
       return postgrator
         .runQuery(
           `SELECT version, name, md5, run_at 
-            FROM ${schemaTable}
+            FROM ${getQuotedSchemaTable(postgrator)}
             WHERE version = 2`
         )
         .then((results) => {
@@ -159,7 +179,9 @@ function driverExecQuery(factoryFunction, label) {
         .migrate("003")
         .then(() =>
           postgrator.runQuery(
-            `UPDATE schemaversion SET md5 = 'baddata' WHERE version = 2`
+            `UPDATE ${getQuotedSchemaTable(
+              postgrator
+            )} SET md5 = 'baddata' WHERE version = 2`
           )
         )
         .then(() => postgrator.migrate("006"))
@@ -180,7 +202,9 @@ function driverExecQuery(factoryFunction, label) {
         .migrate("003")
         .then(() =>
           postgrator.runQuery(
-            `UPDATE schemaversion SET md5 = 'baddata' WHERE version = 2`
+            `UPDATE ${getQuotedSchemaTable(
+              postgrator
+            )} SET md5 = 'baddata' WHERE version = 2`
           )
         )
         .then(() => postgrator.migrate("006"))
