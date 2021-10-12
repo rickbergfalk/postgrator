@@ -1,7 +1,9 @@
+const EventEmitter = require("events");
 const fs = require("fs");
 const path = require("path");
+const promisify = require("util").promisify;
 const glob = require("glob");
-const EventEmitter = require("events");
+const pGlob = promisify(glob);
 
 const createClient = require("./lib/createClient.js");
 const {
@@ -14,17 +16,6 @@ const DEFAULT_CONFIG = {
   schemaTable: "schemaversion",
   validateChecksums: true,
 };
-
-function loadMigrationDirOrPath(migrationPattern) {
-  return new Promise((resolve, reject) => {
-    glob(migrationPattern, (err, files) => {
-      if (err) {
-        return reject(err);
-      }
-      resolve(files);
-    });
-  });
-}
 
 class Postgrator extends EventEmitter {
   constructor(config) {
@@ -41,7 +32,7 @@ class Postgrator extends EventEmitter {
    */
   async getMigrations() {
     const { migrationPattern, newline } = this.config;
-    const migrationFiles = await loadMigrationDirOrPath(migrationPattern);
+    const migrationFiles = await pGlob(migrationPattern);
     let migrations = await Promise.all(
       migrationFiles
         .filter((file) => [".sql", ".js"].indexOf(path.extname(file)) >= 0)
