@@ -20,7 +20,9 @@ async function doMigration() {
   });
 
   const postgrator = new Postgrator({
-    /* Add your postgrator config here, path to migrations, etc */
+    migrationPattern: "glob/path/to/migrations/*",
+    driver: "mysql",
+    database: "database_name",
     execQuery: (query) => {
       return new Promise((resolve, reject) => {
         connection.query(query, (err, rows, fields) => {

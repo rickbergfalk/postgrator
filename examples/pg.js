@@ -12,13 +12,13 @@ async function doMigration() {
 
   await client.connect();
 
-  // `pg` package was the reference for postgrator's original common client
-  // So there isn't much to do for Postgres.
-  const execQuery = (query) => client.query(query);
-
   const postgrator = new Postgrator({
-    /* Add your postgrator config here, path to migrations, etc */
-    execQuery,
+    migrationPattern: "glob/path/to/migrations/*",
+    driver: "pg",
+    database: "database_name",
+    // `pg` package was the reference for postgrator's original common client
+    // So there isn't much to do for Postgres.
+    execQuery: (query) => client.query(query),
   });
 
   // Migrate to latest or whatever version you want

@@ -22,7 +22,9 @@ async function doMigration() {
   await client.connect();
 
   const postgrator = new Postgrator({
-    /* Add your postgrator config here, path to migrations, etc */
+    migrationPattern: "glob/path/to/migrations/*",
+    driver: "mssql",
+    database: "database_name",
     execQuery: (query) => {
       return new Promise((resolve, reject) => {
         const request = new mssql.Request(client);
