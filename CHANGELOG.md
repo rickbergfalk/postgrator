@@ -12,7 +12,6 @@ Despite all the breaking changes below, nothing has changed in the overall migra
 
 ### Features
 
-- Adds `execQuery` function option to inject database connection and query execution
 - md5 validation may be skipped for specific migrations by deleting the md5 value from your DB's schemaversion table.
 
 ### Fixes
