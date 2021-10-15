@@ -1,6 +1,8 @@
 # CHANGELOG
 
-## 5.0.0 (UNRELEASED)
+## 5.0.0
+
+### October 14, 2021
 
 Version 5 represents an effort to simplify things, allow more flexibility, and reduce the maintenance of this package.
 
