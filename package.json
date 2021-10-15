@@ -1,6 +1,6 @@
 {
   "name": "postgrator",
-  "version": "4.3.1",
+  "version": "5.0.0",
   "author": "Rick Bergfalk <rick.bergfalk@gmail.com>",
   "description": "A SQL migration tool for SQL people",
   "license": "MIT",
