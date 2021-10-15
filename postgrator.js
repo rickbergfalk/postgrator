@@ -1,13 +1,13 @@
+const EventEmitter = require("events");
 const fs = require("fs");
 const path = require("path");
+const promisify = require("util").promisify;
 const glob = require("glob");
-const EventEmitter = require("events");
-const deprecate = require("depd")("postgrator");
+const pGlob = promisify(glob);
 
-const createCommonClient = require("./lib/createCommonClient.js");
+const createClient = require("./lib/createClient.js");
 const {
   fileChecksum,
-  checksum,
   sortMigrationsAsc,
   sortMigrationsDesc,
 } = require("./lib/utils.js");
@@ -17,63 +17,12 @@ const DEFAULT_CONFIG = {
   validateChecksums: true,
 };
 
-function loadMigrationDirOrPath(migrationDirectory, migrationPattern) {
-  return new Promise((resolve, reject) => {
-    const loader = (err, files) => {
-      if (err) {
-        return reject(err);
-      }
-      resolve(files);
-    };
-    if (migrationPattern) {
-      glob(migrationPattern, loader);
-    } else if (migrationDirectory) {
-      fs.readdir(migrationDirectory, loader);
-    } else {
-      resolve([]);
-    }
-  });
-}
-
 class Postgrator extends EventEmitter {
   constructor(config) {
     super();
     this.config = Object.assign({}, DEFAULT_CONFIG, config);
     this.migrations = [];
-    this.commonClient = createCommonClient(this.config);
-
-    // Instantiation with database credentials is deprecated
-    // Next major version of postgrator will require user manage the connection
-    // and provide the `execQuery` function
-    if (this.config.port) {
-      deprecate(`Config option "port". Implement execQuery function instead.`);
-    }
-    if (this.config.host) {
-      deprecate(`Config option "host". Implement execQuery function instead.`);
-    }
-    if (this.config.username) {
-      deprecate(
-        `Config option "username". Implement execQuery function instead.`
-      );
-    }
-    if (this.config.password) {
-      deprecate(
-        `Config option "password". Implement execQuery function instead.`
-      );
-    }
-    if (this.config.ssl) {
-      deprecate(`Config option "ssl". Implement execQuery function instead.`);
-    }
-    if (this.config.options) {
-      deprecate(
-        `Config option "options". Implement execQuery function instead.`
-      );
-    }
-    if (this.config.migrationDirectory) {
-      deprecate(
-        `Config option "migrationDirectory". use "migrationPattern" instead using glob match. e.g. path.join(__dirname, '/migrations/*')`
-      );
-    }
+    this.commonClient = createClient(this.config);
   }
 
   /**
@@ -82,36 +31,24 @@ class Postgrator extends EventEmitter {
    * @returns {Promise} array of migration objects
    */
   async getMigrations() {
-    const { migrationDirectory, migrationPattern, newline } = this.config;
-    const migrationFiles = await loadMigrationDirOrPath(
-      migrationDirectory,
-      migrationPattern
-    );
+    const { migrationPattern, newline } = this.config;
+    const migrationFiles = await pGlob(migrationPattern);
     let migrations = await Promise.all(
       migrationFiles
         .filter((file) => [".sql", ".js"].indexOf(path.extname(file)) >= 0)
-        .map(async (file) => {
-          const basename = path.basename(file);
+        .map(async (filename) => {
+          const basename = path.basename(filename);
           const ext = path.extname(basename);
 
-          const basenameNoExt = path.basename(file, ext);
+          const basenameNoExt = path.basename(filename, ext);
           let [version, action, name = ""] = basenameNoExt.split(".");
           version = Number(version);
-
-          const filename = migrationPattern
-            ? file
-            : path.join(migrationDirectory, file);
-
-          // TODO normalize filename on returned migration object
-          // Today it is full path if glob is used, otherwise basename with extension
-          // This is not persisted in the database, but this field might be a part of someone's workflow
-          // Making this change will be a breaking fix
 
           if (ext === ".sql") {
             return {
               version,
               action,
-              filename: file,
+              filename,
               name,
               md5: fileChecksum(filename, newline),
               getSql: () => fs.readFileSync(filename, "utf8"),
@@ -120,15 +57,17 @@ class Postgrator extends EventEmitter {
 
           if (ext === ".js") {
             const jsModule = require(filename);
-            const sql = await jsModule.generateSql();
 
             return {
               version,
               action,
-              filename: file,
+              filename,
               name,
-              md5: checksum(sql, newline),
-              getSql: () => sql,
+              // JS files are dynamic, so resulting content could change
+              // Prettier and JS trends mean that formatting could also change over time
+              // Considering these things, md5 hashing for JS will be skipped.
+              md5: undefined,
+              getSql: () => jsModule.generateSql(),
             };
           }
         })
@@ -156,17 +95,13 @@ class Postgrator extends EventEmitter {
   }
 
   /**
-   * Executes sql query using the common client and ends connection afterwards
+   * Executes sql query using the commonClient runQuery function
    *
    * @returns {Promise} result of query
    * @param {String} query sql query to execute
    */
   async runQuery(query) {
-    deprecate("runQuery. Use your db driver directly instead.");
-    const { commonClient } = this;
-    const results = await commonClient.runQuery(query);
-    await commonClient.endConnection();
-    return results;
+    return this.commonClient.runQuery(query);
   }
 
   /**
@@ -179,7 +114,6 @@ class Postgrator extends EventEmitter {
     const versionSql = this.commonClient.getDatabaseVersionSql();
     const result = await this.commonClient.runQuery(versionSql);
     const version = result.rows.length > 0 ? result.rows[0].version : 0;
-    await this.commonClient.endConnection();
     return parseInt(version);
   }
 
@@ -218,7 +152,10 @@ class Postgrator extends EventEmitter {
       const sql = this.commonClient.getMd5Sql(migration);
       const results = await this.commonClient.runQuery(sql);
       const md5 = results.rows && results.rows[0] && results.rows[0].md5;
-      if (md5 !== migration.md5) {
+      // IF md5 exists in DB and on migration, it means we should validate the md5
+      // (JS migrations no longer generate an md5 because they can be so dynamic.
+      // Deleting an md5 from database could be useful for skipping a problematic check)
+      if (md5 && migration.md5 && md5 !== migration.md5) {
         const msg = `MD5 checksum failed for migration [${migration.version}]`;
         throw new Error(msg);
       }
@@ -320,19 +257,12 @@ class Postgrator extends EventEmitter {
         data.targetVersion
       );
       const migrations = await this.runMigrations(runnableMigrations);
-      await commonClient.endConnection();
       return migrations;
     } catch (error) {
       // Decorate error with empty appliedMigrations if not yet exist
       // Rethrow error to module user
       if (!error.appliedMigrations) {
         error.appliedMigrations = [];
-      }
-      // Attempt to close connection then throw original error
-      try {
-        await commonClient.endConnection();
-      } catch (error) {
-        // no op
       }
       throw error;
     }

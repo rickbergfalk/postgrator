@@ -24,7 +24,6 @@ declare namespace Postgrator {
   export interface BaseOptions {
     schemaTable?: string;
     validateChecksums?: boolean;
-    migrationDirectory?: string;
     migrationPattern?: string;
     newline?: string;
     execQuery?: (query: string) => Promise<{ rows: any[] }>;
@@ -34,11 +33,7 @@ declare namespace Postgrator {
    * Configuration options for MySQL connections
    */
   export interface MySQLOptions extends BaseOptions {
-    driver: "mysql" | "mysql2";
-    host?: string;
-    port?: string | number;
-    username: string;
-    password: string;
+    driver: "mysql";
     database?: string;
   }
 
@@ -47,13 +42,6 @@ declare namespace Postgrator {
    */
   export interface PostgreSQLOptions extends BaseOptions {
     driver: "pg";
-    ssl?: boolean | ConnectionOptions;
-    connectionString?: string;
-    host?: string;
-    port?: string | number;
-    user?: string;
-    username?: string;
-    password?: string;
     database?: string;
     currentSchema?: string;
   }
@@ -63,16 +51,8 @@ declare namespace Postgrator {
    */
   export interface MsSQLOptions extends BaseOptions {
     driver: "mssql";
-    ssl?: boolean;
-    connectionString?: string;
-    host: string;
-    port: string | number;
-    username: string;
-    password: string;
     database: string;
-    options?: any;
-    requestTimeout?: number;
-    connectionTimeout?: number;
+    currentSchema?: string;
   }
 
   type Options = PostgreSQLOptions | MySQLOptions | MsSQLOptions;

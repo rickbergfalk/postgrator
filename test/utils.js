@@ -1,16 +1,24 @@
 const assert = require("assert");
 const utils = require("../lib/utils");
 
-describe("getMajorVersion", function () {
-  it("Detects db versions", function () {
-    assert.strictEqual(utils.getMajorVersion("pg"), 8);
-    assert.strictEqual(utils.getMajorVersion("mssql"), 7);
-    assert.strictEqual(utils.getMajorVersion("mysql"), 2);
-    assert.strictEqual(utils.getMajorVersion("mysql2"), 2);
+const content = `line one\nline two\nlinethree\nlinefour`;
+const contentLF = `line one\nline two\nlinethree\nlinefour`;
+const contentCR = `line one\rline two\rlinethree\rlinefour`;
+const contentCRLF = `line one\r\nline two\r\nlinethree\r\nlinefour`;
+
+describe("utils: convertLineEnding", function () {
+  it("converts LF", function () {
+    const converted = utils.convertLineEnding(content, "LF");
+    assert.strictEqual(converted, contentLF);
   });
 
-  it("Fails gracefully for uninstalled module", function () {
-    const version = utils.getMajorVersion("something");
-    assert.strictEqual(version, null);
+  it("converts CR", function () {
+    const converted = utils.convertLineEnding(content, "CR");
+    assert.strictEqual(converted, contentCR);
+  });
+
+  it("converts CRLF", function () {
+    const converted = utils.convertLineEnding(content, "CRLF");
+    assert.strictEqual(converted, contentCRLF);
   });
 });

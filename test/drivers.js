@@ -1,17 +1,85 @@
 const assert = require("assert");
+const path = require("path");
+const { getPostgratorEnd } = require("./test-util.js");
 
-module.exports = function driverExecQuery(factoryFunction, label) {
+const migrationPattern = path.join(__dirname, "./migrations/*");
+
+function getQuotedSchemaTable(postgrator) {
+  if (postgrator.config.driver === "pg") {
+    return postgrator.config.schemaTable
+      .split(".")
+      .map((value) => `"${value}"`)
+      .join(".");
+  }
+  return postgrator.config.schemaTable;
+}
+
+driverExecQuery(() => {
+  return getPostgratorEnd({
+    migrationPattern,
+    driver: "pg",
+    database: "postgrator",
+  });
+}, "Driver: pg");
+
+driverExecQuery(() => {
+  return getPostgratorEnd({
+    migrationPattern,
+    driver: "pg",
+    database: "postgrator",
+    schemaTable: "postgrator.schemaversion",
+  });
+}, "Driver: pg (with schemaTable)");
+
+driverExecQuery(() => {
+  return getPostgratorEnd({
+    migrationPattern,
+    driver: "pg",
+    database: "postgrator",
+    schemaTable: "postgrator.SchemaVersion",
+  });
+}, "Driver: pg (with capital schemaTable)");
+
+driverExecQuery(() => {
+  return getPostgratorEnd({
+    migrationPattern,
+    driver: "pg",
+    database: "postgrator",
+    currentSchema: "postgrator",
+  });
+}, "Driver: pg (with currentSchema)");
+
+driverExecQuery(() => {
+  return getPostgratorEnd({
+    migrationPattern,
+    driver: "mssql",
+    database: "master",
+  });
+}, "Driver: mssql");
+
+driverExecQuery(() => {
+  return getPostgratorEnd({
+    migrationPattern,
+    driver: "mysql",
+    database: "postgrator",
+  });
+}, "Driver: mysql");
+
+function driverExecQuery(factoryFunction, label) {
   describe(label, () => {
     let postgrator;
     let end = () => {};
 
-    beforeEach(async () => {
+    before(async () => {
       const result = await factoryFunction();
       postgrator = result.postgrator;
       end = result.end;
     });
 
-    afterEach(async () => {
+    after(async () => {
+      await postgrator.runQuery(
+        `DROP TABLE ${getQuotedSchemaTable(postgrator)}`
+      );
       await end();
     });
 
@@ -31,11 +99,10 @@ module.exports = function driverExecQuery(factoryFunction, label) {
     });
 
     it("Has migration details in schema table", function () {
-      const schemaTable = postgrator.config.schemaTable || "schemaversion";
       return postgrator
         .runQuery(
           `SELECT version, name, md5, run_at 
-            FROM ${schemaTable}
+            FROM ${getQuotedSchemaTable(postgrator)}
             WHERE version = 2`
         )
         .then((results) => {
@@ -112,7 +179,9 @@ module.exports = function driverExecQuery(factoryFunction, label) {
         .migrate("003")
         .then(() =>
           postgrator.runQuery(
-            `UPDATE schemaversion SET md5 = 'baddata' WHERE version = 2`
+            `UPDATE ${getQuotedSchemaTable(
+              postgrator
+            )} SET md5 = 'baddata' WHERE version = 2`
           )
         )
         .then(() => postgrator.migrate("006"))
@@ -133,7 +202,9 @@ module.exports = function driverExecQuery(factoryFunction, label) {
         .migrate("003")
         .then(() =>
           postgrator.runQuery(
-            `UPDATE schemaversion SET md5 = 'baddata' WHERE version = 2`
+            `UPDATE ${getQuotedSchemaTable(
+              postgrator
+            )} SET md5 = 'baddata' WHERE version = 2`
           )
         )
         .then(() => postgrator.migrate("006"))
@@ -145,9 +216,5 @@ module.exports = function driverExecQuery(factoryFunction, label) {
     it("Migrates down to 000 again", function () {
       return postgrator.migrate("00");
     });
-
-    it("Cleans up schemaversion table", function () {
-      return postgrator.runQuery("DROP TABLE schemaversion");
-    });
   });
-};
+}

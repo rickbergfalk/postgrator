@@ -41,7 +41,8 @@ instead of something based off a timestamp, you will find it helpful to start
 with 000s or some large number for file organization purposes.
 
 **Action** must be either "do" or "undo". Do implements the version, and undo
-undoes it.
+undoes it. In other migration tools, this might be "up" and "down". Writing undo
+scripts is completely optional if your dev/migration strategy does not require it.
 
 **Optional-description** can be a label or tag to help keep track of what
 happens inside the script. Descriptions should not contain periods.
@@ -49,6 +50,7 @@ happens inside the script. Descriptions should not contain periods.
 **SQL or JS** You have a choice of either using a plain SQL file or you can also
 generate your SQL via a javascript module. The javascript module should export a
 function called generateSql() that returns back a string representing the SQL.
+
 For example:
 
 ```js
@@ -63,6 +65,8 @@ module.exports.generateSql = function () {
 
 You might want to choose the JS file approach, in order to make use (secret)
 environment variables such as the above.
+
+When using JS files, the file content nor the resulting script is checksum validated.
 
 Support for asynchronous functions is provided, in the event you need to retrieve data from a external source, for example:
 
@@ -134,12 +138,7 @@ async function main() {
 main();
 ```
 
-Want more examples for MySQL and MS SQL Server? Check out `driverExecQuery` functions in the following test files for examples:
-
-- `test/drivers/pg.js`
-- `test/drivers/mysql.js`
-- `test/drivers/mysql2.js`
-- `test/drivers/mssql.js`
+Want more examples for MySQL and MS SQL Server? Check out `examples` direcytory.
 
 ### Options
 
@@ -150,11 +149,11 @@ const postgrator = new Postgrator(options);
 | Option             | Required | Description                                                                                                                                                                                        | default         |
 | ------------------ | -------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------- |
 | `migrationPattern` | Required | Glob pattern to migration files. e.g. `path.join(__dirname, '/migrations/*')`                                                                                                                      |                 |
-| `driver`           | Required | Must be `pg`, `mysql`, `mysql2` or `mssql`                                                                                                                                                         |                 |
+| `driver`           | Required | Must be `pg`, `mysql`, or `mssql`                                                                                                                                                                  |                 |
 | `database`         | Required | Target database name.                                                                                                                                                                              |                 |
 | `execQuery`        | Required | Function to execute SQL. MUST return a promise containing an object with a rows array of objects. For example `{ rows: [{ column_name: 'column_value' }] }`                                        |                 |
 | `schemaTable`      | Optional | Table created to track schema version. When using Postgres, you may specify schema as well, e.g. `schema_name.table_name`                                                                          | `schemaversion` |
-| `validateChecksum` | Optional | Validates checksum of existing migration files already run prior to executing migrations. Set to `false` to disable.                                                                               | `true`          |
+| `validateChecksum` | Optional | Validates checksum of existing SQL migration files already run prior to executing migrations. Set to `false` to disable. Unused for JS migrations.                                                 | `true`          |
 | `newline`          | Optional | Force line ending on file when generating checksum. Value should be either `CRLF` (windows) or `LF` (unix/mac).                                                                                    |                 |
 | `currentSchema`    | Optional | For Postgres and MS SQL Server. Specifies schema to look to when validating schemaversion table columns. For Postgres, run's `SET search_path = currentSchema` prior to running queries against db |
 
@@ -174,16 +173,16 @@ available to force a specific line ending prior to generating the checksum.
 ### Migration object
 
 Postgrator will often return a migration object or array of migrations. The
-format of a migration object is
+format of a migration object is:
 
 ```js
 {
   version: versionNumber,
   action: 'do',
   name: 'first-table',
-  filename: '0001.up.first-table.sql',
+  filename: 'path/to/0001.up.first-table.sql',
   md5: 'checksumvalue',
-  getSql: () => {} // sync function to get sql from file
+  getSql: () => {} // function to get sql from file
 }
 ```
 

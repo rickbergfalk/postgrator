@@ -1,5 +1,35 @@
 # CHANGELOG
 
+## 5.0.0 (UNRELEASED)
+
+Version 5 represents an effort to simplify things, allow more flexibility, and reduce the maintenance of this package.
+
+This is made possible by requiring the database query execution function be injected to postgrator. Postgrator no longer manages the database connection, and as a result no longer needs to maintain a mapping to specific database driver implementations.
+
+Despite all the breaking changes below, nothing has changed in the overall migration file approach. Migrations that worked for previous versions of postgrator will still work in v5.
+
+**See `examples/` directory for quick overview of how v5 is used.**
+
+### Features
+
+- md5 validation may be skipped for specific migrations by deleting the md5 value from your DB's schemaversion table.
+
+### Fixes
+
+- Honors uppercase characters in postgres schema table name (#98)
+- JS migrations no longer run during validation, preventing unwanted migration failures (#124)
+
+### BREAKING
+
+- Nodejs 12 or later required.
+- Removed `host`, `port`, `username`, `password`, `ssl`, `options`. Manage connections with `execQuery` instead.
+- Driver value `mysql2` unsupported. (You can still use the `mysql2` package for your `execQuery` implementation, but set driver to `mysql`)
+- Removed`migrationDirectory` option. Use `migrationPattern` instead. In most cases it will be `path/to/migrations/*`. Any [glob](https://www.npmjs.com/package/glob) syntax supported.
+- Removed `GO` keyword splitting for `mssql`. Using `GO` could leave your system in a partially migrated state on failure and is not recommended.
+- filename in migration result is full file path
+- Removed md5 checksum validation for JS migrations. JS migrations are dynamic, and JS style trends could vary over time if a tool like Prettier is applied.
+- JS migrations do not generate SQL until immediately prior to being applied. Previously, JS migrations generated SQL prior to any migrations running. This was problematic for cases where JS migrations no longer successfullly generated SQL.
+
 ## 4.3.1
 
 ### October 9, 2021
