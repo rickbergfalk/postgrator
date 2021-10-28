@@ -159,13 +159,13 @@ const postgrator = new Postgrator(options);
 
 ### Checksum validation
 
-By default, Postgrator will generate an md5 checksum for each migration file, and
+By default, Postgrator will generate an md5 checksum for each migration file and
 save the value to the schema table after a successful migration.
 
-Prior to applying migrations to a database, for any existing migration in the
-migration directory already run Postgrator will validate the md5 checksum to
-ensure the contents of the script have not changed. If a change is detected,
-migration will stop, reporting an error.
+Before applying migrations to a database, Postgrator will validate the md5
+checksum to ensure the scripts have not changed for any already run existing
+migrations in the migration directory. If a change is detected, migration
+will stop, reporting an error.
 
 Because line endings may differ between environments/editors, an option is
 available to force a specific line ending prior to generating the checksum.
@@ -205,8 +205,8 @@ If `postgrator.migrate()` fails to run multiple migrations, Postgrator will
 stop running any further migrations. Migrations successfully run prior to the
 migration with the error will remain implemented.
 
-If you need to migration back down to the version the database was at prior to
-running migrate(), that is up to you to implement. Instead of doing this consider
+If you need to migrate back to the version the database was at prior to
+running `migrate()`, that is up to you to implement. Instead of doing this consider
 writing your application in a way that is compatible with any 
 version of a future release.
 
