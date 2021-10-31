@@ -5,7 +5,7 @@
 A Node.js SQL migration library using a directory of plain SQL scripts. Supports
 Postgres, MySQL, and SQL Server.
 
-Available as a cli tool: https://www.npmjs.com/package/postgrator-cli.
+Available as a CLI tool: https://www.npmjs.com/package/postgrator-cli.
 
 ## Installation
 
@@ -37,19 +37,19 @@ The files must follow the convention
 
 **Version** must be a number, but you may start and increment the numbers in any
 way you'd like. If you choose to use a purely sequential numbering scheme
-instead of something based off a timestamp, you will find it helpful to start
+instead of something based on a timestamp, you will find it helpful to start
 with 000s or some large number for file organization purposes.
 
 **Action** must be either "do" or "undo". Do implements the version, and undo
 undoes it. In other migration tools, this might be "up" and "down". Writing undo
-scripts is completely optional if your dev/migration strategy does not require it.
+scripts is optional if your dev/migration strategy does not require it.
 
 **Optional-description** can be a label or tag to help keep track of what
 happens inside the script. Descriptions should not contain periods.
 
 **SQL or JS** You have a choice of either using a plain SQL file or you can also
 generate your SQL via a javascript module. The javascript module should export a
-function called generateSql() that returns back a string representing the SQL.
+function called generateSql() that returns a string representing the SQL.
 
 For example:
 
@@ -63,12 +63,12 @@ module.exports.generateSql = function () {
 };
 ```
 
-You might want to choose the JS file approach, in order to make use (secret)
+You might want to choose the JS file approach, to make use of (secret)
 environment variables such as the above.
 
 When using JS files, the file content nor the resulting script is checksum validated.
 
-Support for asynchronous functions is provided, in the event you need to retrieve data from a external source, for example:
+Support for asynchronous functions is provided, in the event you need to retrieve data from an external source, for example:
 
 ```js
 const axios = require("axios");
@@ -82,8 +82,8 @@ module.exports.generateSql = async () => {
 };
 ```
 
-To run your sql migrations with Postgrator, write a Node.js script or integrate
-postgrator with your application.
+To run your SQL migrations with Postgrator, write a Node.js script or integrate
+Postgrator with your application.
 
 When first run against your database, Postgrator will create the table specified
 by config.schemaTable. Postgrator relies on this table to track what version the
@@ -138,7 +138,7 @@ async function main() {
 main();
 ```
 
-Want more examples for MySQL and MS SQL Server? Check out `examples` direcytory.
+Want more examples for MySQL and MS SQL Server? Check out the `examples` directory.
 
 ### Options
 
@@ -159,13 +159,13 @@ const postgrator = new Postgrator(options);
 
 ### Checksum validation
 
-By default Postgrator will generate an md5 checksum for each migration file, and
+By default, Postgrator will generate an md5 checksum for each migration file and
 save the value to the schema table after a successful migration.
 
-Prior to applying migrations to a database, for any existing migration in the
-migration directory already run Postgrator will validate the md5 checksum to
-ensure the contents of the script have not changed. If a change is detected,
-migration will stop, reporting an error.
+Before applying migrations to a database, Postgrator will validate the md5
+checksum to ensure the scripts have not changed for any already run existing
+migrations in the migration directory. If a change is detected, migration
+will stop, reporting an error.
 
 Because line endings may differ between environments/editors, an option is
 available to force a specific line ending prior to generating the checksum.
@@ -188,7 +188,7 @@ format of a migration object is:
 
 ### Logging
 
-Postgrator is an event emiter, allowing you to log however
+Postgrator is an event emitter, allowing you to log however
 you want to log. There are no events for error or finish.
 
 ```js
@@ -201,17 +201,17 @@ postgrator.on("migration-finished", (migration) => console.log(migration));
 
 ### Migration errors
 
-If `postgrator.migrate()` fails running multiple migrations, Postgrator will
+If `postgrator.migrate()` fails to run multiple migrations, Postgrator will
 stop running any further migrations. Migrations successfully run prior to the
-migration with the error will remain implemented however.
+migration with the error will remain implemented.
 
-If you need to migration back down to the version the database was at prior to
-running migrate(), that is up to you to implement. Instead of doing this
-however, consider writing your application in a way that is compatible with any
+If you need to migrate back to the version the database was at prior to
+running `migrate()`, that is up to you to implement. Instead of doing this consider
+writing your application in a way that is compatible with any 
 version of a future release.
 
 In the event of an error during migration, the error object will be decorated
-with an array of migrations that run successfully (`error.appliedMIgrations`).
+with an array of migrations that run successfully (`error.appliedMigrations`).
 
 Keep in mind how you write your SQL - You may (or may not) want to write your
 SQL defensively (ie, check for pre-existing objects before you create new ones).
@@ -219,12 +219,12 @@ SQL defensively (ie, check for pre-existing objects before you create new ones).
 ### Preventing partial migrations
 
 Depending on your database and database configuration, consider wrapping each
-migration in a transaction or BEGIN/END block. By default Postgres and SQL
+migration in a transaction or BEGIN/END block. By default, Postgres and SQL
 Server consider multiple statements run in one execution part of one implicit
 transaction. MySQL however will implement up to the failure.
 
 If using SQL Server, do not write a migration containing multiple statements
-using the `GO` keyword. Instead break statements between the `GO` keyword into
+using the `GO` keyword. Instead, break statements between the `GO` keyword into
 multiple migration files, ensuring that you do not end up with partial
 migrations implemented but no record of that happening.
 
@@ -251,7 +251,7 @@ console.log(migrations);
 A docker-compose file is provided with containers
 configured for tests.
 
-To run postgrator tests locally, you'll need Docker and Docker Compose installed.
+To run Postgrator tests locally, you'll need Docker and Docker Compose installed.
 
 ```sh
 # In one terminal window
