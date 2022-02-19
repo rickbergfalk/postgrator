@@ -83,6 +83,11 @@ function driverExecQuery(factoryFunction, label) {
       await end();
     });
 
+    it("Returns undefined for database version before init", async function () {
+      const result = await postgrator.getDatabaseVersion();
+      assert.strictEqual(result, undefined);
+    });
+
     it("Migrates multiple versions up (000 -> 002)", function () {
       return postgrator
         .migrate("002")
