@@ -1,16 +1,18 @@
-const EventEmitter = require("events");
-const fs = require("fs");
-const path = require("path");
-const promisify = require("util").promisify;
-const glob = require("glob");
+import EventEmitter from "events";
+import fs from "fs";
+import path from "path";
+import { promisify } from "util";
+import glob from "glob";
+
 const pGlob = promisify(glob);
 
-const createClient = require("./lib/createClient.js");
-const {
+import createClient from "./lib/createClient.js";
+
+import {
   fileChecksum,
   sortMigrationsAsc,
   sortMigrationsDesc,
-} = require("./lib/utils.js");
+} from "./lib/utils.js";
 
 const DEFAULT_CONFIG = {
   schemaTable: "schemaversion",
@@ -55,8 +57,8 @@ class Postgrator extends EventEmitter {
             };
           }
 
-          if (ext === ".js") {
-            const jsModule = require(filename);
+          if (ext === ".js" || ext === ".mjs") {
+            const jsModule = await import(filename);
 
             return {
               version,

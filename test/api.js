@@ -1,8 +1,8 @@
-const assert = require("assert");
-const pg = require("pg");
-const Postgrator = require("../postgrator");
+import assert from "assert";
+import pg from "pg";
+import Postgrator from "../postgrator";
+import path from "path";
 
-const path = require("path");
 const migrationPattern = path.join(__dirname, "migrations/*");
 
 describe("API", function () {

@@ -1,6 +1,7 @@
-const assert = require("assert");
-const Postgrator = require("../postgrator");
-const path = require("path");
+import assert from "assert";
+import Postgrator from "../postgrator";
+import path from "path";
+
 const migrationPattern = path.join(__dirname, "duplicateMigrations/*");
 
 testDuplicateMigrations({

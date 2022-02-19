@@ -71,7 +71,7 @@ When using JS files, the file content nor the resulting script is checksum valid
 Support for asynchronous functions is provided, in the event you need to retrieve data from an external source, for example:
 
 ```js
-const axios = require("axios");
+import axios from "axios";
 
 module.exports.generateSql = async () => {
   const response = await axios({
@@ -94,8 +94,8 @@ will update the schemaTable accordingly. If the database is already at the
 version specified to migrate to, Postgrator does nothing.
 
 ```js
-const Postgrator = require("postgrator");
-const pg = require("pg");
+import Postgrator from "postgrator";
+import pg from "pg";
 
 async function main() {
   // Create a client of your choice
@@ -207,7 +207,7 @@ migration with the error will remain implemented.
 
 If you need to migrate back to the version the database was at prior to
 running `migrate()`, that is up to you to implement. Instead of doing this consider
-writing your application in a way that is compatible with any 
+writing your application in a way that is compatible with any
 version of a future release.
 
 In the event of an error during migration, the error object will be decorated

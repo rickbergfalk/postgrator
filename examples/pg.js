@@ -1,5 +1,5 @@
-const pg = require("pg");
-const Postgrator = require("../postgrator");
+import pg from "pg";
+import Postgrator from "../postgrator";
 
 async function doMigration() {
   const client = new pg.Client({

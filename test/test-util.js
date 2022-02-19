@@ -1,7 +1,7 @@
-const pg = require("pg");
-const Postgrator = require("../postgrator");
-const mssql = require("mssql");
-const mysql = require("mysql");
+import pg from "pg";
+import Postgrator from "../postgrator";
+import mssql from "mssql";
+import mysql from "mysql";
 
 async function getPostgratorEnd(config) {
   if (config.driver === "pg") {

@@ -1,5 +1,5 @@
-const mysql = require("mysql");
-const Postgrator = require("../postgrator");
+import mysql from "mysql";
+import Postgrator from "../postgrator";
 
 async function doMigration() {
   const connection = mysql.createConnection({

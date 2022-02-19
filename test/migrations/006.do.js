@@ -1,4 +1,5 @@
-const { promisify } = require("util");
+import { promisify } from "util";
+
 const sleep = promisify(setTimeout);
 
 module.exports.generateSql = async () => {

@@ -1,5 +1,5 @@
-const mssql = require("mssql");
-const Postgrator = require("../postgrator");
+import mssql from "mssql";
+import Postgrator from "../postgrator";
 
 async function doMigration() {
   const client = new mssql.ConnectionPool({
