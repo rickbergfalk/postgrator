@@ -1,5 +1,11 @@
 # CHANGELOG
 
+## 5.0.1
+
+### February 18, 2022
+
+- Fix `getDatabaseVersion` error when schemaversion table does not exist. `undefined` is returned instead.
+
 ## 5.0.0
 
 ### October 14, 2021
