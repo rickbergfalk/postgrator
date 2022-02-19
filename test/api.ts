@@ -2,6 +2,10 @@ import * as assert from "assert";
 import * as Postgrator from "../postgrator";
 import * as pg from "pg";
 import * as path from "path";
+import { dirname } from "path";
+import { fileURLToPath } from "url";
+
+const __dirname = dirname(fileURLToPath(import.meta.url));
 
 const migrationPattern = path.join(__dirname, "migrations/*");
 

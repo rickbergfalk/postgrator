@@ -96,6 +96,10 @@ version specified to migrate to, Postgrator does nothing.
 ```js
 import Postgrator from "postgrator";
 import pg from "pg";
+import { dirname } from "path";
+import { fileURLToPath } from "url";
+
+const __dirname = dirname(fileURLToPath(import.meta.url));
 
 async function main() {
   // Create a client of your choice

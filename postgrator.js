@@ -277,4 +277,4 @@ class Postgrator extends EventEmitter {
   }
 }
 
-module.exports = Postgrator;
+export default Postgrator;
