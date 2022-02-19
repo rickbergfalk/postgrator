@@ -1,7 +1,8 @@
 {
   "compilerOptions": {
     "target": "es5",
-    "module": "es2020",
+    "module": "ESNext",
+    "moduleResolution": "node",
     "lib": ["es7"],
     "sourceMap": true,
     "strict": true,

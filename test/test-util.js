@@ -1,9 +1,9 @@
 import pg from "pg";
-import Postgrator from "../postgrator";
+import Postgrator from "../postgrator.js";
 import mssql from "mssql";
 import mysql from "mysql";
 
-async function getPostgratorEnd(config) {
+export async function getPostgratorEnd(config) {
   if (config.driver === "pg") {
     const client = new pg.Client({
       host: "localhost",
@@ -121,6 +121,6 @@ async function getPostgratorEnd(config) {
   }
 }
 
-module.exports = {
+export default {
   getPostgratorEnd,
 };
