@@ -110,7 +110,7 @@ class Postgrator extends EventEmitter {
 
   /**
    * Gets the database version of the schema from the database.
-   * Otherwise 0 if no version has been run
+   * Otherwise `undefined` if no version has been run
    *
    * @returns {Promise} database schema version
    */
