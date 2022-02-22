@@ -57,7 +57,7 @@ describe("TypeScript API", function () {
   });
 
   it("Implements getDatabaseVersion", async () => {
-    const version: number = await postgrator.getDatabaseVersion();
+    const version: number | undefined = await postgrator.getDatabaseVersion();
     assert.strictEqual(version, 4);
   });
 
