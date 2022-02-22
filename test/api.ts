@@ -1,6 +1,5 @@
-import * as assert from "assert";
+import assert from "assert";
 import Postgrator from "../postgrator";
-// @ts-expect-error
 import pg from "pg";
 import * as path from "path";
 import { dirname } from "path";
