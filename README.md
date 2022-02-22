@@ -33,7 +33,7 @@ migrations/
 
 The files must follow the convention
 [version].[action].[optional-description].sql or
-[version].[action].[optional-description].js
+[version].[action].[optional-description].js (or .mjs, .cjs)
 
 **Version** must be a number, but you may start and increment the numbers in any
 way you'd like. If you choose to use a purely sequential numbering scheme
@@ -51,9 +51,12 @@ happens inside the script. Descriptions should not contain periods.
 generate your SQL via a javascript module. The javascript module should export a
 function called generateSql() that returns a string representing the SQL.
 
+**Note**: As of version 6.0.0, `postgrator` is an ES module, and uses `import()` to load `js` migrations. `.mjs` and `.cjs` should be honored.
+
 For example:
 
 ```js
+// Assuming commonJS module
 module.exports.generateSql = function () {
   return (
     "CREATE USER transaction_user WITH PASSWORD '" +

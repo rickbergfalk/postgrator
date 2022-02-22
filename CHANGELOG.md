@@ -1,5 +1,15 @@
 # CHANGELOG
 
+## 6.0.0
+
+### February 21, 2022
+
+### Breaking
+
+Postgrator is now an ES module and requires Node 14 or later. `.cjs` and `.mjs` migration files are now supported.
+
+No other changes have been made.
+
 ## 5.0.1
 
 ### February 18, 2022
