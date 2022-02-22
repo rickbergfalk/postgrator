@@ -91,11 +91,11 @@ declare class Postgrator {
 
   /**
    * Gets the database version of the schema from the database.
-   * Otherwise 0 if no version has been run
+   * Otherwise `undefined` if no version has been run
    *
    * @returns database schema version
    */
-  getDatabaseVersion(): Promise<number>;
+  getDatabaseVersion(): Promise<number | undefined>;
 
   /**
    * Returns an object with max version of migration available
