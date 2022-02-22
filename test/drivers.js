@@ -1,6 +1,10 @@
-const assert = require("assert");
-const path = require("path");
-const { getPostgratorEnd } = require("./test-util.js");
+import assert from "assert";
+import path from "path";
+import { getPostgratorEnd } from "./test-util.js";
+import { dirname } from "path";
+import { fileURLToPath } from "url";
+
+const __dirname = dirname(fileURLToPath(import.meta.url));
 
 const migrationPattern = path.join(__dirname, "./migrations/*");
 

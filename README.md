@@ -33,7 +33,7 @@ migrations/
 
 The files must follow the convention
 [version].[action].[optional-description].sql or
-[version].[action].[optional-description].js
+[version].[action].[optional-description].js (or .mjs, .cjs)
 
 **Version** must be a number, but you may start and increment the numbers in any
 way you'd like. If you choose to use a purely sequential numbering scheme
@@ -51,9 +51,12 @@ happens inside the script. Descriptions should not contain periods.
 generate your SQL via a javascript module. The javascript module should export a
 function called generateSql() that returns a string representing the SQL.
 
+**Note**: As of version 6.0.0, `postgrator` is an ES module, and uses `import()` to load `js` migrations. `.mjs` and `.cjs` should be honored.
+
 For example:
 
 ```js
+// Assuming commonJS module
 module.exports.generateSql = function () {
   return (
     "CREATE USER transaction_user WITH PASSWORD '" +
@@ -71,7 +74,7 @@ When using JS files, the file content nor the resulting script is checksum valid
 Support for asynchronous functions is provided, in the event you need to retrieve data from an external source, for example:
 
 ```js
-const axios = require("axios");
+import axios from "axios";
 
 module.exports.generateSql = async () => {
   const response = await axios({
@@ -94,8 +97,12 @@ will update the schemaTable accordingly. If the database is already at the
 version specified to migrate to, Postgrator does nothing.
 
 ```js
-const Postgrator = require("postgrator");
-const pg = require("pg");
+import Postgrator from "postgrator";
+import pg from "pg";
+import { dirname } from "path";
+import { fileURLToPath } from "url";
+
+const __dirname = dirname(fileURLToPath(import.meta.url));
 
 async function main() {
   // Create a client of your choice
@@ -207,7 +214,7 @@ migration with the error will remain implemented.
 
 If you need to migrate back to the version the database was at prior to
 running `migrate()`, that is up to you to implement. Instead of doing this consider
-writing your application in a way that is compatible with any 
+writing your application in a way that is compatible with any
 version of a future release.
 
 In the event of an error during migration, the error object will be decorated

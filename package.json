@@ -5,8 +5,9 @@
   "description": "A SQL migration tool for SQL people",
   "license": "MIT",
   "engines": {
-    "node": ">=12.0.0"
+    "node": ">=14.0.0"
   },
+  "type": "module",
   "keywords": [
     "migrator",
     "migration",
@@ -26,7 +27,7 @@
     "precommit": "lint-staged",
     "lint": "eslint \"**/*.js\" && prettier --check .",
     "prettier-write": "prettier --write .",
-    "test": "mocha --require ts-node/register --recursive \"test/**/*.{js,ts}\"",
+    "test": "mocha --recursive \"test/**/*.{js,ts}\"",
     "prepare": "husky install"
   },
   "dependencies": {

@@ -1,16 +1,17 @@
-const EventEmitter = require("events");
-const fs = require("fs");
-const path = require("path");
-const promisify = require("util").promisify;
-const glob = require("glob");
-const pGlob = promisify(glob);
-
-const createClient = require("./lib/createClient.js");
-const {
+import EventEmitter from "events";
+import fs from "fs";
+import glob from "glob";
+import path from "path";
+import { pathToFileURL } from "url";
+import { promisify } from "util";
+import createClient from "./lib/createClient.js";
+import {
   fileChecksum,
   sortMigrationsAsc,
   sortMigrationsDesc,
-} = require("./lib/utils.js");
+} from "./lib/utils.js";
+
+const pGlob = promisify(glob);
 
 const DEFAULT_CONFIG = {
   schemaTable: "schemaversion",
@@ -35,7 +36,10 @@ class Postgrator extends EventEmitter {
     const migrationFiles = await pGlob(migrationPattern);
     let migrations = await Promise.all(
       migrationFiles
-        .filter((file) => [".sql", ".js"].indexOf(path.extname(file)) >= 0)
+        .filter(
+          (file) =>
+            [".sql", ".js", ".mjs", ".cjs"].indexOf(path.extname(file)) >= 0
+        )
         .map(async (filename) => {
           const basename = path.basename(filename);
           const ext = path.extname(basename);
@@ -55,8 +59,8 @@ class Postgrator extends EventEmitter {
             };
           }
 
-          if (ext === ".js") {
-            const jsModule = require(filename);
+          if (ext === ".js" || ext === ".cjs" || ext === ".mjs") {
+            const jsModule = await import(pathToFileURL(filename));
 
             return {
               version,
@@ -275,4 +279,4 @@ class Postgrator extends EventEmitter {
   }
 }
 
-module.exports = Postgrator;
+export default Postgrator;

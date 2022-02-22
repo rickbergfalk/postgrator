@@ -1,5 +1,5 @@
-const assert = require("assert");
-const utils = require("../lib/utils");
+import assert from "assert";
+import utils from "../lib/utils";
 
 const content = `line one\nline two\nlinethree\nlinefour`;
 const contentLF = `line one\nline two\nlinethree\nlinefour`;

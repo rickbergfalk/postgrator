@@ -177,4 +177,4 @@ declare class Postgrator {
   on(event: "migration-finished", cb: Postgrator.MigrationEventCallback): void;
 }
 
-export = Postgrator;
+export default Postgrator;
