@@ -37,7 +37,7 @@
     "type": "git",
     "url": "git://github.com/rickbergfalk/postgrator.git"
   },
-  "main": "postgrator",
+  "main": "postgrator.js",
   "types": "postgrator.d.ts",
   "devDependencies": {
     "@types/mocha": "^9.1.0",
