@@ -1,8 +1,11 @@
 # CHANGELOG
 
-## Next
+## 7.0.0
 
-- `getDatabaseVersion` returns 0 when schema version table does not exist instead of `undefined`.
+### February 23, 2022
+
+- `getDatabaseVersion` returns 0 when schema version table does not exist instead of `undefined`. This is technically **breaking** if you rely on the `undefined` returned in version 5.0.1.
+- Fix DEP0151 warning about ext resolution
 
 ## 6.0.0
 
