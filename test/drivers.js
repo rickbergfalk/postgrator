@@ -87,9 +87,9 @@ function driverExecQuery(factoryFunction, label) {
       await end();
     });
 
-    it("Returns undefined for database version before init", async function () {
+    it("Returns 0 for database version before init", async function () {
       const result = await postgrator.getDatabaseVersion();
-      assert.strictEqual(result, undefined);
+      assert.strictEqual(result, 0);
     });
 
     it("Migrates multiple versions up (000 -> 002)", function () {

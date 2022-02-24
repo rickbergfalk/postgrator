@@ -1,5 +1,9 @@
 # CHANGELOG
 
+## Next
+
+- `getDatabaseVersion` returns 0 when schema version table does not exist instead of `undefined`.
+
 ## 6.0.0
 
 ### February 21, 2022
