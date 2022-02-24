@@ -119,7 +119,7 @@ class Postgrator extends EventEmitter {
 
     const initialized = await this.commonClient.hasVersionTable();
     if (!initialized) {
-      return undefined;
+      return 0;
     }
 
     const result = await this.commonClient.runQuery(versionSql);
