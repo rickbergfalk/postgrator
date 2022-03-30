@@ -55,7 +55,19 @@ declare namespace Postgrator {
     currentSchema?: string;
   }
 
-  type Options = PostgreSQLOptions | MySQLOptions | MsSQLOptions;
+  /**
+   * Configuration options for Sqlite3
+   */
+  export interface Sqlite3Options extends BaseOptions {
+    driver: "sqlite3";
+    currentSchema?: string;
+  }
+
+  type Options =
+    | PostgreSQLOptions
+    | MySQLOptions
+    | MsSQLOptions
+    | Sqlite3Options;
 
   /**
    * A migration event handler

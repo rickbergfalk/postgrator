@@ -69,6 +69,14 @@ driverExecQuery(() => {
   });
 }, "Driver: mysql");
 
+driverExecQuery(() => {
+  return getPostgratorEnd({
+    migrationPattern,
+    driver: "sqlite3",
+    schemaTable: "versions",
+  });
+}, "Driver: sqlite3");
+
 function driverExecQuery(factoryFunction, label) {
   describe(label, () => {
     let postgrator;

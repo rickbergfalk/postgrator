@@ -2,6 +2,7 @@ import pg from "pg";
 import Postgrator from "../postgrator.js";
 import mssql from "mssql";
 import mysql from "mysql";
+import sqlite3 from "sqlite3";
 
 export async function getPostgratorEnd(config) {
   if (config.driver === "pg") {
@@ -113,6 +114,40 @@ export async function getPostgratorEnd(config) {
           connection.end((err) => {
             if (err) {
               return reject(err);
+            }
+            resolve();
+          });
+        }),
+    };
+  }
+
+  if (config.driver === "sqlite3") {
+    const db = new sqlite3.Database(":memory:");
+
+    const execQuery = (query) => {
+      return new Promise((resolve, reject) => {
+        db.all(query, (err, rows) => {
+          if (err) {
+            return reject(err);
+          }
+          resolve({ rows });
+        });
+      });
+    };
+
+    const postgrator = new Postgrator({
+      ...config,
+      execQuery,
+    });
+
+    return {
+      postgrator,
+      end: () =>
+        new Promise((resolve, reject) => {
+          db.close((err) => {
+            if (err) {
+              reject(err);
+              return;
             }
             resolve();
           });
