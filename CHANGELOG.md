@@ -1,5 +1,11 @@
 # CHANGELOG
 
+## 7.1.0
+
+### March 31, 2022
+
+- Add `sqlite3` support
+
 ## 7.0.0
 
 ### February 23, 2022
