@@ -3,7 +3,7 @@
 [![CircleCI](https://circleci.com/gh/rickbergfalk/postgrator.svg?style=svg)](https://circleci.com/gh/rickbergfalk/postgrator)
 
 A Node.js SQL migration library using a directory of plain SQL scripts. Supports
-Postgres, MySQL, and SQL Server.
+Postgres, MySQL, SQL Server, and SQLite.
 
 Available as a CLI tool: https://www.npmjs.com/package/postgrator-cli.
 
@@ -156,8 +156,8 @@ const postgrator = new Postgrator(options);
 | Option             | Required | Description                                                                                                                                                                                        | default         |
 | ------------------ | -------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------- |
 | `migrationPattern` | Required | Glob pattern to migration files. e.g. `path.join(__dirname, '/migrations/*')`                                                                                                                      |                 |
-| `driver`           | Required | Must be `pg`, `mysql`, or `mssql`                                                                                                                                                                  |                 |
-| `database`         | Required | Target database name.                                                                                                                                                                              |                 |
+| `driver`           | Required | Must be `pg`, `mysql`, `mssql`, or `sqlite3`                                                                                                                                                       |                 |
+| `database`         | Required | Target database name. Optional for `sqlite3`.                                                                                                                                                      |                 |
 | `execQuery`        | Required | Function to execute SQL. MUST return a promise containing an object with a rows array of objects. For example `{ rows: [{ column_name: 'column_value' }] }`                                        |                 |
 | `schemaTable`      | Optional | Table created to track schema version. When using Postgres, you may specify schema as well, e.g. `schema_name.table_name`                                                                          | `schemaversion` |
 | `validateChecksum` | Optional | Validates checksum of existing SQL migration files already run prior to executing migrations. Set to `false` to disable. Unused for JS migrations.                                                 | `true`          |
