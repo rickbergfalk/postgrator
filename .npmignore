@@ -1,3 +1,10 @@
 .git*
 test/
 node_modules/
+.husky
+.mocharc.json
+.circleci
+docker-compose.yml
+.eslintrc
+.prettierignore
+examples/
