@@ -235,10 +235,10 @@ class Postgrator extends EventEmitter {
 
   /**
    * Main method to move a schema to a particular version.
-   * A target must be specified, otherwise nothing is run.
+   * A target must be specified, otherwise the scheme will be moved to the maximum available version.
    *
    * @returns {Promise}
-   * @param {String} target - version to migrate as string or number (handled as  numbers internally)
+   * @param {String} target - version to migrate as string or number (handled as numbers internally)
    */
   async migrate(target = "") {
     const { commonClient, config } = this;
