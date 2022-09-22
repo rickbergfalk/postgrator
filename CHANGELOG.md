@@ -1,5 +1,12 @@
 # CHANGELOG
 
+## 7.1.1
+
+### September 21, 2022
+
+- Fix migration method code comment
+- Use INTEGER for sqlite3 version type
+
 ## 7.1.0
 
 ### March 31, 2022
