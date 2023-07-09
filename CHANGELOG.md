@@ -1,5 +1,11 @@
 # CHANGELOG
 
+## 7.2.0
+
+### July 9, 2023
+
+- Support `better-sqlite3`
+
 ## 7.1.1
 
 ### September 21, 2022
