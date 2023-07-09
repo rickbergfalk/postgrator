@@ -77,6 +77,15 @@ driverExecQuery(() => {
   });
 }, "Driver: sqlite3");
 
+driverExecQuery(() => {
+  return getPostgratorEnd({
+    migrationPattern,
+    driver: "sqlite3",
+    betterSqlite3: true,
+    schemaTable: "versions",
+  });
+}, "Driver: better-sqlite3");
+
 function driverExecQuery(factoryFunction, label) {
   describe(label, () => {
     let postgrator;

@@ -3,6 +3,7 @@ import Postgrator from "../postgrator.js";
 import mssql from "mssql";
 import mysql from "mysql";
 import sqlite3 from "sqlite3";
+import betterSqlite3 from "better-sqlite3";
 
 export async function getPostgratorEnd(config) {
   if (config.driver === "pg") {
@@ -117,6 +118,44 @@ export async function getPostgratorEnd(config) {
             }
             resolve();
           });
+        }),
+    };
+  }
+
+  if (config.driver === "sqlite3" && config.betterSqlite3) {
+    const db = new betterSqlite3(":memory:");
+
+    const execQuery = (query) => {
+      return new Promise((resolve, reject) => {
+        const stm = db.prepare(query);
+        try {
+          const rows = stm.all();
+          resolve({ rows });
+        } catch (err) {
+          if (err.message.indexOf("This statement does not return data") >= 0) {
+            stm.run();
+            resolve({ rows: [] });
+          }
+          throw err;
+        }
+      });
+    };
+
+    const postgrator = new Postgrator({
+      ...config,
+      execQuery,
+    });
+
+    return {
+      postgrator,
+      end: () =>
+        new Promise((resolve, reject) => {
+          try {
+            db.close();
+            resolve();
+          } catch (err) {
+            reject(err);
+          }
         }),
     };
   }
