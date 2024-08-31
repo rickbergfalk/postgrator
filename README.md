@@ -125,6 +125,7 @@ async function main() {
       database: "databasename",
       schemaTable: "schemaversion",
       execQuery: (query) => client.query(query),
+      execSqlScript: (sqlScript) => client.sqlScript(sqlScript),
     });
 
     // Migrate to specific version
@@ -159,6 +160,7 @@ const postgrator = new Postgrator(options);
 | `driver`           | Required | Must be `pg`, `mysql`, `mssql`, or `sqlite3`                                                                                                                                                       |                 |
 | `database`         | Required | Target database name. Optional for `sqlite3`.                                                                                                                                                      |                 |
 | `execQuery`        | Required | Function to execute SQL. MUST return a promise containing an object with a rows array of objects. For example `{ rows: [{ column_name: 'column_value' }] }`                                        |                 |
+| `execSqlScript`    | Optional | Function to execute db migration script consisting of multiple SQL statements. MUST return a void promise. If not supplied, `execQuery` will be used. `                                        |                 |
 | `schemaTable`      | Optional | Table created to track schema version. When using Postgres, you may specify schema as well, e.g. `schema_name.table_name`                                                                          | `schemaversion` |
 | `validateChecksum` | Optional | Validates checksum of existing SQL migration files already run prior to executing migrations. Set to `false` to disable. Unused for JS migrations.                                                 | `true`          |
 | `newline`          | Optional | Force line ending on file when generating checksum. Value should be either `CRLF` (windows) or `LF` (unix/mac).                                                                                    |                 |

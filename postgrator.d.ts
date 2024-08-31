@@ -27,6 +27,7 @@ declare namespace Postgrator {
     migrationPattern?: string;
     newline?: string;
     execQuery?: (query: string) => Promise<{ rows: any[] }>;
+    execSqlScript?: (sqlScript: string) => Promise<void>;
   }
 
   /**
@@ -100,6 +101,13 @@ declare class Postgrator {
    * @param query sql query to execute
    */
   runQuery(query: string): Promise<Postgrator.QueryResult>;
+
+  /**
+   * Executes user-supplied db migration script consisting of multiple SQL statements
+   *
+   * @param sqlScript sql queries to execute
+   */
+  runSqlScript(sqlScript: string): Promise<void>;
 
   /**
    * Gets the database version of the schema from the database.

@@ -1,5 +1,13 @@
 # CHANGELOG
 
+## 7.3.0
+
+### August 31, 2024
+
+- Support `sqlite3` and `better-sqlite3` migrations with `;` in statements.
+
+- Add `execSqlScript` option to execute migrations consisting of multiple statements. If not supplied, Postgrator will fallback to using `execQuery`.
+
 ## 7.2.0
 
 ### July 9, 2023
