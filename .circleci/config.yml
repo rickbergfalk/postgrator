@@ -8,11 +8,11 @@ jobs:
     docker:
       # specify the version you desire here
       - image: cimg/node:lts
-      - image: cimg/postgres:9.6-alpine-ram
+      - image: cimg/postgres:16.4
         environment:
           POSTGRES_USER: postgrator
           POSTGRES_DB: postgrator
-      - image: cimg/mariadb:10.3-ram
+      - image: cimg/mariadb:10.6
         environment:
           MYSQL_ROOT_PASSWORD: postgrator
           MYSQL_DATABASE: postgrator
