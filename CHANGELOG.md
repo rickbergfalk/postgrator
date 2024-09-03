@@ -2,7 +2,7 @@
 
 ## 7.3.0
 
-### August 31, 2024
+### September 3, 2024
 
 - Support `sqlite3` and `better-sqlite3` migrations with `;` in statements.
 
