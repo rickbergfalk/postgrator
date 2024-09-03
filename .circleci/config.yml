@@ -7,7 +7,7 @@ jobs:
   build:
     docker:
       # specify the version you desire here
-      - image: cimg/node:14.22lts
+      - image: cimg/node:lts
       - image: cimg/postgres:9.6-alpine-ram
         environment:
           POSTGRES_USER: postgrator
