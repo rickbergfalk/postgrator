@@ -2,17 +2,17 @@
 #
 # Check https://circleci.com/docs/2.0/language-javascript/ for more details
 #
-version: 2
+version: 2.1
 jobs:
   build:
     docker:
       # specify the version you desire here
-      - image: circleci/node:12.22
-      - image: circleci/postgres:9.6-alpine-ram
+      - image: cimg/node:14.22lts
+      - image: cimg/postgres:9.6-alpine-ram
         environment:
           POSTGRES_USER: postgrator
           POSTGRES_DB: postgrator
-      - image: circleci/mariadb:10.3-ram
+      - image: cimg/mariadb:10.3-ram
         environment:
           MYSQL_ROOT_PASSWORD: postgrator
           MYSQL_DATABASE: postgrator
