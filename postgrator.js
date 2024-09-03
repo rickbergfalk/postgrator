@@ -109,6 +109,17 @@ class Postgrator extends EventEmitter {
   }
 
   /**
+   * Executes db migration script consisting of multiple SQL statements
+   * using the commonClient runSqlScript function
+   *
+   * @returns {Promise} void
+   * @param {String} sqlScript sql queries to execute
+   */
+  async runSqlScript(sqlScript) {
+    return this.commonClient.runSqlScript(sqlScript);
+  }
+
+  /**
    * Gets the database version of the schema from the database.
    * Otherwise 0 if no version has been run
    *
@@ -188,7 +199,7 @@ class Postgrator extends EventEmitter {
       for (const migration of migrations) {
         this.emit("migration-started", migration);
         const sql = await migration.getSql();
-        await commonClient.runQuery(sql);
+        await commonClient.runSqlScript(sql);
         await commonClient.runQuery(commonClient.persistActionSql(migration));
         appliedMigrations.push(migration);
         this.emit("migration-finished", migration);

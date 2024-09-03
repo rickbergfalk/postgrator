@@ -141,9 +141,17 @@ export async function getPostgratorEnd(config) {
       });
     };
 
+    const execSqlScript = (sqlScript) => {
+      return new Promise((resolve, reject) => {
+        db.exec(sqlScript);
+        resolve();
+      });
+    };
+
     const postgrator = new Postgrator({
       ...config,
       execQuery,
+      execSqlScript,
     });
 
     return {
@@ -174,9 +182,21 @@ export async function getPostgratorEnd(config) {
       });
     };
 
+    const execSqlScript = (sqlScript) => {
+      return new Promise((resolve, reject) => {
+        db.exec(sqlScript, (err) => {
+          if (err) {
+            return reject(err);
+          }
+          resolve();
+        });
+      });
+    };
+
     const postgrator = new Postgrator({
       ...config,
       execQuery,
+      execSqlScript,
     });
 
     return {
