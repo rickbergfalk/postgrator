@@ -8,19 +8,23 @@ import eslintConfigPrettier from "eslint-config-prettier";
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const compat = new FlatCompat({
-    baseDirectory: __dirname,
-    recommendedConfig: js.configs.recommended,
-    allConfig: js.configs.all
+  baseDirectory: __dirname,
+  recommendedConfig: js.configs.recommended,
+  allConfig: js.configs.all,
 });
 
-export default [...compat.extends("eslint:recommended"), eslintConfigPrettier, {
+export default [
+  ...compat.extends("eslint:recommended"),
+  eslintConfigPrettier,
+  {
     languageOptions: {
-        globals: {
-            ...globals.node,
-            ...globals.mocha,
-        },
+      globals: {
+        ...globals.node,
+        ...globals.mocha,
+      },
 
-        ecmaVersion: 2020,
-        sourceType: "module",
+      ecmaVersion: 2020,
+      sourceType: "module",
     },
-}];
+  },
+];
