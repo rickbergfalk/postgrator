@@ -126,7 +126,7 @@ export async function getPostgratorEnd(config) {
     const db = new betterSqlite3(":memory:");
 
     const execQuery = (query) => {
-      return new Promise((resolve, reject) => {
+      return new Promise((resolve) => {
         const stm = db.prepare(query);
         try {
           const rows = stm.all();
