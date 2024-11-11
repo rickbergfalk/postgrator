@@ -37,6 +37,7 @@ class Postgrator extends EventEmitter {
           (file) =>
             [".sql", ".js", ".mjs", ".cjs"].indexOf(path.extname(file)) >= 0
         )
+        .sort()
         .map(async (filename) => {
           const basename = path.basename(filename);
           const ext = path.extname(basename);
