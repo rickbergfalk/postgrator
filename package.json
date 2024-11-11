@@ -28,7 +28,7 @@
     "lint": "eslint \"**/*.js\" && prettier --check .",
     "prettier-write": "prettier --write .",
     "test": "mocha --recursive \"test/**/*.{js,ts}\"",
-    "prepare": "husky install"
+    "prepare": "husky"
   },
   "dependencies": {
     "glob": "^11.0.0"
@@ -40,21 +40,24 @@
   "main": "postgrator.js",
   "types": "postgrator.d.ts",
   "devDependencies": {
-    "@types/mocha": "^9.1.1",
-    "@types/node": "^14.18.21",
+    "@eslint/eslintrc": "^3.1.0",
+    "@eslint/js": "^9.14.0",
+    "@types/mocha": "^10.0.9",
+    "@types/node": "^20.17.6",
     "@types/pg": "^8.6.5",
-    "better-sqlite3": "^8.4.0",
-    "eslint": "^8.17.0",
-    "eslint-config-prettier": "^8.5.0",
-    "husky": "^8.0.1",
-    "lint-staged": "^13.0.0",
+    "better-sqlite3": "^11.5.0",
+    "eslint": "^9.14.0",
+    "eslint-config-prettier": "^9.1.0",
+    "globals": "^15.12.0",
+    "husky": "^9.1.6",
+    "lint-staged": "^15.2.10",
     "mocha": "^10.0.0",
-    "mssql": "^8.1.2",
+    "mssql": "^11.0.1",
     "mysql": "^2.18.1",
     "pg": "^8.7.3",
     "prettier": "^2.6.2",
     "sqlite3": "^5.0.8",
     "ts-node": "^10.8.1",
-    "typescript": "^4.7.3"
+    "typescript": "^5.6.3"
   }
 }
