@@ -1,17 +1,14 @@
 import EventEmitter from "events";
 import fs from "fs";
-import glob from "glob";
+import { glob } from "glob";
 import path from "path";
 import { pathToFileURL } from "url";
-import { promisify } from "util";
 import createClient from "./lib/createClient.js";
 import {
   fileChecksum,
   sortMigrationsAsc,
   sortMigrationsDesc,
 } from "./lib/utils.js";
-
-const pGlob = promisify(glob);
 
 const DEFAULT_CONFIG = {
   schemaTable: "schemaversion",
@@ -33,13 +30,14 @@ class Postgrator extends EventEmitter {
    */
   async getMigrations() {
     const { migrationPattern, newline } = this.config;
-    const migrationFiles = await pGlob(migrationPattern);
+    const migrationFiles = await glob(migrationPattern);
     let migrations = await Promise.all(
       migrationFiles
         .filter(
           (file) =>
             [".sql", ".js", ".mjs", ".cjs"].indexOf(path.extname(file)) >= 0
         )
+        .sort()
         .map(async (filename) => {
           const basename = path.basename(filename);
           const ext = path.extname(basename);

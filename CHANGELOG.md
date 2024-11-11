@@ -1,5 +1,11 @@
 # CHANGELOG
 
+## 8.0.0
+
+### November 11, 2024
+
+- Update `glob` to latest dependency, which technically only supports `Node v20 or later`. Which technically, makes this a breaking change?
+
 ## 7.3.0
 
 ### September 3, 2024
