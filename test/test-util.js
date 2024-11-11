@@ -142,7 +142,7 @@ export async function getPostgratorEnd(config) {
     };
 
     const execSqlScript = (sqlScript) => {
-      return new Promise((resolve, reject) => {
+      return new Promise((resolve) => {
         db.exec(sqlScript);
         resolve();
       });
