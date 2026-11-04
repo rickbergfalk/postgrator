@@ -31,7 +31,7 @@
     "prepare": "husky"
   },
   "dependencies": {
-    "glob": "^11.0.0"
+    "glob": "^14.0.3"
   },
   "repository": {
     "type": "git",
