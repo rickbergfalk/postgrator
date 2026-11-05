@@ -1,0 +1,72 @@
+name: Test
+
+on:
+  push:
+    branches: [master]
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        node-version: [20, 22]
+
+    services:
+      postgres:
+        image: postgres:16.4
+        env:
+          POSTGRES_USER: postgrator
+          POSTGRES_PASSWORD: postgrator
+          POSTGRES_DB: postgrator
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgrator"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 20
+
+      mariadb:
+        image: mariadb:10.6
+        env:
+          MYSQL_ROOT_PASSWORD: postgrator
+          MYSQL_DATABASE: postgrator
+          MYSQL_USER: postgrator
+          MYSQL_PASSWORD: postgrator
+        ports:
+          - 3306:3306
+        options: >-
+          --health-cmd "mysqladmin ping -uroot -ppostgrator"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 20
+
+      mssql:
+        image: mcr.microsoft.com/mssql/server:2017-latest
+        env:
+          ACCEPT_EULA: Y
+          SA_PASSWORD: Postgrator123!
+          MSSQL_PID: Express
+        ports:
+          - 1433:1433
+        options: >-
+          --health-cmd "/opt/mssql-tools/bin/sqlcmd -S localhost -U sa -P Postgrator123! -Q 'SELECT 1'"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 30
+
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: actions/setup-node@v5
+        with:
+          node-version: ${{ matrix.node-version }}
+
+      - run: npm install
+
+      - run: npm test
