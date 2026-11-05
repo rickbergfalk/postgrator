@@ -26,7 +26,7 @@
     "precommit": "lint-staged",
     "lint": "eslint \"**/*.js\" && prettier --check .",
     "prettier-write": "prettier --write .",
-    "test": "node --import tsx --test",
+    "test": "node --import tsx --test --test-concurrency=1",
     "prepare": "husky"
   },
   "dependencies": {

@@ -39,6 +39,9 @@ describe("API", function () {
 
   before(async () => {
     await client.connect();
+    await postgrator.runQuery("DROP TABLE IF EXISTS schemaversion");
+    await postgrator.runQuery("DROP TABLE IF EXISTS person");
+    await postgrator.runQuery("DROP TABLE IF EXISTS animal");
   });
 
   it("Migrates up to 003", function () {

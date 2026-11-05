@@ -96,13 +96,15 @@ function driverExecQuery(factoryFunction, label) {
       const result = await factoryFunction();
       postgrator = result.postgrator;
       end = result.end;
+      await postgrator.runQuery(
+        `DROP TABLE IF EXISTS ${getQuotedSchemaTable(postgrator)}`
+      );
+      await postgrator.runQuery("DROP TABLE IF EXISTS person");
+      await postgrator.runQuery("DROP TABLE IF EXISTS animal");
     });
 
     after(async () => {
-      await postgrator.runQuery(
-        `DROP TABLE ${getQuotedSchemaTable(postgrator)}`
-      );
-      await end();
+      return end();
     });
 
     it("Returns 0 for database version before init", async function () {
