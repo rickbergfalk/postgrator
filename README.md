@@ -1,7 +1,5 @@
 # Postgrator
 
-[![CircleCI](https://circleci.com/gh/rickbergfalk/postgrator.svg?style=svg)](https://circleci.com/gh/rickbergfalk/postgrator)
-
 A Node.js SQL migration library using a directory of plain SQL scripts. Supports
 Postgres, MySQL, SQL Server, and SQLite.
 
