@@ -1,5 +1,5 @@
 import assert from "assert";
-import Postgrator from "../postgrator";
+import Postgrator from "../postgrator.js";
 import pg from "pg";
 import * as path from "path";
 import { dirname } from "path";
