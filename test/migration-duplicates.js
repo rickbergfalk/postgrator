@@ -3,6 +3,7 @@ import Postgrator from "../postgrator";
 import path from "path";
 import { dirname } from "path";
 import { fileURLToPath } from "url";
+import { describe, it } from "node:test";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 

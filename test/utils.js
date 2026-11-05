@@ -1,5 +1,6 @@
 import assert from "assert";
 import utils from "../lib/utils";
+import { describe, it } from "node:test";
 
 const content = `line one\nline two\nlinethree\nlinefour`;
 const contentLF = `line one\nline two\nlinethree\nlinefour`;
