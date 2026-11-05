@@ -65,10 +65,7 @@ declare namespace Postgrator {
   }
 
   type Options =
-    | PostgreSQLOptions
-    | MySQLOptions
-    | MsSQLOptions
-    | Sqlite3Options;
+    PostgreSQLOptions | MySQLOptions | MsSQLOptions | Sqlite3Options;
 
   /**
    * A migration event handler
