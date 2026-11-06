@@ -1,8 +1,9 @@
 import assert from "assert";
 import path from "path";
-import { getPostgratorEnd } from "./test-util";
+import { getPostgratorEnd } from "./test-util.js";
 import { dirname } from "path";
 import { fileURLToPath } from "url";
+import { describe, before, it, after } from "node:test";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 

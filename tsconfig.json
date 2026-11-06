@@ -1,13 +1,13 @@
 {
   "compilerOptions": {
-    "target": "es5",
-    "module": "ESNext",
-    "moduleResolution": "node",
+    "target": "ES2022",
+    "module": "NodeNext",
+    "moduleResolution": "NodeNext",
     "allowSyntheticDefaultImports": true,
-    "lib": ["es7"],
+    "lib": ["es2022"],
     "sourceMap": true,
     "strict": true,
     "noImplicitAny": true,
-    "types": ["node", "mocha"]
+    "types": ["node"]
   }
 }

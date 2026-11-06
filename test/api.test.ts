@@ -1,9 +1,10 @@
 import assert from "assert";
-import Postgrator from "../postgrator";
+import Postgrator from "../postgrator.js";
 import pg from "pg";
 import * as path from "path";
 import { dirname } from "path";
 import { fileURLToPath } from "url";
+import { describe, before, it, after } from 'node:test';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 
@@ -38,6 +39,9 @@ describe("TypeScript API", function () {
 
   before(async () => {
     await client.connect();
+    await postgrator.runQuery("DROP TABLE IF EXISTS schemaversion");
+    await postgrator.runQuery("DROP TABLE IF EXISTS person");
+    await postgrator.runQuery("DROP TABLE IF EXISTS animal");
   });
 
   it("Migrates up to 003", async () => {
