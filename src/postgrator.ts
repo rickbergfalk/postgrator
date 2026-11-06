@@ -65,9 +65,12 @@ class Postgrator extends EventEmitter {
               const version = Number(versionString);
 
               if (ext === ".sql") {
+                if (action !== "do" && action !== "undo") {
+                  return undefined;
+                }
                 return {
                   version,
-                  action: action as PostgratorTypes.MigrationAction,
+                  action,
                   filename,
                   name,
                   md5: fileChecksum(filename, newline),
@@ -82,9 +85,13 @@ class Postgrator extends EventEmitter {
                   generateSql: () => string | Promise<string>;
                 };
 
+                if (action !== "do" && action !== "undo") {
+                  return undefined;
+                }
+
                 return {
                   version,
-                  action: action as PostgratorTypes.MigrationAction,
+                  action,
                   filename,
                   name,
                   // JS files are dynamic, so resulting content could change
