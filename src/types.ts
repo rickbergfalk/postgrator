@@ -34,7 +34,7 @@ export type ExecSqlScript = (sqlScript: string) => Promise<void>;
 export interface BaseOptions {
   schemaTable?: string;
   validateChecksums?: boolean;
-  migrationPattern?: string;
+  migrationPattern: string;
   newline?: string;
   execQuery: ExecQuery;
   execSqlScript?: ExecSqlScript;
@@ -85,7 +85,7 @@ export interface BaseResolvedOptions {
   currentSchema?: string;
   schemaTable: string;
   validateChecksums: boolean;
-  migrationPattern?: string;
+  migrationPattern: string;
   newline?: string;
   execQuery: ExecQuery;
   execSqlScript?: ExecSqlScript;

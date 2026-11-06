@@ -60,7 +60,6 @@ A discriminated resolved union would preserve those guarantees.
 
 - `MySQLOptions.database` is optional (`src/types.ts:48`), but the README says `database` is required and `MysqlClient` interpolates it into queries.
 - `Sqlite3Options.currentSchema` exists (`src/types.ts:74`) but is unused.
-- "Required" options in the README (`migrationPattern`, `execQuery`) are optional in the types.
 
 Decide which options are truly required and align the types, README, and runtime validation.
 
