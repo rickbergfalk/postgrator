@@ -1,8 +1,0 @@
-.git*
-test/
-node_modules/
-.husky
-docker-compose.yml
-.eslintrc
-.prettierignore
-examples/
