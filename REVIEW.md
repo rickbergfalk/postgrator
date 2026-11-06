@@ -36,13 +36,13 @@ This follows the existing fallback pattern already used for `execSqlScript` in `
 
 Updated JSDoc to remove number reference.
 
-### 3. Invalid migration actions are hidden by a cast
+### 3. Invalid migration actions are hidden by a cast — **RESOLVED**
 
 `action: action as PostgratorTypes.MigrationAction` appears in both SQL and JS migration branches (`src/postgrator.ts:67`, and the JS branch nearby).
 
 A file such as `001.sql` or `001.bogus.sql` enters `this.migrations` with an invalid action instead of being rejected or clearly skipped. Validate `action === "do" || action === "undo"` during parsing.
 
-### 4. JS migrations persist the literal string `"undefined"` as md5
+### 4. JS migrations persist the literal string `"undefined"` as md5 — **RESOLVED**
 
 `Migration.md5` is now correctly optional, and JS migrations leave it undefined.
 
@@ -50,7 +50,7 @@ However, `Client.persistActionSql()` interpolates `'${migration.md5}'` (`src/lib
 
 Pre-existing, but the new optional type makes it worth fixing in the major release: use `NULL` or omit the column value.
 
-### 5. `ResolvedOptions` is not driver-aware
+### 5. `ResolvedOptions` is not driver-aware — **RESOLVED**
 
 `ResolvedOptions.database` is always optional (`src/types.ts:85`), even though `MsSQLOptions.database` is required and `MysqlClient.getColumnsSql()` effectively requires it.
 
