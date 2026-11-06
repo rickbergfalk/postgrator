@@ -45,7 +45,7 @@ export interface BaseOptions {
  */
 export interface MySQLOptions extends BaseOptions {
   driver: "mysql";
-  database?: string;
+  database: string;
 }
 
 /**
