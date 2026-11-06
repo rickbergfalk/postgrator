@@ -4,14 +4,36 @@ import mssql from "mssql";
 import mysql from "mysql";
 import sqlite3 from "sqlite3";
 import Database from "better-sqlite3";
-import type { Options, QueryResult } from "../src/types.js";
+import {
+  PostgreSQLOptions,
+  MySQLOptions,
+  MsSQLOptions,
+  Sqlite3Options,
+} from "../src/types.js";
+import type { ExecQuery, Options, QueryResult } from "../src/types.js";
 
 export interface PostgratorEnd {
   postgrator: Postgrator;
   end: () => Promise<void> | void;
 }
 
-export type DriverTestOptions = Options & { betterSqlite3?: boolean };
+export type DriverTestOptions =
+  | (Omit<PostgreSQLOptions, "execQuery"> & {
+      execQuery?: ExecQuery;
+      betterSqlite3?: boolean;
+    })
+  | (Omit<MySQLOptions, "execQuery"> & {
+      execQuery?: ExecQuery;
+      betterSqlite3?: boolean;
+    })
+  | (Omit<MsSQLOptions, "execQuery"> & {
+      execQuery?: ExecQuery;
+      betterSqlite3?: boolean;
+    })
+  | (Omit<Sqlite3Options, "execQuery"> & {
+      execQuery?: ExecQuery;
+      betterSqlite3?: boolean;
+    });
 
 export async function getPostgratorEnd(
   config: DriverTestOptions

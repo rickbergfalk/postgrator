@@ -10,22 +10,27 @@ const __dirname = dirname(fileURLToPath(import.meta.url));
 
 const migrationPattern = path.join(__dirname, "duplicateMigrations/*");
 
+const execQuery = async () => ({ rows: [] });
+
 testDuplicateMigrations({
   migrationPattern,
   driver: "pg",
   database: "postgrator",
+  execQuery,
 });
 
 testDuplicateMigrations({
   migrationPattern,
   driver: "mysql",
   database: "postgrator",
+  execQuery,
 });
 
 testDuplicateMigrations({
   migrationPattern,
   driver: "mssql",
   database: "master",
+  execQuery,
 });
 
 function testDuplicateMigrations(config: Options) {

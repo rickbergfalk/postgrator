@@ -79,6 +79,7 @@ describe("TypeScript API", function () {
     const patterngrator = new Postgrator({
       driver: "pg",
       migrationPattern: `${__dirname}/fail*/*`,
+      execQuery: async () => ({ rows: [] }),
     });
     const migrationsByPattern: Postgrator.Migration[] =
       await patterngrator.getMigrations();

@@ -36,7 +36,7 @@ export interface BaseOptions {
   validateChecksums?: boolean;
   migrationPattern?: string;
   newline?: string;
-  execQuery?: ExecQuery;
+  execQuery: ExecQuery;
   execSqlScript?: ExecSqlScript;
 }
 
@@ -87,7 +87,7 @@ export interface BaseResolvedOptions {
   validateChecksums: boolean;
   migrationPattern?: string;
   newline?: string;
-  execQuery?: ExecQuery;
+  execQuery: ExecQuery;
   execSqlScript?: ExecSqlScript;
 }
 
