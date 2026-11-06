@@ -4,6 +4,7 @@ import { getPostgratorEnd } from "./test-util.js";
 import { dirname } from "path";
 import { fileURLToPath } from "url";
 import { describe, before, it, after } from "node:test";
+import type Postgrator from "../src/postgrator.js";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 
@@ -33,10 +34,13 @@ testMigrationFailure(() => {
   });
 }, "mssql");
 
-function testMigrationFailure(factoryFunction, driver) {
+function testMigrationFailure(
+  factoryFunction: () => ReturnType<typeof getPostgratorEnd>,
+  driver: string
+) {
   describe(`Migration failure: ${driver}`, function () {
-    let postgrator;
-    let end = () => {};
+    let postgrator: Postgrator;
+    let end: () => Promise<void> | void = () => {};
 
     before(async () => {
       const result = await factoryFunction();
@@ -45,13 +49,16 @@ function testMigrationFailure(factoryFunction, driver) {
     });
 
     it("Handles failed migrations", function () {
-      return postgrator.migrate().catch((error) => {
-        assert(error, "Error expected from bad migration");
-        assert(
-          error.appliedMigrations,
-          "appliedMigrations decorated on error object"
-        );
-      });
+      return postgrator.migrate().then(
+        () => {},
+        (error) => {
+          assert(error, "Error expected from bad migration");
+          assert(
+            error.appliedMigrations,
+            "appliedMigrations decorated on error object"
+          );
+        }
+      );
     });
 
     it("Does not implement partial migrations", function () {
@@ -61,8 +68,8 @@ function testMigrationFailure(factoryFunction, driver) {
       });
     });
 
-    it("Migrates down to 000", function () {
-      return postgrator.migrate("00");
+    it("Migrates down to 000", async function () {
+      await postgrator.migrate("00");
     });
 
     after(async function () {

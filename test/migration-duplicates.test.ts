@@ -1,9 +1,10 @@
 import assert from "assert";
-import Postgrator from "../postgrator.js";
+import Postgrator from "../src/postgrator.js";
 import path from "path";
 import { dirname } from "path";
 import { fileURLToPath } from "url";
 import { describe, it } from "node:test";
+import type { Options } from "../src/types.js";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 
@@ -27,7 +28,7 @@ testDuplicateMigrations({
   database: "master",
 });
 
-function testDuplicateMigrations(config) {
+function testDuplicateMigrations(config: Options) {
   describe(`Duplicate migrations: ${config.driver}`, function () {
     const postgrator = new Postgrator(config);
 

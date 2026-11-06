@@ -1,28 +1,28 @@
 import Client from "./Client.js";
 
 class MssqlClient extends Client {
-  getAddNameSql() {
+  getAddNameSql(): string {
     return `
       ALTER TABLE ${this.config.schemaTable} 
         ADD name VARCHAR(MAX);
     `;
   }
 
-  getAddMd5Sql() {
+  getAddMd5Sql(): string {
     return `
       ALTER TABLE ${this.config.schemaTable} 
         ADD md5 VARCHAR(MAX);
     `;
   }
 
-  getAddRunAtSql() {
+  getAddRunAtSql(): string {
     return `
       ALTER TABLE ${this.config.schemaTable} 
         ADD run_at DATETIME;
     `;
   }
 
-  getColumnsSql() {
+  getColumnsSql(): string {
     const { config } = this;
     const schema = config.schemaTable.split(".");
     let tableName = schema[0];
@@ -44,7 +44,7 @@ class MssqlClient extends Client {
     `;
   }
 
-  getDatabaseVersionSql() {
+  getDatabaseVersionSql(): string {
     const { config } = this;
     return `
       SELECT TOP 1 version 

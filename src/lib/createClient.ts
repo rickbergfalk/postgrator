@@ -1,9 +1,11 @@
+import type { ResolvedOptions } from "../types.js";
+import Client from "./Client.js";
 import MssqlClient from "./MssqlClient.js";
 import MysqlClient from "./MysqlClient.js";
 import PostgresClient from "./PostgresClient.js";
 import Sqlite3Client from "./Sqlite3Client.js";
 
-export default function createClient(config) {
+export default function createClient(config: ResolvedOptions): Client {
   if (config.driver === "mysql") {
     return new MysqlClient(config);
   } else if (config.driver === "pg") {

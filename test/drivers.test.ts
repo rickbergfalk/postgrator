@@ -1,15 +1,16 @@
 import assert from "assert";
 import path from "path";
-import { getPostgratorEnd } from "./test-util.js";
+import { getPostgratorEnd, type PostgratorEnd } from "./test-util.js";
 import { dirname } from "path";
 import { fileURLToPath } from "url";
 import { describe, before, after, it } from "node:test";
+import type Postgrator from "../src/postgrator.js";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 
 const migrationPattern = path.join(__dirname, "./migrations/*");
 
-function getQuotedSchemaTable(postgrator) {
+function getQuotedSchemaTable(postgrator: Postgrator): string {
   if (postgrator.config.driver === "pg") {
     return postgrator.config.schemaTable
       .split(".")
@@ -87,10 +88,13 @@ driverExecQuery(() => {
   });
 }, "Driver: better-sqlite3");
 
-function driverExecQuery(factoryFunction, label) {
+function driverExecQuery(
+  factoryFunction: () => Promise<PostgratorEnd>,
+  label: string
+) {
   describe(label, () => {
-    let postgrator;
-    let end = () => {};
+    let postgrator: Postgrator;
+    let end: () => Promise<void> | void = () => {};
 
     before(async () => {
       const result = await factoryFunction();
@@ -186,8 +190,8 @@ function driverExecQuery(factoryFunction, label) {
         });
     });
 
-    it("Migrates down to 000", function () {
-      return postgrator.migrate("00");
+    it("Migrates down to 000", async function () {
+      await postgrator.migrate("00");
     });
 
     it("Migrates to latest without input", function () {
@@ -199,8 +203,8 @@ function driverExecQuery(factoryFunction, label) {
         });
     });
 
-    it("Migrates down to 000 again", function () {
-      return postgrator.migrate("00");
+    it("Migrates down to 000 again", async function () {
+      await postgrator.migrate("00");
     });
 
     it("Errors on invalid md5 check", function () {
@@ -221,8 +225,8 @@ function driverExecQuery(factoryFunction, label) {
         .then((version) => assert.strictEqual(version, 3));
     });
 
-    it("Migrates down to 000 again", function () {
-      return postgrator.migrate("00");
+    it("Migrates down to 000 again", async function () {
+      await postgrator.migrate("00");
     });
 
     it("Skips checksum validation if turned off", function () {
@@ -242,8 +246,8 @@ function driverExecQuery(factoryFunction, label) {
         .then((version) => assert.strictEqual(version, 6));
     });
 
-    it("Migrates down to 000 again", function () {
-      return postgrator.migrate("00");
+    it("Migrates down to 000 again", async function () {
+      await postgrator.migrate("00");
     });
   });
 }

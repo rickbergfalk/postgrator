@@ -2,7 +2,6 @@
 test/
 node_modules/
 .husky
-.mocharc.json
 docker-compose.yml
 .eslintrc
 .prettierignore

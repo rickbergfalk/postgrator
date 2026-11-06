@@ -14,6 +14,9 @@ const compat = new FlatCompat({
 });
 
 export default [
+  {
+    ignores: ["dist/**", "node_modules/**"],
+  },
   ...compat.extends("eslint:recommended"),
   eslintConfigPrettier,
   {
@@ -23,7 +26,7 @@ export default [
         ...globals.mocha,
       },
 
-      ecmaVersion: 2020,
+      ecmaVersion: 2022,
       sourceType: "module",
     },
   },
