@@ -41,12 +41,14 @@ abstract class Client {
   persistActionSql(migration: Migration): string {
     const action = migration.action.toLowerCase();
     if (action === "do") {
+      const md5Part =
+        migration.md5 !== undefined ? `'${migration.md5}'` : `NULL`;
       return `
           INSERT INTO ${this.quotedSchemaTable()} (version, name, md5, run_at) 
           VALUES (
             ${migration.version}, 
             '${migration.name}', 
-            '${migration.md5}',
+            ${md5Part},
             '${new Date().toISOString().replace("T", " ").replace("Z", "")}'
           );`;
     }
