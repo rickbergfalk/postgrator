@@ -1,6 +1,9 @@
 import Client from "./Client.js";
+import type { PostgresResolvedOptions } from "../types.js";
 
 class PostgresClient extends Client {
+  declare config: PostgresResolvedOptions;
+
   getAddNameSql(): string {
     return `
       ALTER TABLE ${this.quotedSchemaTable()} 

@@ -6,17 +6,18 @@ import PostgresClient from "./PostgresClient.js";
 import Sqlite3Client from "./Sqlite3Client.js";
 
 export default function createClient(config: ResolvedOptions): Client {
-  if (config.driver === "mysql") {
-    return new MysqlClient(config);
-  } else if (config.driver === "pg") {
-    return new PostgresClient(config);
-  } else if (config.driver === "mssql") {
-    return new MssqlClient(config);
-  } else if (config.driver === "sqlite3") {
-    return new Sqlite3Client(config);
-  } else {
-    throw new Error(
-      `db driver '${config.driver}' not supported. Must one of: mysql, mssql, sqlite3 or pg`
-    );
+  switch (config.driver) {
+    case "mysql":
+      return new MysqlClient(config);
+    case "pg":
+      return new PostgresClient(config);
+    case "mssql":
+      return new MssqlClient(config);
+    case "sqlite3":
+      return new Sqlite3Client(config);
+    default:
+      throw new Error(
+        `db driver not supported. Must one of: mysql, mssql, sqlite3 or pg`
+      );
   }
 }

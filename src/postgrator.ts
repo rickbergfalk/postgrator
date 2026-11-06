@@ -24,11 +24,9 @@ class Postgrator extends EventEmitter {
 
   constructor(options: PostgratorTypes.Options) {
     super();
-    this.config = Object.assign(
-      {},
-      DEFAULT_CONFIG,
-      options
-    ) as PostgratorTypes.ResolvedOptions;
+    const rawConfig = Object.assign({}, DEFAULT_CONFIG, options);
+    // Type-narrow based on driver for discriminated union guarantees
+    this.config = rawConfig as PostgratorTypes.ResolvedOptions;
     this.migrations = [];
     this.commonClient = createClient(this.config);
   }

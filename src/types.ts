@@ -80,9 +80,8 @@ export type Options =
 /**
  * Configuration after Postgrator defaults have been applied.
  */
-export interface ResolvedOptions {
+export interface BaseResolvedOptions {
   driver: Driver;
-  database?: string;
   currentSchema?: string;
   schemaTable: string;
   validateChecksums: boolean;
@@ -91,6 +90,31 @@ export interface ResolvedOptions {
   execQuery?: ExecQuery;
   execSqlScript?: ExecSqlScript;
 }
+
+export interface MySQLResolvedOptions extends BaseResolvedOptions {
+  driver: "mysql";
+  database: string;
+}
+
+export interface PostgresResolvedOptions extends BaseResolvedOptions {
+  driver: "pg";
+  database?: string;
+}
+
+export interface MsSQLResolvedOptions extends BaseResolvedOptions {
+  driver: "mssql";
+  database: string;
+}
+
+export interface Sqlite3ResolvedOptions extends BaseResolvedOptions {
+  driver: "sqlite3";
+}
+
+export type ResolvedOptions =
+  | MySQLResolvedOptions
+  | PostgresResolvedOptions
+  | MsSQLResolvedOptions
+  | Sqlite3ResolvedOptions;
 
 /**
  * An error thrown during migration, decorated with the migrations that

@@ -1,6 +1,9 @@
 import Client from "./Client.js";
+import type { MsSQLResolvedOptions } from "../types.js";
 
 class MssqlClient extends Client {
+  declare config: MsSQLResolvedOptions;
+
   getAddNameSql(): string {
     return `
       ALTER TABLE ${this.config.schemaTable} 

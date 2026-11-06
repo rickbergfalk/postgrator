@@ -1,6 +1,9 @@
 import Client from "./Client.js";
+import type { MySQLResolvedOptions } from "../types.js";
 
 class MysqlClient extends Client {
+  declare config: MySQLResolvedOptions;
+
   getAddNameSql(): string {
     return `
       ALTER TABLE ${this.config.schemaTable} 

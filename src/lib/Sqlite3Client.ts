@@ -1,6 +1,9 @@
 import Client from "./Client.js";
+import type { Sqlite3ResolvedOptions } from "../types.js";
 
 class Sqlite3Client extends Client {
+  declare config: Sqlite3ResolvedOptions;
+
   getAddNameSql(): string {
     return `
       ALTER TABLE ${this.quotedSchemaTable()} 
