@@ -17,52 +17,6 @@ Overall, the core port is structurally sound. Generated declarations work, names
 
 ## Correctness / Type Safety
 
-### 1. Optional options are actually required at runtime, but use non-null assertions — **RESOLVED**
-
-Per-operation validation was implemented instead of tightening types globally:
-
-- `migrationPattern`: validated in `getMigrations()` (`src/postgrator.ts`) — throws `"migrationPattern is required to get migrations"` if absent. The `!` non-null assertion was removed.
-
-- `execQuery`: validated in `Client.runQuery()` (`src/lib/Client.ts`) — throws `"execQuery is required to run queries"` if absent. Both `!` non-null assertions were removed.
-
-This follows the existing fallback pattern already used for `execSqlScript` in `runSqlScript()`. Runtime errors are now clear and actionable instead of low-level `TypeError`s. The types in `src/types.ts` remain optional to preserve flexibility across operations that don't need both options.
-
-### 2. `migrate()` target type and behavior disagree — **RESOLVED**
-
-- The JSDoc says "string or number" (`src/postgrator.ts:276`), but the signature is `target = ""` / string only.
-- Passing a number at runtime still crashes at `target.toLowerCase().trim()` (`src/postgrator.ts:288`).
-- `if (target === undefined)` at `src/postgrator.ts:295` is dead code because of the default parameter.
-- Invalid targets like `"abc"` become `NaN` and silently result in no migrations rather than an error.
-
-Updated JSDoc to remove number reference.
-
-### 3. Invalid migration actions are hidden by a cast — **RESOLVED**
-
-`action: action as PostgratorTypes.MigrationAction` appears in both SQL and JS migration branches (`src/postgrator.ts:67`, and the JS branch nearby).
-
-A file such as `001.sql` or `001.bogus.sql` enters `this.migrations` with an invalid action instead of being rejected or clearly skipped. Validate `action === "do" || action === "undo"` during parsing.
-
-### 4. JS migrations persist the literal string `"undefined"` as md5 — **RESOLVED**
-
-`Migration.md5` is now correctly optional, and JS migrations leave it undefined.
-
-However, `Client.persistActionSql()` interpolates `'${migration.md5}'` (`src/lib/Client.ts:49`), so JS migrations write the text `"undefined"` into the md5 column.
-
-Pre-existing, but the new optional type makes it worth fixing in the major release: use `NULL` or omit the column value.
-
-### 5. `ResolvedOptions` is not driver-aware — **RESOLVED**
-
-`ResolvedOptions.database` is always optional (`src/types.ts:85`), even though `MsSQLOptions.database` is required and `MysqlClient.getColumnsSql()` effectively requires it.
-
-A discriminated resolved union would preserve those guarantees.
-
-### 6. Option type mismatches with README/runtime
-
-- `MySQLOptions.database` is optional (`src/types.ts:48`), but the README says `database` is required and `MysqlClient` interpolates it into queries.
-- `Sqlite3Options.currentSchema` exists (`src/types.ts:74`) but is unused.
-
-Decide which options are truly required and align the types, README, and runtime validation.
-
 ### 7. Defaults can be overwritten by explicit `undefined`
 
 `Object.assign({}, DEFAULT_CONFIG, options)` (`src/postgrator.ts:27-30`) means `{ schemaTable: undefined }` overrides the default with `undefined`, later crashing in `quotedSchemaTable()`.
