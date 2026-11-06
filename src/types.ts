@@ -71,7 +71,6 @@ export interface MsSQLOptions extends BaseOptions {
  */
 export interface Sqlite3Options extends BaseOptions {
   driver: "sqlite3";
-  currentSchema?: string;
 }
 
 export type Options =
