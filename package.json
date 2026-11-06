@@ -39,8 +39,15 @@
     "type": "git",
     "url": "git://github.com/rickbergfalk/postgrator.git"
   },
-  "main": "dist/postgrator.js",
-  "types": "dist/postgrator.d.ts",
+  "main": "./dist/postgrator.js",
+  "types": "./dist/postgrator.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/postgrator.d.ts",
+      "default": "./dist/postgrator.js"
+    },
+    "./package.json": "./package.json"
+  },
   "files": [
     "dist"
   ],
