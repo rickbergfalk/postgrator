@@ -27,14 +27,14 @@ Per-operation validation was implemented instead of tightening types globally:
 
 This follows the existing fallback pattern already used for `execSqlScript` in `runSqlScript()`. Runtime errors are now clear and actionable instead of low-level `TypeError`s. The types in `src/types.ts` remain optional to preserve flexibility across operations that don't need both options.
 
-### 2. `migrate()` target type and behavior disagree
+### 2. `migrate()` target type and behavior disagree — **RESOLVED**
 
 - The JSDoc says "string or number" (`src/postgrator.ts:276`), but the signature is `target = ""` / string only.
 - Passing a number at runtime still crashes at `target.toLowerCase().trim()` (`src/postgrator.ts:288`).
 - `if (target === undefined)` at `src/postgrator.ts:295` is dead code because of the default parameter.
 - Invalid targets like `"abc"` become `NaN` and silently result in no migrations rather than an error.
 
-Decide whether numbers are supported. If yes, coerce with `String(target)` and update the signature. If no, update the JSDoc and remove the contradictory behavior. Also consider rejecting non-numeric targets.
+Updated JSDoc to remove number reference.
 
 ### 3. Invalid migration actions are hidden by a cast
 
