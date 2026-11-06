@@ -77,10 +77,13 @@ abstract class Client {
 
   async runQuery(query: string) {
     const { config } = this;
-    if (config.driver === "pg" && config.currentSchema) {
-      await config.execQuery!(`SET search_path = ${config.currentSchema}`);
+    if (!config.execQuery) {
+      throw new Error("execQuery is required to run queries");
     }
-    return config.execQuery!(query);
+    if (config.driver === "pg" && config.currentSchema) {
+      await config.execQuery(`SET search_path = ${config.currentSchema}`);
+    }
+    return config.execQuery(query);
   }
 
   async runSqlScript(sqlScript: string): Promise<void> {

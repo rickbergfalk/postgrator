@@ -40,7 +40,10 @@ class Postgrator extends EventEmitter {
    */
   async getMigrations(): Promise<PostgratorTypes.Migration[]> {
     const { migrationPattern, newline } = this.config;
-    const migrationFiles = await glob(migrationPattern!);
+    if (!migrationPattern) {
+      throw new Error("migrationPattern is required to get migrations");
+    }
+    const migrationFiles = await glob(migrationPattern);
     const migrations = (
       await Promise.all(
         migrationFiles
