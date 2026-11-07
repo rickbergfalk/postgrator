@@ -50,4 +50,4 @@ async function doMigration() {
     });
   });
 }
-doMigration();
+void doMigration();

@@ -10,7 +10,7 @@ import {
   MsSQLOptions,
   Sqlite3Options,
 } from "../src/types.js";
-import type { ExecQuery, Options, QueryResult } from "../src/types.js";
+import type { ExecQuery, QueryResult } from "../src/types.js";
 
 export interface PostgratorEnd {
   postgrator: Postgrator;

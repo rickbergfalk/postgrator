@@ -27,4 +27,4 @@ async function doMigration() {
   // close the db connectin
   await client.end();
 }
-doMigration();
+void doMigration();

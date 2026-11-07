@@ -50,4 +50,4 @@ async function doMigration() {
   // close the db connectin
   await client.close();
 }
-doMigration();
+void doMigration();

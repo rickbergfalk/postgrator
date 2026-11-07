@@ -38,7 +38,7 @@ function testMigrationFailure(
   factoryFunction: () => ReturnType<typeof getPostgratorEnd>,
   driver: string
 ) {
-  describe(`Migration failure: ${driver}`, function () {
+  void describe(`Migration failure: ${driver}`, function () {
     let postgrator: Postgrator;
     let end: () => Promise<void> | void = () => {};
 
@@ -48,7 +48,7 @@ function testMigrationFailure(
       end = result.end;
     });
 
-    it("Handles failed migrations", async function () {
+    void it("Handles failed migrations", async function () {
       await assert.rejects(
         () => postgrator.migrate(),
         (error: Error & { appliedMigrations?: unknown }) => {
@@ -62,14 +62,14 @@ function testMigrationFailure(
       );
     });
 
-    it("Does not implement partial migrations", function () {
+    void it("Does not implement partial migrations", function () {
       return postgrator.runQuery("SELECT name FROM widgets").then((results) => {
         assert(results.rows);
         assert.strictEqual(results.rows.length, 0, "Table should be empty");
       });
     });
 
-    it("Migrates down to 000", async function () {
+    void it("Migrates down to 000", async function () {
       await postgrator.migrate("00");
     });
 

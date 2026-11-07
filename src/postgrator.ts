@@ -310,7 +310,7 @@ class Postgrator extends EventEmitter {
       if (config.validateChecksums && data.targetVersion >= databaseVersion) {
         await this.validateMigrations(databaseVersion);
       }
-      const runnableMigrations = await this.getRunnableMigrations(
+      const runnableMigrations = this.getRunnableMigrations(
         data.databaseVersion,
         data.targetVersion
       );
@@ -326,9 +326,7 @@ class Postgrator extends EventEmitter {
       throw migrationError;
     }
   }
-}
 
-interface Postgrator {
   /**
    * Registers an event listener for the `validation-started` event
    */
@@ -362,6 +360,9 @@ interface Postgrator {
   ): this;
 
   on(event: string | symbol, listener: (...args: any[]) => void): this;
+  on(event: string | symbol, listener: (...args: any[]) => void): this {
+    return super.on(event, listener);
+  }
 }
 
 namespace Postgrator {

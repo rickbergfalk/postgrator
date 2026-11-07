@@ -92,7 +92,7 @@ function driverExecQuery(
   factoryFunction: () => Promise<PostgratorEnd>,
   label: string
 ) {
-  describe(label, () => {
+  void describe(label, () => {
     let postgrator: Postgrator;
     let end: () => Promise<void> | void = () => {};
 
@@ -111,12 +111,12 @@ function driverExecQuery(
       return end();
     });
 
-    it("Returns 0 for database version before init", async function () {
+    void it("Returns 0 for database version before init", async function () {
       const result = await postgrator.getDatabaseVersion();
       assert.strictEqual(result, 0);
     });
 
-    it("Migrates multiple versions up (000 -> 002)", function () {
+    void it("Migrates multiple versions up (000 -> 002)", function () {
       return postgrator
         .migrate("002")
         .then(() => postgrator.runQuery("SELECT name FROM person"))
@@ -125,13 +125,13 @@ function driverExecQuery(
         });
     });
 
-    it("Handles current version", function () {
+    void it("Handles current version", function () {
       return postgrator.migrate("002").then((migrations) => {
         assert.strictEqual(migrations.length, 0);
       });
     });
 
-    it("Has migration details in schema table", function () {
+    void it("Has migration details in schema table", function () {
       return postgrator
         .runQuery(
           `SELECT version, name, md5, run_at 
@@ -145,7 +145,7 @@ function driverExecQuery(
         });
     });
 
-    it("Migrates one version up (002 -> 003", function () {
+    void it("Migrates one version up (002 -> 003", function () {
       return postgrator
         .migrate("003")
         .then(() => postgrator.runQuery("SELECT name FROM person"))
@@ -154,7 +154,7 @@ function driverExecQuery(
         });
     });
 
-    it("Migrates generated SQL", function () {
+    void it("Migrates generated SQL", function () {
       // using this to demo that you use environment variables to generate sql
       process.env.TEST_NAME = "aesthete";
       return postgrator
@@ -166,7 +166,7 @@ function driverExecQuery(
         });
     });
 
-    it("Checksums generated SQL", function () {
+    void it("Checksums generated SQL", function () {
       process.env.TEST_ANOTHER_NAME = "sop";
       return postgrator
         .migrate("006")
@@ -181,7 +181,7 @@ function driverExecQuery(
         });
     });
 
-    it('Migrates to "max"', function () {
+    void it('Migrates to "max"', function () {
       return postgrator
         .migrate("max")
         .then(() => postgrator.runQuery("SELECT name, age FROM person"))
@@ -190,11 +190,11 @@ function driverExecQuery(
         });
     });
 
-    it("Migrates down to 000", async function () {
+    void it("Migrates down to 000", async function () {
       await postgrator.migrate("00");
     });
 
-    it("Migrates to latest without input", function () {
+    void it("Migrates to latest without input", function () {
       return postgrator
         .migrate()
         .then(() => postgrator.runQuery("SELECT name, age FROM person"))
@@ -203,11 +203,11 @@ function driverExecQuery(
         });
     });
 
-    it("Migrates down to 000 again", async function () {
+    void it("Migrates down to 000 again", async function () {
       await postgrator.migrate("00");
     });
 
-    it("Errors on invalid md5 check", function () {
+    void it("Errors on invalid md5 check", function () {
       return postgrator
         .migrate("003")
         .then(() =>
@@ -225,11 +225,11 @@ function driverExecQuery(
         .then((version) => assert.strictEqual(version, 3));
     });
 
-    it("Migrates down to 000 again", async function () {
+    void it("Migrates down to 000 again", async function () {
       await postgrator.migrate("00");
     });
 
-    it("Skips checksum validation if turned off", function () {
+    void it("Skips checksum validation if turned off", function () {
       postgrator.config.validateChecksums = false;
       return postgrator
         .migrate("003")
@@ -246,7 +246,7 @@ function driverExecQuery(
         .then((version) => assert.strictEqual(version, 6));
     });
 
-    it("Migrates down to 000 again", async function () {
+    void it("Migrates down to 000 again", async function () {
       await postgrator.migrate("00");
     });
   });
