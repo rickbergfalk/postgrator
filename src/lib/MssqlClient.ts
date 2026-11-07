@@ -47,7 +47,7 @@ class MssqlClient extends Client {
     `;
   }
 
-  getDatabaseVersionSql(): string {
+  override getDatabaseVersionSql(): string {
     const { config } = this;
     return `
       SELECT TOP 1 version 

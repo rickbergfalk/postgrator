@@ -97,7 +97,6 @@ class Postgrator extends EventEmitter {
                   // JS files are dynamic, so resulting content could change
                   // Prettier and JS trends mean that formatting could also change over time
                   // Considering these things, md5 hashing for JS will be skipped.
-                  md5: undefined,
                   getSql: () => jsModule.generateSql(),
                 };
               }
@@ -330,7 +329,7 @@ class Postgrator extends EventEmitter {
   /**
    * Registers an event listener for the `validation-started` event
    */
-  on(
+  override on(
     event: "validation-started",
     cb: PostgratorTypes.MigrationEventCallback
   ): this;
@@ -338,7 +337,7 @@ class Postgrator extends EventEmitter {
   /**
    * Registers an event listener for the `validation-finished` event
    */
-  on(
+  override on(
     event: "validation-finished",
     cb: PostgratorTypes.MigrationEventCallback
   ): this;
@@ -346,7 +345,7 @@ class Postgrator extends EventEmitter {
   /**
    * Registers an event listener for the `migration-started` event
    */
-  on(
+  override on(
     event: "migration-started",
     cb: PostgratorTypes.MigrationEventCallback
   ): this;
@@ -354,13 +353,16 @@ class Postgrator extends EventEmitter {
   /**
    * Registers an event listener for the `migration-finished` event
    */
-  on(
+  override on(
     event: "migration-finished",
     cb: PostgratorTypes.MigrationEventCallback
   ): this;
 
-  on(event: string | symbol, listener: (...args: any[]) => void): this;
-  on(event: string | symbol, listener: (...args: any[]) => void): this {
+  override on(event: string | symbol, listener: (...args: any[]) => void): this;
+  override on(
+    event: string | symbol,
+    listener: (...args: any[]) => void
+  ): this {
     return super.on(event, listener);
   }
 }
