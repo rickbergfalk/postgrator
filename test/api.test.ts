@@ -73,6 +73,9 @@ describe("TypeScript API", function () {
     assert.strictEqual(m.action, "do");
     assert(m.filename.endsWith("001.do.sql"));
     assert(m.hasOwnProperty("name"));
+    assert.strictEqual(m.name, "");
+    const m2 = migrations.find((m2) => m2.version === 2 && m2.action === "do");
+    assert.strictEqual(m2?.name, "some-description");
   });
 
   it("Finds migrations by glob pattern", async () => {
