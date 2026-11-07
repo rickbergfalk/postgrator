@@ -15,16 +15,6 @@ Overall, the core port is structurally sound. Generated declarations work, names
 
 ---
 
-## Correctness / Type Safety
-
-### 7. Defaults can be overwritten by explicit `undefined`
-
-`Object.assign({}, DEFAULT_CONFIG, options)` (`src/postgrator.ts:27-30`) means `{ schemaTable: undefined }` overrides the default with `undefined`, later crashing in `quotedSchemaTable()`.
-
-`exactOptionalPropertyTypes` is not enabled, so TypeScript permits this. Using nullish coalescing or `??=` would be safer. The same applies to `validateChecksums: undefined`, which currently disables checksum validation instead of retaining the default.
-
----
-
 ## Tests
 
 ### 8. Coverage regressed when `test/api.test.js` was deleted
