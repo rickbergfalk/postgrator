@@ -52,14 +52,6 @@ All tests import `../src/...` through `tsx`.
 
 A small smoke test importing from the packed package, or at least `tsc` against `dist`, would catch packaging and declaration regressions.
 
-### 11. Lint coverage effectively no longer includes the real source
-
-`eslint "**/*.{js,mjs,cjs}"` (`package.json:29`) only lints JS files. All source and tests are now TS, so ESLint only really checks the config file.
-
-Example miss: `test/api.test.ts:58` declares an unused `migrations` local. `tsc --noUnusedLocals` catches it, but the current lint does not.
-
-Add `typescript-eslint` or at least enable `noUnusedLocals` / `noUnusedParameters`.
-
 ### 12. Minor test portability concern
 
 The old JS API test used `path.join(__dirname, "/fail*/*")`; the retained TS test uses a hard-coded forward slash template (`test/api.test.ts:81`). Linux CI passes, but this is less portable.
