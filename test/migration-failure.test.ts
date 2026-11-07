@@ -48,15 +48,16 @@ function testMigrationFailure(
       end = result.end;
     });
 
-    it("Handles failed migrations", function () {
-      return postgrator.migrate().then(
-        () => {},
-        (error) => {
+    it("Handles failed migrations", async function () {
+      await assert.rejects(
+        () => postgrator.migrate(),
+        (error: Error & { appliedMigrations?: unknown }) => {
           assert(error, "Error expected from bad migration");
           assert(
             error.appliedMigrations,
             "appliedMigrations decorated on error object"
           );
+          return true;
         }
       );
     });

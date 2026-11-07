@@ -17,23 +17,6 @@ Overall, the core port is structurally sound. Generated declarations work, names
 
 ## Tests
 
-### 8. Coverage regressed when `test/api.test.js` was deleted
-
-The deleted JS test contained:
-
-- `assert.strictEqual(m.name, "")`
-- lookup of migration 002 and `assert.strictEqual(m2.name, "some-description")`
-
-The retained `test/api.test.ts` only asserts `m.hasOwnProperty("name")` (`test/api.test.ts:75`), so migration name parsing is no longer verified.
-
-Restore those assertions in the TS test.
-
-### 9. The failure test still passes if migration unexpectedly succeeds
-
-`test/migration-failure.test.ts:51-62` uses `.then(() => {}, onRejected)`, so a successful `migrate()` is silently accepted.
-
-It should assert rejection, e.g. fail when the fulfilled callback runs.
-
 ### 10. No test of the built package or published types
 
 All tests import `../src/...` through `tsx`.
