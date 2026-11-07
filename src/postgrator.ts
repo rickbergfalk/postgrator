@@ -20,7 +20,7 @@ const DEFAULT_CONFIG = {
 class Postgrator extends EventEmitter {
   config: PostgratorTypes.ResolvedOptions;
   migrations: PostgratorTypes.Migration[];
-  commonClient: Client;
+  private commonClient: Client;
 
   constructor(options: PostgratorTypes.Options) {
     super();
