@@ -62,12 +62,6 @@ The `test` script only matches `test/*.test.ts`, not nested test directories.
 
 ## Build / Packaging / CI
 
-### 13. CI does not run lint or build
-
-`.github/workflows/test.yml` only runs `npm run typecheck` and `npm test`.
-
-Add `npm run lint` and `npm run build` so formatting, ESLint, and emitted output are checked.
-
 ### 14. `dist` is never cleaned before building
 
 `dist/` is gitignored and `prepack` only runs `tsc`.
