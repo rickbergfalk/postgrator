@@ -27,7 +27,7 @@
     "clean": "node scripts/clean.mjs",
     "build": "npm run clean && tsc -p tsconfig.build.json",
     "typecheck": "tsc --noEmit",
-    "lint": "npm run typecheck && npx oxlint --type-aware && prettier --check .",
+    "lint": "npm run typecheck && npx oxlint --type-aware --max-warnings=0 && prettier --check .",
     "prettier-write": "prettier --write .",
     "test": "node --import tsx --test --test-concurrency=1 \"test/**/*.test.ts\"",
     "test:package": "node scripts/test-package.mjs",
