@@ -29,9 +29,12 @@ function run(command, args, options = {}) {
 function expectedTarballFiles(packageJson, packedFiles) {
   const normalize = (file) => file.replace(/^\.\//, "");
   const missing = [];
-  const required = ["package.json", packageJson.main, packageJson.types].map(
-    normalize
-  );
+  const required = [
+    "package.json",
+    packageJson.main,
+    packageJson.types,
+    "CHANGELOG.md",
+  ].map(normalize);
   for (const file of required) {
     if (!packedFiles.includes(file)) {
       missing.push(file);
@@ -63,6 +66,10 @@ try {
     // Sources, tests, and dev scripts must never ship.
     if (["src/", "test/", "scripts/"].some((dir) => file.startsWith(dir))) {
       throw new Error(`Unexpected file in packed tarball: ${file}`);
+    }
+    // Declaration maps reference sources that are not published.
+    if (file.endsWith(".d.ts.map")) {
+      throw new Error(`Unexpected declaration map in packed tarball: ${file}`);
     }
   }
 

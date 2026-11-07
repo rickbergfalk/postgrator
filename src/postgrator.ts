@@ -378,6 +378,8 @@ namespace Postgrator {
   export type ResolvedOptions = PostgratorTypes.ResolvedOptions;
   export type MigrationError = PostgratorTypes.MigrationError;
   export type MigrationEventCallback = PostgratorTypes.MigrationEventCallback;
+  export type ExecQuery = PostgratorTypes.ExecQuery;
+  export type ExecSqlScript = PostgratorTypes.ExecSqlScript;
 }
 
 export type {

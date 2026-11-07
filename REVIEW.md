@@ -15,49 +15,7 @@ Overall, the core port is structurally sound. Generated declarations work, names
 
 ---
 
-## Tests
-
-### 10. No test of the built package or published types
-
-All tests import `../src/...` through `tsx`.
-
-`npm run build` / `dist` output is never exercised in CI.
-
-A small smoke test importing from the packed package, or at least `tsc` against `dist`, would catch packaging and declaration regressions.
-
----
-
 ## Build / Packaging / CI
-
-### 14. `dist` is never cleaned before building
-
-`dist/` is gitignored and `prepack` only runs `tsc`.
-
-If a source file is renamed or deleted, stale compiled files can remain in `dist` and get packed.
-
-Add a clean step before `tsc`.
-
-### 15. Git installs may produce a package without `dist`
-
-`dist` is gitignored, and only `prepack` builds it.
-
-For non-registry installs npm runs `prepare` (currently just `husky`), not `prepack`.
-
-Unless registry-only installation is intended, `prepare` should also build, or this behavior should be documented.
-
-### 16. `CHANGELOG.md` is no longer in the published tarball
-
-Old `.npmignore` did not exclude it; the new `files: ["dist"]` whitelist does.
-
-The `npm pack --dry-run` output confirms it is absent.
-
-### 17. Declaration maps point to files not published
-
-`dist/postgrator.d.ts.map` references `../src/postgrator.ts`, but `src` is not in the tarball.
-
-JavaScript maps are fine because `inlineSources` embeds the source; declaration maps are not.
-
-Either include `src`, disable `declarationMap`, or otherwise adjust source map packaging.
 
 ### 18. Release metadata not updated
 
