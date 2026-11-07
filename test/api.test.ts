@@ -1,16 +1,16 @@
 import assert from "assert";
-import Postgrator from "../postgrator.js";
+import Postgrator from "../src/postgrator.js";
 import pg from "pg";
 import * as path from "path";
 import { dirname } from "path";
 import { fileURLToPath } from "url";
-import { describe, before, it, after } from 'node:test';
+import { describe, before, it, after } from "node:test";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 
 const migrationPattern = path.join(__dirname, "migrations/*");
 
-describe("TypeScript API", function () {
+void describe("TypeScript API", function () {
   const client = new pg.Client({
     host: "localhost",
     port: 5432,
@@ -44,53 +44,57 @@ describe("TypeScript API", function () {
     await postgrator.runQuery("DROP TABLE IF EXISTS animal");
   });
 
-  it("Migrates up to 003", async () => {
+  void it("Migrates up to 003", async () => {
     const migrations: Postgrator.Migration[] = await postgrator.migrate("003");
     assert.strictEqual(migrations.length, 3, "3 migrations run");
   });
 
-  it("Emits migration events", () => {
+  void it("Emits migration events", () => {
     assert.strictEqual(mStarted.length, 3);
     assert.strictEqual(mFinished.length, 3);
   });
 
-  it("Emits validation events", async () => {
-    const migrations: Postgrator.Migration[] = await postgrator.migrate("004");
+  void it("Emits validation events", async () => {
+    await postgrator.migrate("004");
     assert.strictEqual(vStarted.length, 3);
     assert.strictEqual(vFinished.length, 3);
   });
 
-  it("Implements getDatabaseVersion", async () => {
+  void it("Implements getDatabaseVersion", async () => {
     const version: number = await postgrator.getDatabaseVersion();
     assert.strictEqual(version, 4);
   });
 
-  it("Implements getMigrations", async () => {
+  void it("Implements getMigrations", async () => {
     const migrations: Postgrator.Migration[] = await postgrator.getMigrations();
     assert.strictEqual(migrations.length, 12);
     const m = migrations[0];
-    assert.strictEqual(m.version, 1);
+    assert.strictEqual(m?.version, 1);
     assert.strictEqual(m.action, "do");
     assert(m.filename.endsWith("001.do.sql"));
     assert(m.hasOwnProperty("name"));
+    assert.strictEqual(m.name, "");
+    const m2 = migrations.find((m2) => m2.version === 2 && m2.action === "do");
+    assert.strictEqual(m2?.name, "some-description");
   });
 
-  it("Finds migrations by glob pattern", async () => {
+  void it("Finds migrations by glob pattern", async () => {
     const patterngrator = new Postgrator({
       driver: "pg",
-      migrationPattern: `${__dirname}/fail*/*`,
+      migrationPattern: path.join(__dirname, "fail*", "*").replace(/\\/g, "/"),
+      execQuery: async () => ({ rows: [] }),
     });
     const migrationsByPattern: Postgrator.Migration[] =
       await patterngrator.getMigrations();
     assert.strictEqual(migrationsByPattern.length, 4);
   });
 
-  it("Implements getMaxVersion", async () => {
+  void it("Implements getMaxVersion", async () => {
     const max: number = await postgrator.getMaxVersion();
     assert.strictEqual(max, 6);
   });
 
-  it("Migrates down to 000", async () => {
+  void it("Migrates down to 000", async () => {
     const migrations: Postgrator.Migration[] = await postgrator.migrate("000");
     assert.strictEqual(migrations.length, 4, "4 migrations run");
   });

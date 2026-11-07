@@ -152,17 +152,17 @@ Want more examples for MySQL and MS SQL Server? Check out the `examples` directo
 const postgrator = new Postgrator(options);
 ```
 
-| Option             | Required | Description                                                                                                                                                                                        | default         |
-| ------------------ | -------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------- |
-| `migrationPattern` | Required | Glob pattern to migration files. e.g. `path.join(__dirname, '/migrations/*')`                                                                                                                      |                 |
-| `driver`           | Required | Must be `pg`, `mysql`, `mssql`, or `sqlite3`                                                                                                                                                       |                 |
-| `database`         | Required | Target database name. Optional for `sqlite3`.                                                                                                                                                      |                 |
-| `execQuery`        | Required | Function to execute SQL. MUST return a promise containing an object with a rows array of objects. For example `{ rows: [{ column_name: 'column_value' }] }`                                        |                 |
-| `execSqlScript`    | Optional | Function to execute db migration script consisting of multiple SQL statements. MUST return a void promise. If not supplied, `execQuery` will be used. `                                            |                 |
-| `schemaTable`      | Optional | Table created to track schema version. When using Postgres, you may specify schema as well, e.g. `schema_name.table_name`                                                                          | `schemaversion` |
-| `validateChecksum` | Optional | Validates checksum of existing SQL migration files already run prior to executing migrations. Set to `false` to disable. Unused for JS migrations.                                                 | `true`          |
-| `newline`          | Optional | Force line ending on file when generating checksum. Value should be either `CRLF` (windows) or `LF` (unix/mac).                                                                                    |                 |
-| `currentSchema`    | Optional | For Postgres and MS SQL Server. Specifies schema to look to when validating schemaversion table columns. For Postgres, run's `SET search_path = currentSchema` prior to running queries against db |
+| Option              | Required    | Description                                                                                                                                                                                                                                                               | default         |
+| ------------------- | ----------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------- |
+| `migrationPattern`  | Required    | Glob pattern to migration files. e.g. `path.join(__dirname, '/migrations/*')`                                                                                                                                                                                             |                 |
+| `driver`            | Required    | Must be `pg`, `mysql`, `mssql`, or `sqlite3`                                                                                                                                                                                                                              |                 |
+| `database`          | Conditional | Database name used to scope schema-table introspection. **Required for `mysql` and `mssql`; optional for `pg`** (recommended when multiple databases share a cluster). Not used for `sqlite3`. This does not select the connection target; the injected `execQuery` does. |                 |
+| `execQuery`         | Required    | Function to execute SQL. MUST return a promise containing an object with a rows array of objects. For example `{ rows: [{ column_name: 'column_value' }] }`                                                                                                               |                 |
+| `execSqlScript`     | Optional    | Function to execute db migration script consisting of multiple SQL statements. MUST return a void promise. If not supplied, `execQuery` will be used. `                                                                                                                   |                 |
+| `schemaTable`       | Optional    | Table created to track schema version. When using Postgres, you may specify schema as well, e.g. `schema_name.table_name`                                                                                                                                                 | `schemaversion` |
+| `validateChecksums` | Optional    | Validates checksum of existing SQL migration files already run prior to executing migrations. Set to `false` to disable. Unused for JS migrations.                                                                                                                        | `true`          |
+| `newline`           | Optional    | Force line ending on file when generating checksum. Value should be either `CRLF` (windows) or `LF` (unix/mac).                                                                                                                                                           |                 |
+| `currentSchema`     | Optional    | For Postgres and MS SQL Server. Specifies schema to look to when validating schemaversion table columns. For Postgres, run's `SET search_path = currentSchema` prior to running queries against db                                                                        |
 
 ### Checksum validation
 
@@ -269,6 +269,16 @@ npm test
 # control/command-c to quit docker-compose and remove containers
 docker-compose rm --force
 ```
+
+To verify the built package, run:
+
+```sh
+npm run test:package
+```
+
+This packs the tarball, imports it from a temporary consumer project, runs a
+migration end-to-end, and type-checks the published declarations. It does not
+need the Docker databases.
 
 ## License
 

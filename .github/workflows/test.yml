@@ -69,4 +69,10 @@ jobs:
 
       - run: npm install
 
+      - run: npm run lint
+
+      - run: npm run build
+
+      - run: npm run test:package
+
       - run: npm test

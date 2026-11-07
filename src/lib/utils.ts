@@ -1,7 +1,8 @@
 import fs from "fs";
 import crypto from "crypto";
+import type { Migration } from "../types.js";
 
-export function sortMigrationsAsc(a, b) {
+export function sortMigrationsAsc(a: Migration, b: Migration): number {
   if (a.version < b.version) {
     return -1;
   }
@@ -11,7 +12,7 @@ export function sortMigrationsAsc(a, b) {
   return 0;
 }
 
-export function sortMigrationsDesc(a, b) {
+export function sortMigrationsDesc(a: Migration, b: Migration): number {
   if (a.version < b.version) {
     return 1;
   }
@@ -23,28 +24,28 @@ export function sortMigrationsDesc(a, b) {
 
 /**
  * Calculate checksum of file to detect changes to migrations that have already run.
- * @param {string} filename
- * @param {string} lineEnding - newline setting string for newline lib
+ * @param filename
+ * @param lineEnding - newline setting string for newline lib
  */
-export function fileChecksum(filename, lineEnding) {
+export function fileChecksum(filename: string, lineEnding?: string): string {
   const content = fs.readFileSync(filename, "utf8");
   return checksum(content, lineEnding);
 }
 
 /**
- *
- * @param {string} content - Content to checksum
- * @param {string} lineEnding - newline setting string for newline lib
+ * Calculate checksum of content.
+ * @param content - Content to checksum
+ * @param lineEnding - newline setting string for newline lib
  */
-export function checksum(content, lineEnding) {
+export function checksum(content: string, lineEnding?: string): string {
   if (lineEnding) {
     content = convertLineEnding(content, lineEnding);
   }
   return crypto.createHash("md5").update(content, "utf8").digest("hex");
 }
 
-export function convertLineEnding(content, lineEnding) {
-  const lineEndingMap = {
+export function convertLineEnding(content: string, lineEnding: string): string {
+  const lineEndingMap: Record<string, string> = {
     LF: "\n",
     CR: "\r",
     CRLF: "\r\n",

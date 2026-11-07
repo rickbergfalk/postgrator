@@ -1,5 +1,6 @@
 import mysql from "mysql";
-import Postgrator from "../postgrator";
+import Postgrator from "../src/postgrator.js";
+import type { QueryResult } from "../src/types.js";
 
 async function doMigration() {
   const connection = mysql.createConnection({
@@ -10,7 +11,7 @@ async function doMigration() {
     password: "postgrator",
   });
 
-  await new Promise((resolve, reject) => {
+  await new Promise<void>((resolve, reject) => {
     connection.connect((err) => {
       if (err) {
         return reject(err);
@@ -24,7 +25,7 @@ async function doMigration() {
     driver: "mysql",
     database: "database_name",
     execQuery: (query) => {
-      return new Promise((resolve, reject) => {
+      return new Promise<QueryResult>((resolve, reject) => {
         connection.query(query, (err, rows, fields) => {
           if (err) {
             return reject(err);
@@ -40,7 +41,7 @@ async function doMigration() {
   await postgrator.migrate();
 
   // close the db connectin
-  await new Promise((resolve, reject) => {
+  await new Promise<void>((resolve, reject) => {
     connection.end((err) => {
       if (err) {
         return reject(err);
@@ -49,4 +50,4 @@ async function doMigration() {
     });
   });
 }
-doMigration();
+void doMigration();

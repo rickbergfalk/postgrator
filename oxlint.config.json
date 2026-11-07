@@ -1,0 +1,4 @@
+{
+  "$schema": "https://raw.githubusercontent.com/oxc-project/oxlint/main/oxlint/schemas/oxlint.schema.json",
+  "ignores": ["dist/**", "node_modules/**", "coverage/**"]
+}

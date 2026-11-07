@@ -1,5 +1,5 @@
 import pg from "pg";
-import Postgrator from "../postgrator";
+import Postgrator from "../src/postgrator.js";
 
 async function doMigration() {
   const client = new pg.Client({
@@ -27,4 +27,4 @@ async function doMigration() {
   // close the db connectin
   await client.end();
 }
-doMigration();
+void doMigration();

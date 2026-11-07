@@ -1,11 +1,43 @@
 import pg from "pg";
-import Postgrator from "../postgrator.js";
+import Postgrator from "../src/postgrator.js";
 import mssql from "mssql";
 import mysql from "mysql";
 import sqlite3 from "sqlite3";
-import betterSqlite3 from "better-sqlite3";
+import Database from "better-sqlite3";
+import {
+  PostgreSQLOptions,
+  MySQLOptions,
+  MsSQLOptions,
+  Sqlite3Options,
+} from "../src/types.js";
+import type { ExecQuery, QueryResult } from "../src/types.js";
 
-export async function getPostgratorEnd(config) {
+export interface PostgratorEnd {
+  postgrator: Postgrator;
+  end: () => Promise<void> | void;
+}
+
+export type DriverTestOptions =
+  | (Omit<PostgreSQLOptions, "execQuery"> & {
+      execQuery?: ExecQuery;
+      betterSqlite3?: boolean;
+    })
+  | (Omit<MySQLOptions, "execQuery"> & {
+      execQuery?: ExecQuery;
+      betterSqlite3?: boolean;
+    })
+  | (Omit<MsSQLOptions, "execQuery"> & {
+      execQuery?: ExecQuery;
+      betterSqlite3?: boolean;
+    })
+  | (Omit<Sqlite3Options, "execQuery"> & {
+      execQuery?: ExecQuery;
+      betterSqlite3?: boolean;
+    });
+
+export async function getPostgratorEnd(
+  config: DriverTestOptions
+): Promise<PostgratorEnd> {
   if (config.driver === "pg") {
     const client = new pg.Client({
       host: "localhost",
@@ -17,7 +49,7 @@ export async function getPostgratorEnd(config) {
 
     await client.connect();
 
-    const execQuery = (query) => client.query(query);
+    const execQuery = (query: string) => client.query(query);
     const end = () => client.end();
 
     const postgrator = new Postgrator({
@@ -54,7 +86,7 @@ export async function getPostgratorEnd(config) {
     const postgrator = new Postgrator({
       ...config,
       execQuery: (query) => {
-        return new Promise((resolve, reject) => {
+        return new Promise<QueryResult>((resolve, reject) => {
           const request = new mssql.Request(client);
 
           request.batch(query, (err, result) => {
@@ -62,7 +94,9 @@ export async function getPostgratorEnd(config) {
               return reject(err);
             }
             return resolve({
-              rows: result && result.recordset ? result.recordset : result,
+              rows: (result && result.recordset
+                ? result.recordset
+                : result) as any[],
             });
           });
         });
@@ -84,7 +118,7 @@ export async function getPostgratorEnd(config) {
       password: "postgrator",
     });
 
-    await new Promise((resolve, reject) => {
+    await new Promise<void>((resolve, reject) => {
       connection.connect((err) => {
         if (err) {
           return reject(err);
@@ -96,7 +130,7 @@ export async function getPostgratorEnd(config) {
     const postgrator = new Postgrator({
       ...config,
       execQuery: (query) => {
-        return new Promise((resolve, reject) => {
+        return new Promise<QueryResult>((resolve, reject) => {
           connection.query(query, (err, rows, fields) => {
             if (err) {
               return reject(err);
@@ -111,7 +145,7 @@ export async function getPostgratorEnd(config) {
     return {
       postgrator,
       end: () =>
-        new Promise((resolve, reject) => {
+        new Promise<void>((resolve, reject) => {
           connection.end((err) => {
             if (err) {
               return reject(err);
@@ -123,16 +157,19 @@ export async function getPostgratorEnd(config) {
   }
 
   if (config.driver === "sqlite3" && config.betterSqlite3) {
-    const db = new betterSqlite3(":memory:");
+    const db = new Database(":memory:");
 
-    const execQuery = (query) => {
-      return new Promise((resolve) => {
+    const execQuery = (query: string) => {
+      return new Promise<QueryResult>((resolve) => {
         const stm = db.prepare(query);
         try {
           const rows = stm.all();
           resolve({ rows });
         } catch (err) {
-          if (err.message.indexOf("This statement does not return data") >= 0) {
+          if (
+            err instanceof Error &&
+            err.message.indexOf("This statement does not return data") >= 0
+          ) {
             stm.run();
             resolve({ rows: [] });
           }
@@ -141,8 +178,8 @@ export async function getPostgratorEnd(config) {
       });
     };
 
-    const execSqlScript = (sqlScript) => {
-      return new Promise((resolve) => {
+    const execSqlScript = (sqlScript: string) => {
+      return new Promise<void>((resolve) => {
         db.exec(sqlScript);
         resolve();
       });
@@ -157,7 +194,7 @@ export async function getPostgratorEnd(config) {
     return {
       postgrator,
       end: () =>
-        new Promise((resolve, reject) => {
+        new Promise<void>((resolve, reject) => {
           try {
             db.close();
             resolve();
@@ -171,8 +208,8 @@ export async function getPostgratorEnd(config) {
   if (config.driver === "sqlite3") {
     const db = new sqlite3.Database(":memory:");
 
-    const execQuery = (query) => {
-      return new Promise((resolve, reject) => {
+    const execQuery = (query: string) => {
+      return new Promise<QueryResult>((resolve, reject) => {
         db.all(query, (err, rows) => {
           if (err) {
             return reject(err);
@@ -182,8 +219,8 @@ export async function getPostgratorEnd(config) {
       });
     };
 
-    const execSqlScript = (sqlScript) => {
-      return new Promise((resolve, reject) => {
+    const execSqlScript = (sqlScript: string) => {
+      return new Promise<void>((resolve, reject) => {
         db.exec(sqlScript, (err) => {
           if (err) {
             return reject(err);
@@ -202,7 +239,7 @@ export async function getPostgratorEnd(config) {
     return {
       postgrator,
       end: () =>
-        new Promise((resolve, reject) => {
+        new Promise<void>((resolve, reject) => {
           db.close((err) => {
             if (err) {
               reject(err);
@@ -213,6 +250,8 @@ export async function getPostgratorEnd(config) {
         }),
     };
   }
+
+  throw new Error("Unsupported driver configuration");
 }
 
 export default {

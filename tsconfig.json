@@ -4,10 +4,24 @@
     "module": "NodeNext",
     "moduleResolution": "NodeNext",
     "allowSyntheticDefaultImports": true,
+    "esModuleInterop": true,
     "lib": ["es2022"],
     "sourceMap": true,
+    "declaration": true,
+    "declarationMap": true,
     "strict": true,
     "noImplicitAny": true,
+    "noUnusedLocals": true,
+    "noUnusedParameters": true,
+    "noFallthroughCasesInSwitch": true,
+    "noUncheckedIndexedAccess": true,
+    "noImplicitOverride": true,
+    "exactOptionalPropertyTypes": true,
+    "allowUnreachableCode": false,
+    "forceConsistentCasingInFileNames": true,
+    "skipLibCheck": true,
+    "noEmit": true,
     "types": ["node"]
-  }
+  },
+  "include": ["src/**/*.ts", "test/**/*.ts", "examples/**/*.ts"]
 }

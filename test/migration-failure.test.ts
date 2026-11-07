@@ -4,6 +4,7 @@ import { getPostgratorEnd } from "./test-util.js";
 import { dirname } from "path";
 import { fileURLToPath } from "url";
 import { describe, before, it, after } from "node:test";
+import type Postgrator from "../src/postgrator.js";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 
@@ -33,10 +34,13 @@ testMigrationFailure(() => {
   });
 }, "mssql");
 
-function testMigrationFailure(factoryFunction, driver) {
-  describe(`Migration failure: ${driver}`, function () {
-    let postgrator;
-    let end = () => {};
+function testMigrationFailure(
+  factoryFunction: () => ReturnType<typeof getPostgratorEnd>,
+  driver: string
+) {
+  void describe(`Migration failure: ${driver}`, function () {
+    let postgrator: Postgrator;
+    let end: () => Promise<void> | void = () => {};
 
     before(async () => {
       const result = await factoryFunction();
@@ -44,25 +48,29 @@ function testMigrationFailure(factoryFunction, driver) {
       end = result.end;
     });
 
-    it("Handles failed migrations", function () {
-      return postgrator.migrate().catch((error) => {
-        assert(error, "Error expected from bad migration");
-        assert(
-          error.appliedMigrations,
-          "appliedMigrations decorated on error object"
-        );
-      });
+    void it("Handles failed migrations", async function () {
+      await assert.rejects(
+        () => postgrator.migrate(),
+        (error: Error & { appliedMigrations?: unknown }) => {
+          assert(error, "Error expected from bad migration");
+          assert(
+            error.appliedMigrations,
+            "appliedMigrations decorated on error object"
+          );
+          return true;
+        }
+      );
     });
 
-    it("Does not implement partial migrations", function () {
+    void it("Does not implement partial migrations", function () {
       return postgrator.runQuery("SELECT name FROM widgets").then((results) => {
         assert(results.rows);
         assert.strictEqual(results.rows.length, 0, "Table should be empty");
       });
     });
 
-    it("Migrates down to 000", function () {
-      return postgrator.migrate("00");
+    void it("Migrates down to 000", async function () {
+      await postgrator.migrate("00");
     });
 
     after(async function () {

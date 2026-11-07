@@ -1,28 +1,31 @@
 import Client from "./Client.js";
+import type { MySQLResolvedOptions } from "../types.js";
 
 class MysqlClient extends Client {
-  getAddNameSql() {
+  declare config: MySQLResolvedOptions;
+
+  getAddNameSql(): string {
     return `
       ALTER TABLE ${this.config.schemaTable} 
         ADD COLUMN name TEXT;
     `;
   }
 
-  getAddMd5Sql() {
+  getAddMd5Sql(): string {
     return `
       ALTER TABLE ${this.config.schemaTable} 
         ADD COLUMN md5 TEXT;
     `;
   }
 
-  getAddRunAtSql() {
+  getAddRunAtSql(): string {
     return `
       ALTER TABLE ${this.config.schemaTable} 
         ADD COLUMN run_at TIMESTAMP;
     `;
   }
 
-  getColumnsSql() {
+  getColumnsSql(): string {
     return `
       SELECT column_name
       FROM INFORMATION_SCHEMA.COLUMNS 

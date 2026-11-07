@@ -1,5 +1,6 @@
 import mssql from "mssql";
-import Postgrator from "../postgrator";
+import Postgrator from "../src/postgrator.js";
+import type { QueryResult } from "../src/types.js";
 
 async function doMigration() {
   const client = new mssql.ConnectionPool({
@@ -26,7 +27,7 @@ async function doMigration() {
     driver: "mssql",
     database: "database_name",
     execQuery: (query) => {
-      return new Promise((resolve, reject) => {
+      return new Promise<QueryResult>((resolve, reject) => {
         const request = new mssql.Request(client);
         // batch will handle multiple queries
         request.batch(query, (err, result) => {
@@ -34,7 +35,9 @@ async function doMigration() {
             return reject(err);
           }
           return resolve({
-            rows: result && result.recordset ? result.recordset : result,
+            rows: (result && result.recordset
+              ? result.recordset
+              : result) as any[],
           });
         });
       });
@@ -47,4 +50,4 @@ async function doMigration() {
   // close the db connectin
   await client.close();
 }
-doMigration();
+void doMigration();
