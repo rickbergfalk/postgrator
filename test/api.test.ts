@@ -69,7 +69,7 @@ void describe("TypeScript API", function () {
     const migrations: Postgrator.Migration[] = await postgrator.getMigrations();
     assert.strictEqual(migrations.length, 12);
     const m = migrations[0];
-    assert.strictEqual(m.version, 1);
+    assert.strictEqual(m?.version, 1);
     assert.strictEqual(m.action, "do");
     assert(m.filename.endsWith("001.do.sql"));
     assert(m.hasOwnProperty("name"));
