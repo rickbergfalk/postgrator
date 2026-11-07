@@ -52,12 +52,6 @@ All tests import `../src/...` through `tsx`.
 
 A small smoke test importing from the packed package, or at least `tsc` against `dist`, would catch packaging and declaration regressions.
 
-### 12. Minor test portability concern
-
-The old JS API test used `path.join(__dirname, "/fail*/*")`; the retained TS test uses a hard-coded forward slash template (`test/api.test.ts:81`). Linux CI passes, but this is less portable.
-
-The `test` script only matches `test/*.test.ts`, not nested test directories.
-
 ---
 
 ## Build / Packaging / CI
