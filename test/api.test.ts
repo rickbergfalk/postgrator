@@ -78,7 +78,7 @@ describe("TypeScript API", function () {
   it("Finds migrations by glob pattern", async () => {
     const patterngrator = new Postgrator({
       driver: "pg",
-      migrationPattern: `${__dirname}/fail*/*`,
+      migrationPattern: path.join(__dirname, "fail*", "*").replace(/\\/g, "/"),
       execQuery: async () => ({ rows: [] }),
     });
     const migrationsByPattern: Postgrator.Migration[] =
