@@ -29,6 +29,7 @@
     "lint": "npm run typecheck && npx oxlint --type-aware && prettier --check .",
     "prettier-write": "prettier --write .",
     "test": "node --import tsx --test --test-concurrency=1 \"test/**/*.test.ts\"",
+    "test:package": "node scripts/test-package.mjs",
     "prepare": "husky",
     "prepack": "npm run build"
   },

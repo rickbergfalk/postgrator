@@ -270,6 +270,16 @@ npm test
 docker-compose rm --force
 ```
 
+To verify the built package, run:
+
+```sh
+npm run test:package
+```
+
+This packs the tarball, imports it from a temporary consumer project, runs a
+migration end-to-end, and type-checks the published declarations. It does not
+need the Docker databases.
+
 ## License
 
 MIT
