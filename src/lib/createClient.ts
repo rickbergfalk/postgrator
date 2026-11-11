@@ -1,4 +1,4 @@
-import type { ResolvedOptions } from "../types.js";
+import type { BaseResolvedOptions, ResolvedOptions } from "../types.js";
 import Client from "./Client.js";
 import MssqlClient from "./MssqlClient.js";
 import MysqlClient from "./MysqlClient.js";
@@ -15,9 +15,11 @@ export default function createClient(config: ResolvedOptions): Client {
       return new MssqlClient(config);
     case "sqlite3":
       return new Sqlite3Client(config);
-    default:
+    default: {
+      const driver = (config as BaseResolvedOptions).driver;
       throw new Error(
-        `db driver not supported. Must one of: mysql, mssql, sqlite3 or pg`
+        `db driver '${driver}' not supported. Must be one of: mysql, mssql, sqlite3 or pg`
       );
+    }
   }
 }
