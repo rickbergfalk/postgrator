@@ -1,5 +1,22 @@
 # CHANGELOG
 
+## 9.0.0
+
+### Unreleased
+
+- Require Node v22 or later
+- The package has been migrated to TypeScript, which brought some breaking type changes and bug fixes:
+  - `migrationPattern` and `execQuery` are now required.
+  - `database` is now required for `mysql`.
+  - `Sqlite3Options.currentSchema` is removed.
+  - `Migration.md5` is now optional.
+  - `Migration.getSql` now returns `string | Promise<string>`. Code such as `m.getSql().trim()` no longer compiles.
+  - `QueryResult.fields` is now optional.
+  - `on()` now returns `this` instead of `void`.
+  - The package now ships compiled output from `dist/`, with an `exports` map.
+  - `getMigrations()` now drops files whose action is not exactly `do` or `undo`. This changes the results of `getMigrations()` and `getMaxVersion()`.
+  - `persistActionSql` in `src/lib/Client.ts` now writes `NULL` for `md5` when a migration has no checksum. The old code wrote the string `'undefined'`.
+
 ## 8.0.1
 
 ### November 10, 2026
