@@ -90,9 +90,8 @@ abstract class Client {
 
   async runSqlScript(sqlScript: string): Promise<void> {
     const { config } = this;
-    const { execSqlScript } = config;
-    if (execSqlScript) {
-      return await config.execSqlScript!(sqlScript);
+    if (config.execSqlScript) {
+      return await config.execSqlScript(sqlScript);
     }
     /* ignore result */ await this.runQuery(sqlScript);
   }
