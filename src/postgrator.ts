@@ -301,9 +301,6 @@ class Postgrator extends EventEmitter {
         targetVersion = Number(target);
       }
       data.targetVersion = targetVersion;
-      if (target === undefined) {
-        throw new Error("targetVersion undefined");
-      }
       const databaseVersion = await this.getDatabaseVersion();
       data.databaseVersion = databaseVersion;
       if (config.validateChecksums && data.targetVersion >= databaseVersion) {
