@@ -1,5 +1,11 @@
 # CHANGELOG
 
+## 8.0.1
+
+### November 10, 2026
+
+- Update `glob` to v14
+
 ## 8.0.0
 
 ### November 11, 2024
